@@ -124,10 +124,60 @@ class SupabaseProfileRepository implements ProfileRepository {
 }
 
 class PreviewProfileRepository implements ProfileRepository {
-  UserProfile _profile = const UserProfile.preview();
+  final Map<String, UserProfile> _profiles = {
+    'preview-user': const UserProfile.preview(),
+    'host-amina': const UserProfile(
+      id: 'host-amina',
+      displayName: 'Amina B.',
+      bio:
+          'Weekend hiker and careful planner who prefers village stays, early starts, and small groups.',
+      homeCity: 'Casablanca',
+      avatarUrl: null,
+      travelStyles: ['Nature', 'Hiking', 'Local stays'],
+      languages: ['Arabic', 'French', 'English'],
+      isLinkedInVerified: true,
+      isOnboardingComplete: true,
+    ),
+    'host-youssef': const UserProfile(
+      id: 'host-youssef',
+      displayName: 'Youssef E.',
+      bio:
+          'Coastal road-trip regular, seafood enthusiast, and patient beginner surf companion.',
+      homeCity: 'Rabat',
+      avatarUrl: null,
+      travelStyles: ['Food', 'Road trips', 'Coast'],
+      languages: ['Arabic', 'French'],
+      isLinkedInVerified: true,
+      isOnboardingComplete: true,
+    ),
+    'host-leila': const UserProfile(
+      id: 'host-leila',
+      displayName: 'Leila M.',
+      bio:
+          'Slow-travel host who enjoys kasbah architecture, local guesthouses, and flexible afternoons.',
+      homeCity: 'Marrakech',
+      avatarUrl: null,
+      travelStyles: ['Road trips', 'Culture', 'Slow travel'],
+      languages: ['Arabic', 'French', 'English'],
+      isLinkedInVerified: true,
+      isOnboardingComplete: true,
+    ),
+    'host-salma': const UserProfile(
+      id: 'host-salma',
+      displayName: 'Salma R.',
+      bio:
+          'Museum lover and architecture enthusiast exploring the towns of northern Morocco.',
+      homeCity: 'Tangier',
+      avatarUrl: null,
+      travelStyles: ['Culture', 'City breaks'],
+      languages: ['Arabic', 'French', 'Spanish'],
+      isLinkedInVerified: false,
+      isOnboardingComplete: true,
+    ),
+  };
 
   @override
-  Future<UserProfile?> fetchProfile(String userId) async => _profile;
+  Future<UserProfile?> fetchProfile(String userId) async => _profiles[userId];
 
   @override
   Future<UserProfile> completeProfile({
@@ -136,7 +186,7 @@ class PreviewProfileRepository implements ProfileRepository {
     Uint8List? avatarBytes,
     String avatarExtension = 'jpg',
   }) async {
-    _profile = UserProfile(
+    final profile = UserProfile(
       id: userId,
       displayName: draft.displayName,
       bio: draft.bio,
@@ -147,7 +197,8 @@ class PreviewProfileRepository implements ProfileRepository {
       isLinkedInVerified: true,
       isOnboardingComplete: true,
     );
-    return _profile;
+    _profiles[userId] = profile;
+    return profile;
   }
 
   @override

@@ -7,6 +7,8 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/analytics/product_analytics.dart';
+import '../../profile/domain/traveler_action_target.dart';
+import '../../profile/presentation/traveler_action_sheet.dart';
 import '../application/chat_controller.dart';
 import '../application/conversation_controller.dart';
 import '../domain/trip_conversation.dart';
@@ -158,6 +160,17 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen>
                   scrollController: _scrollController,
                   currentUserId: chat.userId,
                   isBlocked: safety.isBlocked,
+                  onUserTap: (message) => showTravelerActions(
+                    context,
+                    target: TravelerActionTarget(
+                      userId: message.senderId!,
+                      displayName: message.senderName ?? 'Trip member',
+                      tripId: conversation?.tripId,
+                      tripTitle: conversation?.tripTitle,
+                      conversationId: widget.conversationId,
+                    ),
+                    openedFromConversation: true,
+                  ),
                 ),
               ),
               _MessageComposer(
@@ -179,12 +192,14 @@ class _ConversationBody extends StatelessWidget {
     required this.scrollController,
     required this.currentUserId,
     required this.isBlocked,
+    required this.onUserTap,
   });
 
   final ConversationController controller;
   final ScrollController scrollController;
   final String currentUserId;
   final bool Function(String?) isBlocked;
+  final ValueChanged<ChatMessage> onUserTap;
 
   @override
   Widget build(BuildContext context) {
@@ -239,6 +254,9 @@ class _ConversationBody extends StatelessWidget {
               isBlockedSender: isBlocked(message.senderId),
               startsGroup: startsGroup,
               onRetry: () => controller.retry(message),
+              onSenderTap: message.senderId == null
+                  ? null
+                  : () => onUserTap(message),
             ),
           ],
         );
@@ -332,6 +350,7 @@ class _MessageBubble extends StatelessWidget {
     required this.isBlockedSender,
     required this.startsGroup,
     required this.onRetry,
+    required this.onSenderTap,
   });
 
   final ChatMessage message;
@@ -339,6 +358,7 @@ class _MessageBubble extends StatelessWidget {
   final bool isBlockedSender;
   final bool startsGroup;
   final VoidCallback onRetry;
+  final VoidCallback? onSenderTap;
 
   @override
   Widget build(BuildContext context) {
@@ -412,7 +432,18 @@ class _MessageBubble extends StatelessWidget {
               SizedBox(
                 width: 30,
                 child: startsGroup
-                    ? _SenderAvatar(name: senderName)
+                    ? Semantics(
+                        button: true,
+                        label: 'Open $senderName actions',
+                        child: InkResponse(
+                          key: ValueKey(
+                            'chat-user-${message.senderId}-${message.id}',
+                          ),
+                          onTap: onSenderTap,
+                          radius: 24,
+                          child: _SenderAvatar(name: senderName),
+                        ),
+                      )
                     : const SizedBox.shrink(),
               ),
               const SizedBox(width: AppSpacing.xs),
@@ -443,15 +474,21 @@ class _MessageBubble extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!isMine && startsGroup) ...[
-                      Text(
-                        senderName,
-                        style: const TextStyle(
-                          color: AppColors.green,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                      GestureDetector(
+                        onTap: onSenderTap,
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Text(
+                            senderName,
+                            style: const TextStyle(
+                              color: AppColors.green,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xxs),
                     ],
                     Text(
                       message.body,

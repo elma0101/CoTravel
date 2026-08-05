@@ -14,6 +14,8 @@ import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/messages/presentation/conversation_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/profile_onboarding_screen.dart';
+import '../../features/profile/domain/traveler_action_target.dart';
+import '../../features/profile/presentation/member_profile_screen.dart';
 import '../../features/safety/presentation/safety_center_screen.dart';
 import '../../features/trips/presentation/trips_screen.dart';
 import '../../features/trips/presentation/create_trip_screen.dart';
@@ -40,6 +42,22 @@ abstract final class AppRoutes {
   static String tripLogistics(String tripId) => '/trip/$tripId/logistics';
   static String conversation(String conversationId) =>
       '/conversation/$conversationId';
+
+  static String memberProfile(
+    String userId, {
+    String? tripId,
+    String? conversationId,
+    bool openedFromConversation = false,
+  }) {
+    return Uri(
+      path: '/member/$userId',
+      queryParameters: {
+        'trip': ?tripId,
+        'conversation': ?conversationId,
+        if (openedFromConversation) 'from': 'conversation',
+      },
+    ).toString();
+  }
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -131,6 +149,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.betaFeedback,
         builder: (context, state) => const BetaFeedbackScreen(),
+      ),
+      GoRoute(
+        path: '/member/:userId',
+        builder: (context, state) {
+          return MemberProfileScreen(
+            userId: state.pathParameters['userId']!,
+            tripId: state.uri.queryParameters['trip'],
+            conversationId: state.uri.queryParameters['conversation'],
+            openedFromConversation:
+                state.uri.queryParameters['from'] == 'conversation',
+            fallback: state.extra is TravelerActionTarget
+                ? state.extra! as TravelerActionTarget
+                : null,
+          );
+        },
       ),
       GoRoute(
         path: '/conversation/:conversationId',

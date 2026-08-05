@@ -8,6 +8,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../join_requests/presentation/join_request_panel.dart';
 import '../../join_requests/domain/trip_join_request.dart';
+import '../../profile/domain/traveler_action_target.dart';
+import '../../profile/presentation/traveler_action_sheet.dart';
 import '../../safety/domain/safety_models.dart';
 import '../../safety/presentation/safety_actions.dart';
 import '../domain/trip.dart';
@@ -1092,103 +1094,152 @@ class _CostLegend extends StatelessWidget {
   }
 }
 
-class _HostCard extends StatelessWidget {
+class _HostCard extends ConsumerWidget {
   const _HostCard({required this.trip});
 
   final Trip trip;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.terracottaSoft,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: AppColors.green,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  _initials(trip.hostName),
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final chat = ref.watch(chatControllerProvider);
+    return ListenableBuilder(
+      listenable: chat,
+      builder: (context, child) {
+        final conversation = chat.conversationForTrip(trip.id);
+        return Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          child: InkWell(
+            key: ValueKey('host-actions-${trip.hostId}'),
+            onTap: () => showTravelerActions(
+              context,
+              target: TravelerActionTarget(
+                userId: trip.hostId,
+                displayName: trip.hostName,
+                homeCity: trip.hostHomeCity,
+                isVerified: trip.hostVerified,
+                tripId: trip.id,
+                tripTitle: trip.title,
+                conversationId: conversation?.id,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      trip.hostName,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      trip.hostHomeCity ?? 'CoTravel member',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
-                    ),
-                  ],
-                ),
+            ),
+            borderRadius: BorderRadius.circular(24),
+            child: Ink(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.terracottaSoft,
+                borderRadius: BorderRadius.circular(24),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.surface.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      trip.hostVerified
-                          ? Icons.verified_rounded
-                          : Icons.hourglass_top_rounded,
-                      color: trip.hostVerified
-                          ? AppColors.green
-                          : AppColors.muted,
-                      size: 16,
-                    ),
-                    const SizedBox(width: AppSpacing.xxs),
-                    Text(
-                      trip.hostVerified ? 'Verified' : 'Pending',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          color: AppColors.green,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          _initials(trip.hostName),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              trip.hostName,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: AppSpacing.xxs),
+                            Text(
+                              trip.hostHomeCity ?? 'CoTravel member',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.muted),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              trip.hostVerified
+                                  ? Icons.verified_rounded
+                                  : Icons.hourglass_top_rounded,
+                              color: trip.hostVerified
+                                  ? AppColors.green
+                                  : AppColors.muted,
+                              size: 16,
+                            ),
+                            const SizedBox(width: AppSpacing.xxs),
+                            Text(
+                              trip.hostVerified ? 'Verified' : 'Pending',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    child: Divider(color: AppColors.border),
+                  ),
+                  Text(
+                    'Hosting a ${trip.travelStyle.toLowerCase()} trip for a small group of up to ${trip.capacity} travelers.',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(height: 1.4),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Profile and messages',
+                        style: TextStyle(
+                          color: AppColors.green,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(width: AppSpacing.xxs),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: AppColors.green,
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-            child: Divider(color: AppColors.border),
-          ),
-          Text(
-            'Hosting a ${trip.travelStyle.toLowerCase()} trip for a small group of up to ${trip.capacity} travelers.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.4),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

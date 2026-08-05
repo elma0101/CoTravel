@@ -41,6 +41,18 @@ class ChatController extends ChangeNotifier {
     return null;
   }
 
+  TripConversation? conversationForTrip(String? tripId) {
+    if (tripId == null) {
+      return null;
+    }
+    for (final conversation in _conversations) {
+      if (conversation.tripId == tripId) {
+        return conversation;
+      }
+    }
+    return null;
+  }
+
   Future<void> load() => _refresh(showLoading: _conversations.isEmpty);
 
   Future<void> refresh() => _refresh(showLoading: false);

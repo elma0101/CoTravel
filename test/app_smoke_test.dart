@@ -68,6 +68,26 @@ void main() {
     expect(find.text('Trip details'), findsOneWidget);
     expect(find.text('Route'), findsOneWidget);
     expect(find.text('Rabat to Essaouira'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('host-actions-host-youssef')),
+      360,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('host-actions-host-youssef')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Message'), findsOneWidget);
+    expect(
+      find.text('Available after your place on this trip is confirmed.'),
+      findsOneWidget,
+    );
+    final lockedMessageAction = tester.widget<InkWell>(
+      find.descendant(
+        of: find.byKey(const ValueKey('message-user-host-youssef')),
+        matching: find.byType(InkWell),
+      ),
+    );
+    expect(lockedMessageAction.onTap, isNull);
   });
 
   testWidgets('traveler confirms a host-approved request', (tester) async {
@@ -151,6 +171,78 @@ void main() {
       find.text('I can compare the two guesthouses after dinner.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('host actions connect trip details, profile, and group chat', (
+    tester,
+  ) async {
+    final authState = AppAuthState.preview(initiallyAuthenticated: true);
+    addTearDown(authState.dispose);
+
+    await _pumpApp(tester, authState);
+    await tester.enterText(
+      find.byKey(const ValueKey('explore-destination')),
+      'Boumalne',
+    );
+    await tester.tap(find.text('Find trips'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Dades slow road'),
+      260,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Dades slow road'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('host-actions-host-leila')),
+      360,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const ValueKey('host-actions-host-leila')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('View profile'), findsOneWidget);
+    expect(find.text('Message'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('view-profile-host-leila')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Traveler profile'), findsOneWidget);
+    expect(find.text('Leila M.'), findsOneWidget);
+    expect(find.text('Slow travel'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('profile-message-host-leila')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Only confirmed trip members can read this conversation.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('chat sender opens the same traveler profile', (tester) async {
+    final authState = AppAuthState.preview(initiallyAuthenticated: true);
+    addTearDown(authState.dispose);
+
+    await _pumpApp(tester, authState);
+    await tester.tap(find.byIcon(Icons.chat_bubble_outline_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('conversation-preview-conversation-dades')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('chat-user-host-leila-preview-host-shortlist')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Back to trip chat'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('view-profile-host-leila')));
+    await tester.pumpAndSettle();
+    expect(find.text('Traveler profile'), findsOneWidget);
+    expect(find.text('Leila M.'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('profile-message-host-leila')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('chat-composer')), findsOneWidget);
   });
 
   testWidgets('confirmed traveler explores dynamic shared costs', (

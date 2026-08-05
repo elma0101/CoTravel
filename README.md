@@ -21,6 +21,8 @@ The project is pinned to Flutter 3.44.8 and Dart 3.12.2.
 - Avatar upload, travel preferences, and LinkedIn identity-linking support
 - Versioned Supabase schema with profile and storage Row Level Security
 - Multi-stop itinerary creation with dates, capacity, and shared-cost estimates
+- Interactive MapLibre route explorer with numbered stops, itinerary-map
+  selection, route overview, and guided previous/next navigation
 - Searchable trip discovery with date, travel-style, and host-trust filters
 - My Trips catalog and detailed route, budget, and host views
 - Profile-aware join requests with host approval and traveler reconfirmation
@@ -66,6 +68,10 @@ Copy `config/dev.example.json` to `config/dev.json` first. Local configuration
 files are ignored by Git. The default development configuration also works
 without a backend and opens on an explicit preview sign-in screen.
 
+`MAP_STYLE_URL` selects the MapLibre-compatible basemap. The example files use
+CARTO's public Positron style, so route tiles require an internet connection.
+The app's route and stop metadata remain independent of the basemap provider.
+
 For staging, copy `config/staging.example.json` to `config/staging.json` and
 replace the placeholders. Preview authentication is never enabled outside the
 development environment.
@@ -89,6 +95,8 @@ Preview mode also seeds both sides of milestone 4: one candidate for a hosted
 trip and one host-approved invitation awaiting traveler confirmation.
 It includes a confirmed Dades trip conversation so milestone 5 messaging can
 be evaluated without external services.
+All preview itineraries include map-ready route metadata, and familiar Morocco
+city names retain a local coordinate fallback for older text-only trip records.
 The same confirmed trip includes a shared-cost calculator and external booking
 shortlist for milestone 6. The preview-owned Rif trip demonstrates the
 host-only logistics editor.

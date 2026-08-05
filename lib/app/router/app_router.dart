@@ -17,6 +17,7 @@ import '../../features/profile/presentation/profile_onboarding_screen.dart';
 import '../../features/safety/presentation/safety_center_screen.dart';
 import '../../features/trips/presentation/trips_screen.dart';
 import '../../features/trips/presentation/create_trip_screen.dart';
+import '../../features/trips/presentation/route_explorer_screen.dart';
 import '../../features/trips/presentation/trip_detail_screen.dart';
 import 'startup_screen.dart';
 
@@ -34,6 +35,7 @@ abstract final class AppRoutes {
   static const betaFeedback = '/beta-feedback';
 
   static String tripDetails(String tripId) => '/trip/$tripId';
+  static String tripRoute(String tripId) => '/trip/$tripId/route';
   static String tripRequests(String tripId) => '/trip/$tripId/requests';
   static String tripLogistics(String tripId) => '/trip/$tripId/logistics';
   static String conversation(String conversationId) =>
@@ -93,6 +95,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const ProfileOnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/trip/:tripId/route',
+        builder: (context, state) {
+          return RouteExplorerScreen(tripId: state.pathParameters['tripId']!);
+        },
       ),
       GoRoute(
         path: '/trip/:tripId',

@@ -1,12 +1,16 @@
 enum AppEnvironment { development, staging, production }
 
 class AppConfig {
+  static const defaultMapStyleUrl =
+      'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+
   const AppConfig({
     required this.environment,
     required this.supabaseUrl,
     required this.supabasePublishableKey,
     required this.requestPreviewAuth,
     required this.requireLinkedInVerification,
+    this.mapStyleUrl = defaultMapStyleUrl,
   });
 
   factory AppConfig.fromEnvironment() {
@@ -33,6 +37,10 @@ class AppConfig {
       requireLinkedInVerification: const bool.fromEnvironment(
         'REQUIRE_LINKEDIN_VERIFICATION',
       ),
+      mapStyleUrl: const String.fromEnvironment(
+        'MAP_STYLE_URL',
+        defaultValue: defaultMapStyleUrl,
+      ),
     );
   }
 
@@ -41,6 +49,7 @@ class AppConfig {
   final String supabasePublishableKey;
   final bool requestPreviewAuth;
   final bool requireLinkedInVerification;
+  final String mapStyleUrl;
 
   bool get hasSupabaseConfiguration =>
       supabaseUrl.trim().isNotEmpty && supabasePublishableKey.trim().isNotEmpty;
@@ -63,6 +72,13 @@ class AppConfig {
       if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
         throw StateError('SUPABASE_URL must be a valid absolute URL.');
       }
+    }
+
+    final mapStyleUri = Uri.tryParse(mapStyleUrl);
+    if (mapStyleUri == null ||
+        !mapStyleUri.hasScheme ||
+        mapStyleUri.host.isEmpty) {
+      throw StateError('MAP_STYLE_URL must be a valid absolute URL.');
     }
 
     if (environment != AppEnvironment.development &&

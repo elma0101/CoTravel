@@ -1,9 +1,127 @@
+enum TripStopType { waypoint, activity, overnight, breakStop }
+
+extension TripStopTypeValue on TripStopType {
+  String get storageValue => switch (this) {
+    TripStopType.waypoint => 'waypoint',
+    TripStopType.activity => 'activity',
+    TripStopType.overnight => 'overnight',
+    TripStopType.breakStop => 'break',
+  };
+
+  String get label => switch (this) {
+    TripStopType.waypoint => 'Waypoint',
+    TripStopType.activity => 'Activity',
+    TripStopType.overnight => 'Overnight',
+    TripStopType.breakStop => 'Break',
+  };
+
+  static TripStopType fromStorage(String? value) => switch (value) {
+    'activity' => TripStopType.activity,
+    'overnight' => TripStopType.overnight,
+    'break' => TripStopType.breakStop,
+    _ => TripStopType.waypoint,
+  };
+}
+
+enum TripTravelMode { drive, sharedTaxi, train, bus, walk, other }
+
+extension TripTravelModeValue on TripTravelMode {
+  String get storageValue => switch (this) {
+    TripTravelMode.drive => 'drive',
+    TripTravelMode.sharedTaxi => 'shared_taxi',
+    TripTravelMode.train => 'train',
+    TripTravelMode.bus => 'bus',
+    TripTravelMode.walk => 'walk',
+    TripTravelMode.other => 'other',
+  };
+
+  String get label => switch (this) {
+    TripTravelMode.drive => 'Drive',
+    TripTravelMode.sharedTaxi => 'Shared taxi',
+    TripTravelMode.train => 'Train',
+    TripTravelMode.bus => 'Bus',
+    TripTravelMode.walk => 'Walk',
+    TripTravelMode.other => 'Transfer',
+  };
+
+  static TripTravelMode? fromStorage(String? value) => switch (value) {
+    'drive' => TripTravelMode.drive,
+    'shared_taxi' => TripTravelMode.sharedTaxi,
+    'train' => TripTravelMode.train,
+    'bus' => TripTravelMode.bus,
+    'walk' => TripTravelMode.walk,
+    'other' => TripTravelMode.other,
+    _ => null,
+  };
+}
+
+class GeoPoint {
+  const GeoPoint(this.latitude, this.longitude)
+    : assert(latitude >= -90 && latitude <= 90),
+      assert(longitude >= -180 && longitude <= 180);
+
+  final double latitude;
+  final double longitude;
+}
+
 class TripStop {
-  const TripStop({required this.city, required this.arrivalDate, this.notes});
+  const TripStop({
+    required this.city,
+    required this.arrivalDate,
+    this.notes,
+    this.latitude,
+    this.longitude,
+    this.type = TripStopType.waypoint,
+    this.travelMode,
+    this.travelDurationMinutes,
+    this.isOptional = false,
+  }) : assert(
+         (latitude == null && longitude == null) ||
+             (latitude != null && longitude != null),
+       ),
+       assert(latitude == null || (latitude >= -90 && latitude <= 90)),
+       assert(longitude == null || (longitude >= -180 && longitude <= 180)),
+       assert(travelDurationMinutes == null || travelDurationMinutes > 0);
 
   final String city;
   final DateTime arrivalDate;
   final String? notes;
+  final double? latitude;
+  final double? longitude;
+  final TripStopType type;
+  final TripTravelMode? travelMode;
+  final int? travelDurationMinutes;
+  final bool isOptional;
+
+  GeoPoint? get coordinate {
+    final latitude = this.latitude;
+    final longitude = this.longitude;
+    return latitude == null || longitude == null
+        ? null
+        : GeoPoint(latitude, longitude);
+  }
+
+  TripStop copyWith({
+    double? latitude,
+    double? longitude,
+    TripStopType? type,
+    TripTravelMode? travelMode,
+    int? travelDurationMinutes,
+    bool? isOptional,
+  }) {
+    return TripStop(
+      city: city,
+      arrivalDate: arrivalDate,
+      notes: notes,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      type: type ?? this.type,
+      travelMode: travelMode ?? this.travelMode,
+      travelDurationMinutes:
+          travelDurationMinutes ?? this.travelDurationMinutes,
+      isOptional: isOptional ?? this.isOptional,
+    );
+  }
 }
 
 class TripDraft {

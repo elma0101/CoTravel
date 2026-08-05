@@ -39,6 +39,8 @@ dependencies:
   go_router: ^17.3.0
   supabase_flutter: ^2.16.0
   image_picker: ^1.2.3
+  # 0.22 keeps Android builds compatible with the project's Java 17 toolchain.
+  maplibre_gl: 0.22.0
   url_launcher: ^6.3.2
 
 dev_dependencies:
@@ -62,6 +64,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/trips/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

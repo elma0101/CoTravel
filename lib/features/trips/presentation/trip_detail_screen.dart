@@ -11,6 +11,7 @@ import '../../join_requests/domain/trip_join_request.dart';
 import '../../safety/domain/safety_models.dart';
 import '../../safety/presentation/safety_actions.dart';
 import '../domain/trip.dart';
+import '../domain/trip_route.dart';
 import 'trip_formatters.dart';
 
 class TripDetailScreen extends ConsumerStatefulWidget {
@@ -123,7 +124,12 @@ class _TripDetails extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xl),
         const _SectionTitle(title: 'Route'),
         const SizedBox(height: AppSpacing.md),
-        _RouteTimeline(trip: trip),
+        _RouteTimeline(
+          trip: trip,
+          onExplore: TripRoute.fromTrip(trip).canExplore
+              ? () => context.push(AppRoutes.tripRoute(trip.id))
+              : null,
+        ),
         const SizedBox(height: AppSpacing.xl),
         const _SectionTitle(title: 'The plan'),
         const SizedBox(height: AppSpacing.sm),
@@ -308,9 +314,10 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _RouteTimeline extends StatelessWidget {
-  const _RouteTimeline({required this.trip});
+  const _RouteTimeline({required this.trip, required this.onExplore});
 
   final Trip trip;
+  final VoidCallback? onExplore;
 
   @override
   Widget build(BuildContext context) {
@@ -343,6 +350,20 @@ class _RouteTimeline extends StatelessWidget {
               point: points[index],
               isLast: index == points.length - 1,
             ),
+          const SizedBox(height: AppSpacing.xs),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              key: const ValueKey('explore-trip-route'),
+              onPressed: onExplore,
+              icon: const Icon(Icons.map_outlined),
+              label: Text(
+                onExplore == null
+                    ? 'Map coordinates unavailable'
+                    : 'Explore this route',
+              ),
+            ),
+          ),
         ],
       ),
     );

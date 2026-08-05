@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../profile/domain/user_profile.dart';
 import '../domain/trip.dart';
+import '../domain/trip_route.dart';
 
 abstract interface class TripRepository {
   Future<List<Trip>> discoverTrips();
@@ -22,7 +23,18 @@ class SupabaseTripRepository implements TripRepository {
 
   static const _tripSelection = '''
     *,
-    trip_stops(city, arrival_date, notes, position),
+    trip_stops(
+      city,
+      arrival_date,
+      notes,
+      position,
+      latitude,
+      longitude,
+      stop_type,
+      travel_mode,
+      travel_duration_minutes,
+      is_optional
+    ),
     host:profiles!trips_host_id_fkey(
       display_name,
       home_city,
@@ -76,15 +88,20 @@ class SupabaseTripRepository implements TripRepository {
         'p_origin_city': draft.originCity,
         'p_start_date': _dateValue(draft.startDate),
         'p_end_date': _dateValue(draft.endDate),
-        'p_stops': draft.stops
-            .map(
-              (stop) => {
-                'city': stop.city,
-                'arrival_date': _dateValue(stop.arrivalDate),
-                'notes': stop.notes,
-              },
-            )
-            .toList(),
+        'p_stops': draft.stops.map((stop) {
+          final resolved = MoroccoRouteCoordinates.resolve(stop);
+          return {
+            'city': resolved.city,
+            'arrival_date': _dateValue(resolved.arrivalDate),
+            'notes': resolved.notes,
+            'latitude': resolved.latitude,
+            'longitude': resolved.longitude,
+            'stop_type': resolved.type.storageValue,
+            'travel_mode': resolved.travelMode?.storageValue,
+            'travel_duration_minutes': resolved.travelDurationMinutes,
+            'is_optional': resolved.isOptional,
+          };
+        }).toList(),
         'p_capacity': draft.capacity,
         'p_lodging_total': draft.lodgingTotal,
         'p_transport_total': draft.transportTotal,
@@ -126,6 +143,15 @@ class SupabaseTripRepository implements TripRepository {
               city: stop['city'] as String,
               arrivalDate: DateTime.parse(stop['arrival_date'] as String),
               notes: stop['notes'] as String?,
+              latitude: (stop['latitude'] as num?)?.toDouble(),
+              longitude: (stop['longitude'] as num?)?.toDouble(),
+              type: TripStopTypeValue.fromStorage(stop['stop_type'] as String?),
+              travelMode: TripTravelModeValue.fromStorage(
+                stop['travel_mode'] as String?,
+              ),
+              travelDurationMinutes: (stop['travel_duration_minutes'] as num?)
+                  ?.toInt(),
+              isOptional: stop['is_optional'] as bool? ?? false,
             ),
           )
           .toList(),
@@ -222,7 +248,7 @@ class PreviewTripRepository implements TripRepository {
       originCity: draft.originCity,
       startDate: draft.startDate,
       endDate: draft.endDate,
-      stops: draft.stops,
+      stops: draft.stops.map(MoroccoRouteCoordinates.resolve).toList(),
       capacity: draft.capacity,
       confirmedTravelerCount: 0,
       lodgingTotal: draft.lodgingTotal,
@@ -255,10 +281,20 @@ class PreviewTripRepository implements TripRepository {
         startDate: atlasStart,
         endDate: atlasStart.add(const Duration(days: 3)),
         stops: [
-          TripStop(city: 'Marrakech', arrivalDate: atlasStart),
+          TripStop(
+            city: 'Marrakech',
+            arrivalDate: atlasStart,
+            type: TripStopType.activity,
+            travelMode: TripTravelMode.train,
+            travelDurationMinutes: 160,
+            notes: 'Meet near the medina for a relaxed first evening.',
+          ),
           TripStop(
             city: 'Imlil',
             arrivalDate: atlasStart.add(const Duration(days: 1)),
+            type: TripStopType.overnight,
+            travelMode: TripTravelMode.sharedTaxi,
+            travelDurationMinutes: 90,
             notes: 'Easy mountain walks and a village guesthouse.',
           ),
         ],
@@ -282,15 +318,27 @@ class PreviewTripRepository implements TripRepository {
         startDate: rifStart,
         endDate: rifStart.add(const Duration(days: 4)),
         stops: [
-          TripStop(city: 'Tetouan', arrivalDate: rifStart),
+          TripStop(
+            city: 'Tetouan',
+            arrivalDate: rifStart,
+            type: TripStopType.activity,
+            travelMode: TripTravelMode.drive,
+            travelDurationMinutes: 300,
+          ),
           TripStop(
             city: 'Akchour',
             arrivalDate: rifStart.add(const Duration(days: 2)),
+            type: TripStopType.activity,
+            travelMode: TripTravelMode.drive,
+            travelDurationMinutes: 75,
             notes: 'A moderate trail day with an early start.',
           ),
           TripStop(
             city: 'Chefchaouen',
             arrivalDate: rifStart.add(const Duration(days: 3)),
+            type: TripStopType.overnight,
+            travelMode: TripTravelMode.drive,
+            travelDurationMinutes: 45,
           ),
         ],
         capacity: 4,
@@ -313,10 +361,19 @@ class PreviewTripRepository implements TripRepository {
         startDate: coastStart,
         endDate: coastStart.add(const Duration(days: 4)),
         stops: [
-          TripStop(city: 'El Jadida', arrivalDate: coastStart),
+          TripStop(
+            city: 'El Jadida',
+            arrivalDate: coastStart,
+            type: TripStopType.activity,
+            travelMode: TripTravelMode.drive,
+            travelDurationMinutes: 110,
+          ),
           TripStop(
             city: 'Essaouira',
             arrivalDate: coastStart.add(const Duration(days: 2)),
+            type: TripStopType.overnight,
+            travelMode: TripTravelMode.drive,
+            travelDurationMinutes: 230,
           ),
         ],
         capacity: 4,
@@ -339,14 +396,29 @@ class PreviewTripRepository implements TripRepository {
         startDate: dadesStart,
         endDate: dadesStart.add(const Duration(days: 4)),
         stops: [
-          TripStop(city: 'Ait Ben Haddou', arrivalDate: dadesStart),
+          TripStop(
+            city: 'Ait Ben Haddou',
+            arrivalDate: dadesStart,
+            type: TripStopType.activity,
+            travelMode: TripTravelMode.drive,
+            travelDurationMinutes: 210,
+            notes: 'Walk through the ksar before the afternoon heat.',
+          ),
           TripStop(
             city: 'Skoura',
             arrivalDate: dadesStart.add(const Duration(days: 1)),
+            type: TripStopType.overnight,
+            travelMode: TripTravelMode.drive,
+            travelDurationMinutes: 75,
+            notes: 'Palm-grove guesthouse and a flexible afternoon.',
           ),
           TripStop(
             city: 'Boumalne Dades',
             arrivalDate: dadesStart.add(const Duration(days: 2)),
+            type: TripStopType.activity,
+            travelMode: TripTravelMode.drive,
+            travelDurationMinutes: 105,
+            notes: 'Explore the gorge viewpoints at an easy pace.',
           ),
         ],
         capacity: 5,
@@ -369,10 +441,19 @@ class PreviewTripRepository implements TripRepository {
         startDate: northStart,
         endDate: northStart.add(const Duration(days: 3)),
         stops: [
-          TripStop(city: 'Tetouan', arrivalDate: northStart),
+          TripStop(
+            city: 'Tetouan',
+            arrivalDate: northStart,
+            type: TripStopType.activity,
+            travelMode: TripTravelMode.bus,
+            travelDurationMinutes: 75,
+          ),
           TripStop(
             city: 'Chefchaouen',
             arrivalDate: northStart.add(const Duration(days: 1)),
+            type: TripStopType.overnight,
+            travelMode: TripTravelMode.bus,
+            travelDurationMinutes: 90,
           ),
         ],
         capacity: 4,

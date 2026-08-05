@@ -2,6 +2,7 @@
   "APP_ENV": "development",
   "ENABLE_PREVIEW_AUTH": "true",
   "REQUIRE_LINKEDIN_VERIFICATION": "false",
+  "MAP_STYLE_URL": "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
   "SUPABASE_URL": "",
   "SUPABASE_PUBLISHABLE_KEY": ""
 }

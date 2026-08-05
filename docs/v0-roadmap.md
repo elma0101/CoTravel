@@ -11,7 +11,7 @@ were delivered together in milestone 3.
 | 2 | Authentication and trust: email onboarding, profile, avatar, LinkedIn status | Complete in preview; backend migration prepared |
 | 3 | Itinerary and discovery: creation, ordered stops, capacity, costs, feed, filters, details | Complete |
 | 4 | Mutual approval: traveler request, host decision, traveler confirmation, seat locking | Complete |
-| 5 | Group coordination: confirmed-member conversation, realtime-style messages, unread state | Complete |
+| 5 | Group coordination: confirmed-member conversation, realtime messages, paginated history, resilient delivery, unread state | Complete |
 | 6 | Costs and logistics: live cost splits, host shortlist, external booking links | Complete |
 | 7 | Safety and release hardening: report/block, moderation, authorization audit, analytics, accessibility and integration checks | Complete |
 | 8 | Controlled beta: Supabase staging activation, TestFlight/Play testing, seed data, feedback and KPI dashboard | Implementation complete; external activation pending |

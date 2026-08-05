@@ -1,5 +1,9 @@
 enum ChatMessageType { member, system }
 
+enum ChatDeliveryStatus { sending, sent, failed }
+
+enum ChatRealtimeStatus { connecting, connected, disconnected }
+
 class TripConversation {
   const TripConversation({
     required this.id,
@@ -54,6 +58,8 @@ class ChatMessage {
     required this.body,
     required this.type,
     required this.sentAt,
+    this.clientId,
+    this.deliveryStatus = ChatDeliveryStatus.sent,
   });
 
   final String id;
@@ -63,6 +69,52 @@ class ChatMessage {
   final String body;
   final ChatMessageType type;
   final DateTime sentAt;
+  final String? clientId;
+  final ChatDeliveryStatus deliveryStatus;
 
   bool isMine(String userId) => senderId == userId;
+
+  String get stableId => clientId ?? id;
+
+  ChatMessage copyWith({
+    String? id,
+    DateTime? sentAt,
+    ChatDeliveryStatus? deliveryStatus,
+  }) {
+    return ChatMessage(
+      id: id ?? this.id,
+      conversationId: conversationId,
+      senderId: senderId,
+      senderName: senderName,
+      body: body,
+      type: type,
+      sentAt: sentAt ?? this.sentAt,
+      clientId: clientId,
+      deliveryStatus: deliveryStatus ?? this.deliveryStatus,
+    );
+  }
+}
+
+class ChatMessageCursor {
+  const ChatMessageCursor({required this.sentAt, required this.messageId});
+
+  final DateTime sentAt;
+  final String messageId;
+}
+
+class ChatMessagePage {
+  const ChatMessagePage({required this.messages, required this.hasMore});
+
+  final List<ChatMessage> messages;
+  final bool hasMore;
+}
+
+class ChatRealtimeEvent {
+  const ChatRealtimeEvent.status(this.status) : message = null;
+
+  const ChatRealtimeEvent.message(this.message)
+    : status = ChatRealtimeStatus.connected;
+
+  final ChatRealtimeStatus status;
+  final ChatMessage? message;
 }

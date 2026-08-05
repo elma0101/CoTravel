@@ -53,6 +53,13 @@ The sixth migration creates:
 - prevention of new join requests between blocked accounts
 - privacy-minimized, whitelisted analytics events with no client read access
 
+The chat completion migration adds:
+
+- member-gated cursor pagination instead of loading an entire conversation
+- idempotent client message identifiers so a retry cannot duplicate a message
+- server-returned delivery records for optimistic sending and visible retries
+- monotonic, message-aware read positions for accurate unread counts
+
 ## 2. Configure authentication
 
 In Authentication settings:
@@ -106,19 +113,23 @@ flutter run --dart-define-from-file=config/staging.json
 12. Confirm an authenticated non-member cannot select messages, subscribe to
     realtime message changes, call `send_chat_message`, or mark the chat read.
 13. Send messages from two confirmed accounts and verify the inbox preview and
-    unread count update correctly.
-14. Verify an unconfirmed traveler cannot select a trip's logistics row.
-15. As the host, update both shared-cost totals and structured booking links.
-16. Confirm a group member can read the links but cannot call
+    unread count and bottom-navigation badge update correctly.
+14. Disable the network while sending, verify the failed message remains in the
+    conversation, reconnect, tap retry, and confirm only one copy is stored.
+15. Add more than 40 messages, reopen the conversation, scroll upward, and
+    confirm older pages load without a jump or duplicate messages.
+16. Verify an unconfirmed traveler cannot select a trip's logistics row.
+17. As the host, update both shared-cost totals and structured booking links.
+18. Confirm a group member can read the links but cannot call
     `save_trip_logistics`, and that the per-person estimate changes with the
     confirmed participant count.
-17. Block a host and verify both accounts lose profile/trip discovery access
+19. Block a host and verify both accounts lose profile/trip discovery access
     and cannot create a new join request through the RPC.
-18. Submit a report and verify the reporter sees its public status but cannot
+20. Submit a report and verify the reporter sees its public status but cannot
     read or change moderator notes.
-19. Confirm an unrelated account cannot select blocks, reports, the moderation
+21. Confirm an unrelated account cannot select blocks, reports, the moderation
     queue, or analytics rows.
-20. Verify each analytics event is attributed to `auth.uid()` and unknown or
+22. Verify each analytics event is attributed to `auth.uid()` and unknown or
     oversized payloads are rejected.
 
 Use `docs/security-audit.md` for the complete multi-account authorization

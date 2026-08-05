@@ -47,6 +47,7 @@ class MessagesScreen extends ConsumerWidget {
                     : RefreshIndicator(
                         onRefresh: controller.load,
                         child: ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.fromLTRB(
                             AppSpacing.lg,
                             0,
@@ -61,9 +62,12 @@ class MessagesScreen extends ConsumerWidget {
                                 controller.conversations[index];
                             return _ConversationTile(
                               conversation: conversation,
-                              onTap: () => context.push(
-                                AppRoutes.conversation(conversation.id),
-                              ),
+                              onTap: () {
+                                controller.markReadLocally(conversation.id);
+                                context.push(
+                                  AppRoutes.conversation(conversation.id),
+                                );
+                              },
                             );
                           },
                         ),
@@ -171,7 +175,9 @@ class _ConversationTile extends StatelessWidget {
                               shape: BoxShape.circle,
                             ),
                             child: Text(
-                              '${conversation.unreadCount}',
+                              conversation.unreadCount > 99
+                                  ? '99+'
+                                  : '${conversation.unreadCount}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,

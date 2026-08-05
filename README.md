@@ -28,7 +28,8 @@ The project is pinned to Flutter 3.44.8 and Dart 3.12.2.
 - Profile-aware join requests with host approval and traveler reconfirmation
 - Host candidate inbox and traveler-facing request status tracking
 - Automatically created, member-only trip conversations after dual approval
-- Group chat inbox with unread state, realtime messages, and system events
+- Group chat inbox with realtime unread badges, paginated history, optimistic
+  delivery, safe retry, and system events
 - Live lodging and transport splits for any group size from one to capacity
 - Confirmed-member booking shortlists with external provider handoff
 - Host-managed cost estimates, booking links, and planning notes

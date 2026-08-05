@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../data/chat_repository.dart';
@@ -14,13 +16,21 @@ class ChatController extends ChangeNotifier {
 
   List<TripConversation> _conversations = const [];
   bool _isLoading = true;
-  bool _isSending = false;
+  bool _isRefreshing = false;
+  bool _refreshPending = false;
   String? _errorMessage;
+  StreamSubscription<void>? _inboxSubscription;
+  Timer? _refreshDebounce;
+  bool _disposed = false;
 
   List<TripConversation> get conversations => List.unmodifiable(_conversations);
   bool get isLoading => _isLoading;
-  bool get isSending => _isSending;
+  bool get isRefreshing => _isRefreshing;
   String? get errorMessage => _errorMessage;
+  int get totalUnreadCount => _conversations.fold(
+    0,
+    (total, conversation) => total + conversation.unreadCount,
+  );
 
   TripConversation? conversationById(String conversationId) {
     for (final conversation in _conversations) {
@@ -31,58 +41,79 @@ class ChatController extends ChangeNotifier {
     return null;
   }
 
-  Future<void> load() async {
-    _isLoading = true;
+  Future<void> load() => _refresh(showLoading: _conversations.isEmpty);
+
+  Future<void> refresh() => _refresh(showLoading: false);
+
+  void markReadLocally(String conversationId) {
+    final index = _conversations.indexWhere(
+      (conversation) => conversation.id == conversationId,
+    );
+    if (index < 0 || _conversations[index].unreadCount == 0) {
+      return;
+    }
+    final updated = [..._conversations];
+    updated[index] = updated[index].copyWith(unreadCount: 0);
+    _conversations = updated;
+    _notifyIfMounted();
+  }
+
+  Future<void> _refresh({required bool showLoading}) async {
+    if (_disposed) {
+      return;
+    }
+    _ensureInboxSubscription();
+    if (_isRefreshing) {
+      _refreshPending = true;
+      return;
+    }
+    _isRefreshing = true;
+    if (showLoading) {
+      _isLoading = true;
+    }
     _errorMessage = null;
-    notifyListeners();
+    _notifyIfMounted();
     try {
       _conversations = await _repository.fetchConversations();
     } on Object {
-      _errorMessage = 'Conversations could not be loaded. Please try again.';
+      if (_conversations.isEmpty) {
+        _errorMessage = 'Conversations could not be loaded. Please try again.';
+      }
     } finally {
+      _isRefreshing = false;
       _isLoading = false;
-      notifyListeners();
+      _notifyIfMounted();
+      if (_refreshPending && !_disposed) {
+        _refreshPending = false;
+        unawaited(_refresh(showLoading: false));
+      }
     }
   }
 
-  Stream<List<ChatMessage>> watchMessages(String conversationId) {
-    return _repository.watchMessages(conversationId);
-  }
-
-  Future<void> sendMessage({
-    required String conversationId,
-    required String body,
-  }) async {
-    final trimmed = body.trim();
-    if (trimmed.isEmpty || trimmed.length > 1000) {
-      throw ArgumentError('Messages must contain 1 to 1000 characters.');
-    }
-
-    _isSending = true;
-    _errorMessage = null;
-    notifyListeners();
-    try {
-      await _repository.sendMessage(
-        conversationId: conversationId,
-        body: trimmed,
+  void _ensureInboxSubscription() {
+    _inboxSubscription ??= _repository.watchInbox().listen((_) {
+      if (_disposed) {
+        return;
+      }
+      _refreshDebounce?.cancel();
+      _refreshDebounce = Timer(
+        const Duration(milliseconds: 250),
+        () => unawaited(refresh()),
       );
-      _conversations = await _repository.fetchConversations();
-    } on Object {
-      _errorMessage = 'Message could not be sent. Please try again.';
-      rethrow;
-    } finally {
-      _isSending = false;
-      notifyListeners();
-    }
+    });
   }
 
-  Future<void> markRead(String conversationId) async {
-    try {
-      await _repository.markRead(conversationId);
-      _conversations = await _repository.fetchConversations();
+  @override
+  void dispose() {
+    _disposed = true;
+    _refreshDebounce?.cancel();
+    unawaited(_inboxSubscription?.cancel());
+    super.dispose();
+  }
+
+  void _notifyIfMounted() {
+    if (!_disposed) {
       notifyListeners();
-    } on Object {
-      // Reading remains available even if the receipt cannot be persisted.
     }
   }
 }

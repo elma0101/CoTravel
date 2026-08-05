@@ -8,14 +8,23 @@ import '../domain/trip_conversation.dart';
 abstract interface class ChatRepository {
   Future<List<TripConversation>> fetchConversations();
 
-  Stream<List<ChatMessage>> watchMessages(String conversationId);
+  Stream<void> watchInbox();
 
-  Future<void> sendMessage({
+  Future<ChatMessagePage> fetchMessages({
     required String conversationId,
-    required String body,
+    ChatMessageCursor? before,
+    int limit = 40,
   });
 
-  Future<void> markRead(String conversationId);
+  Stream<ChatRealtimeEvent> watchConversation(String conversationId);
+
+  Future<ChatMessage> sendMessage({
+    required String conversationId,
+    required String body,
+    required String clientId,
+  });
+
+  Future<void> markRead({required String conversationId, DateTime? through});
 }
 
 class SupabaseChatRepository implements ChatRepository {
@@ -32,31 +41,153 @@ class SupabaseChatRepository implements ChatRepository {
   }
 
   @override
-  Stream<List<ChatMessage>> watchMessages(String conversationId) {
-    return _client
-        .from('chat_messages')
-        .stream(primaryKey: ['id'])
-        .eq('conversation_id', conversationId)
-        .order('sent_at')
-        .map((rows) => rows.map(_messageFromMap).toList());
+  Stream<void> watchInbox() {
+    late RealtimeChannel channel;
+    late StreamController<void> controller;
+
+    controller = StreamController<void>(
+      onListen: () {
+        final inboxChannel = _client
+            .channel('chat-inbox-${DateTime.now().microsecondsSinceEpoch}')
+            .onPostgresChanges(
+              event: PostgresChangeEvent.insert,
+              schema: 'public',
+              table: 'chat_messages',
+              callback: (_) => controller.add(null),
+            );
+        final userId = _client.auth.currentUser?.id;
+        if (userId != null) {
+          inboxChannel.onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'conversation_members',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (_) => controller.add(null),
+          );
+        }
+        channel = inboxChannel.subscribe();
+      },
+      onCancel: () async {
+        await _client.removeChannel(channel);
+      },
+    );
+    return controller.stream;
   }
 
   @override
-  Future<void> sendMessage({
+  Future<ChatMessagePage> fetchMessages({
+    required String conversationId,
+    ChatMessageCursor? before,
+    int limit = 40,
+  }) async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'list_chat_messages',
+      params: {
+        'p_conversation_id': conversationId,
+        'p_before_sent_at': before?.sentAt.toUtc().toIso8601String(),
+        'p_before_id': before?.messageId,
+        'p_limit': limit,
+      },
+    );
+    final messages = rows
+        .map((row) => _messageFromMap(row as Map<String, dynamic>))
+        .toList()
+        .reversed
+        .toList(growable: false);
+    return ChatMessagePage(messages: messages, hasMore: rows.length == limit);
+  }
+
+  @override
+  Stream<ChatRealtimeEvent> watchConversation(String conversationId) {
+    late RealtimeChannel channel;
+    late StreamController<ChatRealtimeEvent> controller;
+
+    controller = StreamController<ChatRealtimeEvent>(
+      onListen: () {
+        controller.add(
+          const ChatRealtimeEvent.status(ChatRealtimeStatus.connecting),
+        );
+        channel = _client
+            .channel(
+              'chat-$conversationId-${DateTime.now().microsecondsSinceEpoch}',
+            )
+            .onPostgresChanges(
+              event: PostgresChangeEvent.insert,
+              schema: 'public',
+              table: 'chat_messages',
+              filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'conversation_id',
+                value: conversationId,
+              ),
+              callback: (payload) {
+                if (payload.newRecord.isNotEmpty) {
+                  controller.add(
+                    ChatRealtimeEvent.message(
+                      _messageFromMap(payload.newRecord),
+                    ),
+                  );
+                }
+              },
+            )
+            .subscribe((status, error) {
+              if (controller.isClosed) {
+                return;
+              }
+              controller.add(
+                ChatRealtimeEvent.status(
+                  status == RealtimeSubscribeStatus.subscribed
+                      ? ChatRealtimeStatus.connected
+                      : ChatRealtimeStatus.disconnected,
+                ),
+              );
+            });
+      },
+      onCancel: () async {
+        await _client.removeChannel(channel);
+      },
+    );
+    return controller.stream;
+  }
+
+  @override
+  Future<ChatMessage> sendMessage({
     required String conversationId,
     required String body,
+    required String clientId,
   }) async {
-    await _client.rpc(
-      'send_chat_message',
-      params: {'p_conversation_id': conversationId, 'p_body': body},
+    final response = await _client.rpc<dynamic>(
+      'send_chat_message_v2',
+      params: {
+        'p_conversation_id': conversationId,
+        'p_body': body,
+        'p_client_id': clientId,
+      },
     );
+    final row = switch (response) {
+      final List<dynamic> rows when rows.isNotEmpty =>
+        rows.first as Map<String, dynamic>,
+      final Map<String, dynamic> value => value,
+      _ => throw StateError('The message server returned no message.'),
+    };
+    return _messageFromMap(row);
   }
 
   @override
-  Future<void> markRead(String conversationId) async {
+  Future<void> markRead({
+    required String conversationId,
+    DateTime? through,
+  }) async {
     await _client.rpc(
-      'mark_conversation_read',
-      params: {'p_conversation_id': conversationId},
+      'mark_conversation_read_through',
+      params: {
+        'p_conversation_id': conversationId,
+        'p_read_through': through?.toUtc().toIso8601String(),
+      },
     );
   }
 
@@ -71,14 +202,14 @@ class SupabaseChatRepository implements ChatRepository {
       lastMessage: row['last_message'] as String?,
       lastMessageAt: row['last_message_at'] == null
           ? null
-          : DateTime.parse(row['last_message_at'] as String),
+          : DateTime.parse(row['last_message_at'] as String).toLocal(),
       unreadCount: (row['unread_count'] as num).toInt(),
     );
   }
 
   ChatMessage _messageFromMap(Map<String, dynamic> row) {
     return ChatMessage(
-      id: row['id'] as String,
+      id: (row['id'] ?? row['message_id']) as String,
       conversationId: row['conversation_id'] as String,
       senderId: row['sender_id'] as String?,
       senderName: row['sender_name'] as String?,
@@ -86,7 +217,8 @@ class SupabaseChatRepository implements ChatRepository {
       type: row['message_type'] == 'system'
           ? ChatMessageType.system
           : ChatMessageType.member,
-      sentAt: DateTime.parse(row['sent_at'] as String),
+      sentAt: DateTime.parse(row['sent_at'] as String).toLocal(),
+      clientId: row['client_id'] as String?,
     );
   }
 }
@@ -98,8 +230,10 @@ class PreviewChatRepository implements ChatRepository {
 
   final List<TripConversation> _conversations = [];
   final Map<String, List<ChatMessage>> _messages = {};
-  final Map<String, StreamController<List<ChatMessage>>> _messageControllers =
+  final Map<String, StreamController<ChatRealtimeEvent>> _messageControllers =
       {};
+  final StreamController<void> _inboxController =
+      StreamController<void>.broadcast();
   int _nextMessageId = 1;
 
   @override
@@ -112,25 +246,66 @@ class PreviewChatRepository implements ChatRepository {
   }
 
   @override
-  Stream<List<ChatMessage>> watchMessages(String conversationId) async* {
+  Stream<void> watchInbox() => _inboxController.stream;
+
+  @override
+  Future<ChatMessagePage> fetchMessages({
+    required String conversationId,
+    ChatMessageCursor? before,
+    int limit = 40,
+  }) async {
     _requireConversation(conversationId);
-    yield List.unmodifiable(_messages[conversationId] ?? const []);
+    final allMessages = _messages[conversationId] ?? const [];
+    var end = allMessages.length;
+    if (before != null) {
+      final cursorIndex = allMessages.indexWhere(
+        (message) => message.id == before.messageId,
+      );
+      if (cursorIndex >= 0) {
+        end = cursorIndex;
+      } else {
+        end = allMessages.indexWhere(
+          (message) => !message.sentAt.isBefore(before.sentAt),
+        );
+        if (end < 0) {
+          end = allMessages.length;
+        }
+      }
+    }
+    final start = (end - limit).clamp(0, end);
+    return ChatMessagePage(
+      messages: List.unmodifiable(allMessages.sublist(start, end)),
+      hasMore: start > 0,
+    );
+  }
+
+  @override
+  Stream<ChatRealtimeEvent> watchConversation(String conversationId) async* {
+    _requireConversation(conversationId);
+    yield const ChatRealtimeEvent.status(ChatRealtimeStatus.connected);
     final controller = _messageControllers.putIfAbsent(
       conversationId,
-      StreamController<List<ChatMessage>>.broadcast,
+      StreamController<ChatRealtimeEvent>.broadcast,
     );
     yield* controller.stream;
   }
 
   @override
-  Future<void> sendMessage({
+  Future<ChatMessage> sendMessage({
     required String conversationId,
     required String body,
+    required String clientId,
   }) async {
     _requireConversation(conversationId);
     final trimmed = body.trim();
-    if (trimmed.isEmpty || trimmed.length > 1000) {
+    if (trimmed.isEmpty || trimmed.runes.length > 1000) {
       throw StateError('Messages must contain 1 to 1000 characters.');
+    }
+    final existing = _messages[conversationId]?.where(
+      (message) => message.clientId == clientId,
+    );
+    if (existing != null && existing.isNotEmpty) {
+      return existing.first;
     }
 
     final sentAt = DateTime.now();
@@ -142,22 +317,31 @@ class PreviewChatRepository implements ChatRepository {
       body: trimmed,
       type: ChatMessageType.member,
       sentAt: sentAt,
+      clientId: clientId,
     );
     final messages = _messages.putIfAbsent(conversationId, () => []);
     messages.add(message);
-    _messageControllers[conversationId]?.add(List.unmodifiable(messages));
+    _messageControllers[conversationId]?.add(
+      ChatRealtimeEvent.message(message),
+    );
     _updateConversation(
       conversationId,
       lastMessage: trimmed,
       lastMessageAt: sentAt,
       unreadCount: 0,
     );
+    _inboxController.add(null);
+    return message;
   }
 
   @override
-  Future<void> markRead(String conversationId) async {
+  Future<void> markRead({
+    required String conversationId,
+    DateTime? through,
+  }) async {
     _requireConversation(conversationId);
     _updateConversation(conversationId, unreadCount: 0);
+    _inboxController.add(null);
   }
 
   Future<void> createForConfirmedRequest(TripJoinRequest request) async {
@@ -169,6 +353,7 @@ class PreviewChatRepository implements ChatRepository {
         conversation.id,
         memberCount: conversation.memberCount + 1,
       );
+      _inboxController.add(null);
       return;
     }
 
@@ -200,12 +385,14 @@ class PreviewChatRepository implements ChatRepository {
         sentAt: sentAt,
       ),
     ];
+    _inboxController.add(null);
   }
 
   void dispose() {
     for (final controller in _messageControllers.values) {
       controller.close();
     }
+    _inboxController.close();
   }
 
   void _seed(DateTime value) {
@@ -252,6 +439,7 @@ class PreviewChatRepository implements ChatRepository {
         body: 'Yes, any time after 7 works for me.',
         type: ChatMessageType.member,
         sentAt: now.subtract(const Duration(hours: 1)),
+        clientId: 'preview-seeded-user-message',
       ),
       ChatMessage(
         id: 'preview-host-shortlist',

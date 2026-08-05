@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "development",
+  "ENABLE_PREVIEW_AUTH": "true",
+  "REQUIRE_LINKEDIN_VERIFICATION": "false",
+  "SUPABASE_URL": "",
+  "SUPABASE_PUBLISHABLE_KEY": ""
+}

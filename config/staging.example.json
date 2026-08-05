@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "staging",
+  "ENABLE_PREVIEW_AUTH": "false",
+  "REQUIRE_LINKEDIN_VERIFICATION": "true",
+  "SUPABASE_URL": "https://pgzazcnivvkryobekjgi.supabase.co",
+  "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_O7pY_k1xS-MrX0jIw2WTaQ_yT7pk78R"
+}

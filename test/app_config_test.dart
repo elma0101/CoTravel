@@ -41,6 +41,30 @@ void main() {
       expect(config.validate, throwsStateError);
     });
 
+    test('refuses a release build with the development defaults', () {
+      const config = AppConfig(
+        environment: AppEnvironment.development,
+        supabaseUrl: '',
+        supabasePublishableKey: '',
+        requestPreviewAuth: true,
+        requireLinkedInVerification: false,
+      );
+
+      expect(() => config.validate(isReleaseBuild: true), throwsStateError);
+    });
+
+    test('accepts a release build with a staging configuration', () {
+      const config = AppConfig(
+        environment: AppEnvironment.staging,
+        supabaseUrl: 'https://example.supabase.co',
+        supabasePublishableKey: 'publishable-key',
+        requestPreviewAuth: false,
+        requireLinkedInVerification: true,
+      );
+
+      expect(() => config.validate(isReleaseBuild: true), returnsNormally);
+    });
+
     test('requires backend configuration in staging', () {
       const config = AppConfig(
         environment: AppEnvironment.staging,

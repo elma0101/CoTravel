@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 enum AppEnvironment { development, staging, production }
 
 class AppConfig {
@@ -57,7 +59,14 @@ class AppConfig {
   bool get previewAuthEnabled =>
       environment == AppEnvironment.development && requestPreviewAuth;
 
-  void validate() {
+  void validate({bool isReleaseBuild = kReleaseMode}) {
+    if (isReleaseBuild && environment == AppEnvironment.development) {
+      throw StateError(
+        'Release builds need a staging or production configuration. Build '
+        'with --dart-define-from-file=config/staging.json.',
+      );
+    }
+
     final hasUrl = supabaseUrl.trim().isNotEmpty;
     final hasKey = supabasePublishableKey.trim().isNotEmpty;
 

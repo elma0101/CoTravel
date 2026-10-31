@@ -60,6 +60,21 @@ The chat completion migration adds:
 - server-returned delivery records for optimistic sending and visible retries
 - monotonic, message-aware read positions for accurate unread counts
 
+The remaining migrations add:
+
+- controlled-beta feedback, the KPI dashboard, and the guarded staging seed
+- PoC timing evidence and append-only validation snapshots
+- route coordinates and stop details for the interactive map
+- fixes for traveler confirmation and chat sending, and explicit API-role
+  permissions that block direct profile writes and operator-only functions
+
+Run the database tests with Docker available:
+
+```bash
+supabase db start
+supabase test db
+```
+
 ## 2. Configure authentication
 
 In Authentication settings:

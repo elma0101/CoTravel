@@ -6,7 +6,7 @@ Row Level Security and security-definer RPC validation are authoritative.
 
 | Resource | Read boundary | Mutation boundary | Automated control |
 | --- | --- | --- | --- |
-| Profiles | Authenticated users can read completed profiles unless either account blocked the other; users always see themselves | Owner only | Profile RLS policies |
+| Profiles | Authenticated users can read completed profiles unless either account blocked the other; users always see themselves | Only through `complete_profile` and `sync_my_linkedin_verification`; no direct writes | No authenticated write grants |
 | Trips and stops | Published trips are discoverable unless either account blocked the host; hosts see their own trips | Verified, onboarded host through `create_trip` | Trip/stops RLS and validated RPC |
 | Join requests | Requesting traveler and relevant host only | Explicit state RPCs; confirmation locks the trip row before taking a seat | Request RLS, uniqueness index, transaction locks, block trigger |
 | Conversations | Confirmed conversation members only | Members through validated message/read RPCs | Membership helper, RLS, confirmation trigger |
@@ -18,7 +18,10 @@ Row Level Security and security-definer RPC validation are authoritative.
 
 ## Abuse-case checks
 
-Run these with separate host, traveler, unrelated, and blocked accounts:
+`supabase/tests/database/authorization.test.sql` runs these against real policies
+and RPCs in CI, except concurrent confirmation, which is only tested in sequence.
+Still run them on staging with separate host, traveler, unrelated, and blocked
+accounts:
 
 1. An unrelated account cannot select private requests, conversations,
    messages, logistics, reports, blocks, or analytics rows.

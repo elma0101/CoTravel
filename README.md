@@ -1,8 +1,8 @@
 # CoTravel mobile app
 
 Flutter foundation for the CoTravel peer-to-peer travel platform. The initial
-scaffold targets Android and iOS and follows the approved warm, restrained
-visual direction.
+scaffold targets Android and iOS. `docs/v0-roadmap.md` tracks the plan to
+complete the product specification.
 
 The project is pinned to Flutter 3.44.8 and Dart 3.12.2.
 
@@ -86,6 +86,13 @@ dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
 ```
+
+Database policies and RPCs are tested separately with `supabase test db`, which
+needs Docker. Preview-mode screens can be re-rendered to `docs/baseline-screens`
+with `FLUTTER_ROOT=<sdk> flutter test tool/capture_screens.dart`.
+
+Release builds refuse to start with the development defaults, so always pass
+`--dart-define-from-file` with a staging or production configuration.
 
 Supabase restores existing sessions when configured, while local development
 can use the clearly labelled preview session. Backend activation steps are in

@@ -26,7 +26,7 @@ does not mean the milestone meets the specification; see the completion plan.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 1 | Foundation: toolchain, baseline screens, source documents, release guard, database tests | Complete |
-| 2 | Core flow: in-app notifications, trip editing and cancellation, leaving a trip, cancellation windows, hiding past trips, profile editing | Implemented; push notifications need Firebase credentials |
+| 2 | Core flow: in-app notifications, trip editing and cancellation, leaving a trip, cancellation windows, hiding past trips, profile editing | Implemented; Android push is built but not yet tested on a device, and iOS push needs a paid Apple account |
 | 3 | Trust and legal: occupation, structured join details, host filters and tags, terms, consent, account deletion | Not started |
 | 4 | Match the mockups: shared design pieces, then Explore, Trip details, Create trip, and Join request | Not started |
 | 5 | Discovery and logistics: map view, place search with coordinates, pre-filled booking links, saved trips | Not started |

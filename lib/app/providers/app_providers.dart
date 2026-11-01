@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,7 +17,9 @@ import '../../features/logistics/data/logistics_repository.dart';
 import '../../features/messages/application/chat_controller.dart';
 import '../../features/messages/data/chat_repository.dart';
 import '../../features/notifications/application/notification_controller.dart';
+import '../../features/notifications/application/push_controller.dart';
 import '../../features/notifications/data/notification_repository.dart';
+import '../../features/notifications/data/push_messaging.dart';
 import '../../features/safety/application/safety_controller.dart';
 import '../../features/safety/data/safety_repository.dart';
 import '../../features/trips/application/trip_catalog_controller.dart';
@@ -201,6 +204,32 @@ final joinRequestControllerProvider = Provider<JoinRequestController>((ref) {
   );
 
   unawaited(controller.load());
+  ref.onDispose(controller.dispose);
+  return controller;
+});
+
+// Push is Android only for now. iOS needs an APNs key from a paid Apple account.
+final pushMessagingProvider = Provider<PushMessaging>((ref) {
+  final hasBackend = ref.watch(supabaseClientProvider) != null;
+  return hasBackend && defaultTargetPlatform == TargetPlatform.android
+      ? FirebasePushMessaging()
+      : const NoopPushMessaging();
+});
+
+final pushTokenRepositoryProvider = Provider<PushTokenRepository>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return client == null
+      ? const NoopPushTokenRepository()
+      : SupabasePushTokenRepository(client);
+});
+
+final pushControllerProvider = Provider<PushController>((ref) {
+  final controller = PushController(
+    authState: ref.watch(appAuthStateProvider),
+    messaging: ref.watch(pushMessagingProvider),
+    tokens: ref.watch(pushTokenRepositoryProvider),
+  );
+  unawaited(controller.start());
   ref.onDispose(controller.dispose);
   return controller;
 });

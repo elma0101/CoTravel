@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +15,7 @@ import '../../features/join_requests/presentation/trip_requests_screen.dart';
 import '../../features/logistics/presentation/trip_logistics_screen.dart';
 import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/messages/presentation/conversation_screen.dart';
+import '../../features/notifications/domain/app_notification.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/profile_onboarding_screen.dart';
@@ -47,6 +50,16 @@ abstract final class AppRoutes {
   static String tripLogistics(String tripId) => '/trip/$tripId/logistics';
   static String conversation(String conversationId) =>
       '/conversation/$conversationId';
+
+  /// Where a notification leads, or null when it has no related trip.
+  static String? notificationTarget(NotificationKind kind, String? tripId) {
+    if (tripId == null) {
+      return null;
+    }
+    return kind == NotificationKind.joinRequestReceived
+        ? tripRequests(tripId)
+        : tripDetails(tripId);
+  }
 
   static String memberProfile(
     String userId, {
@@ -260,6 +273,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  ref.watch(pushControllerProvider).attach((open) {
+    final notificationId = open.notificationId;
+    if (notificationId != null) {
+      unawaited(
+        ref.read(notificationControllerProvider).markReadById(notificationId),
+      );
+    }
+    final kind = NotificationKind.fromStorage(open.kind);
+    final target = kind == null
+        ? null
+        : AppRoutes.notificationTarget(kind, open.tripId);
+    router.push(target ?? AppRoutes.notifications);
+  });
 
   ref.onDispose(router.dispose);
   ref.onDispose(sessionStatus.dispose);

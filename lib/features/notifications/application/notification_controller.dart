@@ -56,6 +56,16 @@ class NotificationController extends ChangeNotifier {
     }
   }
 
+  // A tapped push can arrive before the inbox has loaded this notification.
+  Future<void> markReadById(String notificationId) async {
+    try {
+      await _repository.markRead(notificationId);
+    } on Object {
+      return;
+    }
+    await load();
+  }
+
   Future<void> markAllRead() async {
     final previous = _notifications;
     _notifications = _notifications

@@ -67,8 +67,20 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     ref.read(tripCatalogProvider).clearFilter();
   }
 
+  Future<void> _pickDates() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(now.year + 2),
+      initialDateRange: _dateRange,
+    );
+    if (picked != null && mounted) {
+      setState(() => _dateRange = picked);
+    }
+  }
+
   Future<void> _openFilters() async {
-    var nextRange = _dateRange;
     var nextStyle = _travelStyle;
     var nextVerified = _verifiedOnly;
 
@@ -96,27 +108,13 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        final now = DateTime.now();
-                        final picked = await showDateRangePicker(
-                          context: context,
-                          firstDate: DateTime(now.year, now.month, now.day),
-                          lastDate: DateTime(now.year + 2),
-                          initialDateRange: nextRange,
-                        );
-                        if (picked != null) {
-                          setSheetState(() => nextRange = picked);
-                        }
-                      },
-                      icon: const Icon(Icons.date_range_outlined),
-                      label: Text(
-                        nextRange == null
-                            ? 'Choose travel dates'
-                            : formatTripDateRange(
-                                nextRange!.start,
-                                nextRange!.end,
-                              ),
+                    TextField(
+                      key: const ValueKey('explore-origin'),
+                      controller: _originController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        hintText: 'Leaving from',
+                        prefixIcon: Icon(Icons.trip_origin_rounded),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -170,7 +168,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
     if (shouldApply == true && mounted) {
       setState(() {
-        _dateRange = nextRange;
         _travelStyle = nextStyle;
         _verifiedOnly = nextVerified;
       });
@@ -198,16 +195,17 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               ),
               children: [
                 const _BrandHeader(),
-                const SizedBox(height: AppSpacing.xl),
-                const _HeroCopy(),
                 const SizedBox(height: AppSpacing.lg),
+                const _HeroCopy(),
+                const SizedBox(height: AppSpacing.md),
                 _TripSearch(
-                  originController: _originController,
                   destinationController: _destinationController,
+                  dateRange: _dateRange,
                   hasAdvancedFilters:
-                      _dateRange != null ||
+                      _originController.text.trim().isNotEmpty ||
                       _travelStyle != null ||
                       _verifiedOnly,
+                  onPickDates: _pickDates,
                   onSearch: _applyFilters,
                   onFilters: _openFilters,
                 ),
@@ -307,96 +305,136 @@ class _HeroCopy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Find your people,\nthen go.',
-          style: Theme.of(context).textTheme.displaySmall,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Browse clear plans from travelers who value a good fit.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
-        ),
-      ],
+    return Text(
+      'Find your people, then go.',
+      style: Theme.of(context).textTheme.headlineMedium,
     );
   }
 }
 
 class _TripSearch extends StatelessWidget {
   const _TripSearch({
-    required this.originController,
     required this.destinationController,
+    required this.dateRange,
     required this.hasAdvancedFilters,
+    required this.onPickDates,
     required this.onSearch,
     required this.onFilters,
   });
 
-  final TextEditingController originController;
   final TextEditingController destinationController;
+  final DateTimeRange? dateRange;
   final bool hasAdvancedFilters;
+  final VoidCallback onPickDates;
   final VoidCallback onSearch;
   final VoidCallback onFilters;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          TextField(
-            key: const ValueKey('explore-origin'),
-            controller: originController,
-            textCapitalization: TextCapitalization.words,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              hintText: 'Leaving from',
-              prefixIcon: Icon(Icons.trip_origin_rounded),
-            ),
+    final range = dateRange;
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          TextField(
-            key: const ValueKey('explore-destination'),
-            controller: destinationController,
-            textCapitalization: TextCapitalization.words,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => onSearch(),
-            decoration: const InputDecoration(
-              hintText: 'Where to?',
-              prefixIcon: Icon(Icons.location_on_outlined),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
+          child: Column(
             children: [
-              IconButton.outlined(
-                onPressed: onFilters,
-                tooltip: 'More filters',
-                icon: Badge(
-                  isLabelVisible: hasAdvancedFilters,
-                  child: const Icon(Icons.tune_rounded),
+              TextField(
+                key: const ValueKey('explore-destination'),
+                controller: destinationController,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => onSearch(),
+                decoration: const InputDecoration(
+                  labelText: 'Destination',
+                  hintText: 'Anywhere',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  prefixIcon: Icon(Icons.location_on_outlined),
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onSearch,
-                  icon: const Icon(Icons.search_rounded),
-                  label: const Text('Find trips'),
+              const Divider(indent: AppSpacing.md, endIndent: AppSpacing.md),
+              InkWell(
+                key: const ValueKey('explore-dates'),
+                onTap: onPickDates,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    0,
+                    AppSpacing.sm,
+                    AppSpacing.sm,
+                    AppSpacing.sm,
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 48,
+                        child: Icon(
+                          Icons.calendar_today_outlined,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Dates',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: AppColors.muted,
+                              ),
+                            ),
+                            Text(
+                              range == null
+                                  ? 'Any dates'
+                                  : formatTripDateRange(range.start, range.end),
+                              style: textTheme.bodyLarge,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.muted,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            IconButton.outlined(
+              onPressed: onFilters,
+              tooltip: 'More filters',
+              icon: Badge(
+                isLabelVisible: hasAdvancedFilters,
+                child: const Icon(Icons.tune_rounded),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onSearch,
+                child: const Text('Search open trips'),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -419,11 +457,18 @@ class _SectionHeading extends StatelessWidget {
         Expanded(
           child: Text(
             hasFilter ? '$resultCount matching trips' : 'Open trips',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
         if (hasFilter)
-          TextButton(onPressed: onClear, child: const Text('Clear')),
+          TextButton(onPressed: onClear, child: const Text('Clear'))
+        else
+          Text(
+            'Soonest first',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
+          ),
       ],
     );
   }

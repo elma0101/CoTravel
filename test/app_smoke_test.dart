@@ -28,7 +28,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CoTravel'), findsOneWidget);
-    expect(find.text('Find your people,\nthen go.'), findsOneWidget);
+    expect(find.text('Find your people, then go.'), findsOneWidget);
     expect(find.text('Explore'), findsOneWidget);
   });
 
@@ -53,7 +53,7 @@ void main() {
       find.byKey(const ValueKey('explore-destination')),
       'Essaouira',
     );
-    await tester.tap(find.text('Find trips'));
+    await tester.tap(find.text('Search open trips'));
     await tester.pumpAndSettle();
 
     expect(find.text('1 matching trips'), findsOneWidget);
@@ -67,7 +67,14 @@ void main() {
 
     expect(find.text('Trip details'), findsOneWidget);
     expect(find.text('Route'), findsOneWidget);
-    expect(find.text('Rabat to Essaouira'), findsOneWidget);
+    expect(find.text('Essaouira'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Estimated cost per traveler'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Accommodation'), findsOneWidget);
+    expect(find.text('Shared transport'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('host-actions-host-youssef')),
       360,
@@ -99,7 +106,7 @@ void main() {
       find.byKey(const ValueKey('explore-destination')),
       'Imlil',
     );
-    await tester.tap(find.text('Find trips'));
+    await tester.tap(find.text('Search open trips'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Atlas villages weekend'),
@@ -115,16 +122,12 @@ void main() {
     );
     await tester.drag(find.byType(ListView), const Offset(0, -140));
     await tester.pumpAndSettle();
+    expect(find.text('2 of 5 confirmed'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('confirm-trip-place')));
     await tester.pumpAndSettle();
 
     expect(find.text('Your place is confirmed'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('2 places left'),
-      -320,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('2 places left'), findsOneWidget);
+    expect(find.text('3 of 5 confirmed'), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
@@ -184,7 +187,7 @@ void main() {
       find.byKey(const ValueKey('explore-destination')),
       'Boumalne',
     );
-    await tester.tap(find.text('Find trips'));
+    await tester.tap(find.text('Search open trips'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Dades slow road'),
@@ -256,7 +259,7 @@ void main() {
       find.byKey(const ValueKey('explore-destination')),
       'Boumalne',
     );
-    await tester.tap(find.text('Find trips'));
+    await tester.tap(find.text('Search open trips'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Dades slow road'),
@@ -343,15 +346,19 @@ void main() {
     addTearDown(authState.dispose);
 
     await _pumpApp(tester, authState);
+    await tester.tap(find.byTooltip('More filters'));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('explore-origin')),
       'Tangier',
     );
+    await tester.tap(find.text('Apply filters'));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('explore-destination')),
       'Tetouan',
     );
-    await tester.tap(find.text('Find trips'));
+    await tester.tap(find.text('Search open trips'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Northern colors'),
@@ -460,15 +467,19 @@ void main() {
     addTearDown(authState.dispose);
 
     await _pumpApp(tester, authState);
+    await tester.tap(find.byTooltip('More filters'));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('explore-origin')),
       'Tangier',
     );
+    await tester.tap(find.text('Apply filters'));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('explore-destination')),
       'Tetouan',
     );
-    await tester.tap(find.text('Find trips'));
+    await tester.tap(find.text('Search open trips'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Northern colors'),
@@ -603,7 +614,7 @@ void main() {
     await tester.tap(find.text('Complete profile'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Find your people,\nthen go.'), findsOneWidget);
+    expect(find.text('Find your people, then go.'), findsOneWidget);
   });
 
   testWidgets('returns to welcome after signing out', (tester) async {
@@ -668,6 +679,9 @@ Future<void> _pumpApp(
   AppAuthState authState, {
   ProductAnalytics? analytics,
 }) async {
+  tester.view.physicalSize = const Size(800, 1400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
   const config = AppConfig(
     environment: AppEnvironment.development,
     supabaseUrl: '',

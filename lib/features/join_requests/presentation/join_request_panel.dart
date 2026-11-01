@@ -166,35 +166,9 @@ class JoinRequestPanel extends ConsumerWidget {
         }
 
         final request = controller.requestForTrip(trip.id);
+        // A visitor's only action lives in JoinRequestBar.
         if (request == null) {
-          return _PanelShell(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Interested in this trip?',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Introduce yourself to ${trip.hostName}. Your profile and note will be reviewed before anything is confirmed.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                FilledButton(
-                  key: const ValueKey('request-to-join'),
-                  onPressed: trip.openSeats == 0
-                      ? null
-                      : () => _composeRequest(context, ref),
-                  child: Text(
-                    trip.openSeats == 0 ? 'Trip is full' : 'Request to join',
-                  ),
-                ),
-              ],
-            ),
-          );
+          return const SizedBox.shrink();
         }
 
         return _RequestStatusCard(
@@ -220,26 +194,6 @@ class JoinRequestPanel extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Future<void> _composeRequest(BuildContext context, WidgetRef ref) async {
-    final requestController = ref.read(joinRequestControllerProvider);
-
-    final submitted = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => _JoinRequestComposer(
-        trip: trip,
-        requestController: requestController,
-      ),
-    );
-
-    if (submitted == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request sent to the host.')),
-      );
-    }
   }
 
   Future<void> _runAction(
@@ -268,6 +222,104 @@ class JoinRequestPanel extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+/// The mockup's fixed footer: group size for everyone, and the join action for
+/// a visitor who has not asked yet.
+class JoinRequestBar extends ConsumerWidget {
+  const JoinRequestBar({required this.trip, super.key});
+
+  final Trip trip;
+
+  Future<void> _composeRequest(BuildContext context, WidgetRef ref) async {
+    final requestController = ref.read(joinRequestControllerProvider);
+
+    final submitted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => _JoinRequestComposer(
+        trip: trip,
+        requestController: requestController,
+      ),
+    );
+
+    if (submitted == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request sent to the host.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(joinRequestControllerProvider);
+    final userId = ref.watch(appAuthStateProvider).profile?.id;
+
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, child) {
+        final canRequest =
+            !controller.isLoading &&
+            !trip.isCancelled &&
+            trip.hostId != userId &&
+            controller.requestForTrip(trip.id) == null;
+        return DecoratedBox(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            border: Border(top: BorderSide(color: AppColors.border)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.sm,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Group',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.muted),
+                        ),
+                      ),
+                      Text(
+                        '${trip.participantCount} of ${trip.capacity} confirmed',
+                        key: const ValueKey('trip-group-count'),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  if (canRequest) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    ElevatedButton(
+                      key: const ValueKey('request-to-join'),
+                      onPressed: trip.openSeats == 0
+                          ? null
+                          : () => _composeRequest(context, ref),
+                      child: Text(
+                        trip.openSeats == 0
+                            ? 'Trip is full'
+                            : 'Request to join',
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

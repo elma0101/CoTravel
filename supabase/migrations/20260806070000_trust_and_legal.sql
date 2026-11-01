@@ -242,6 +242,14 @@ left join public.profiles as reporter on reporter.id = report.reporter_id
 left join public.profiles as subject on subject.id = report.subject_user_id
 left join public.trips as trip on trip.id = report.trip_id;
 
+-- A deleted member's messages stay in the group without a sender.
+alter table public.chat_messages
+  drop constraint chat_messages_sender_valid,
+  add constraint chat_messages_sender_valid check (
+    (message_type = 'system' and sender_id is null)
+    or message_type = 'member'
+  );
+
 -- Deleting a hosted trip would strand its group, so hosts cancel those first.
 -- Other trips the host created go with the account through the foreign keys.
 create or replace function public.delete_my_account()

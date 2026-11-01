@@ -37,7 +37,7 @@ set display_name = 'Traveler B',
 where id = '00000000-0000-4000-8000-0000000000b2';
 
 insert into public.trips (
-  id, host_id, title, origin_city, start_date, end_date, capacity,
+  id, host_id, title, origin_city, destination_city, start_date, end_date, capacity,
   confirmed_traveler_count, lodging_total, transport_total, currency,
   travel_style, summary
 )
@@ -46,6 +46,7 @@ values (
   '00000000-0000-4000-8000-0000000000b1',
   'Atlas loop',
   'Rabat',
+  'Merzouga',
   current_date + 30,
   current_date + 33,
   4,
@@ -57,7 +58,7 @@ values (
   'A summary that is long enough for the constraint.'
 );
 
-insert into public.trip_join_requests (id, trip_id, traveler_id, introduction, status)
+insert into public.trip_join_requests (id, trip_id, traveler_id, message, status)
 values (
   '00000000-0000-4000-8000-0000000000d1',
   '00000000-0000-4000-8000-0000000000c1',

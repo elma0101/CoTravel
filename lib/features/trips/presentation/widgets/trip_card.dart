@@ -4,6 +4,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../domain/trip.dart';
 import '../trip_formatters.dart';
+import 'mountain_illustration.dart';
 import 'trip_cover_images.dart';
 import 'trip_photo_attribution.dart';
 
@@ -33,48 +34,27 @@ class TripCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          trip.title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      _HostBadge(verified: trip.hostVerified),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '${trip.originCity} to ${trip.destinationCity}',
+                    trip.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    trip.routeSummary,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    '${formatTripDateRange(trip.startDate, trip.endDate)} · '
+                    '${trip.capacity} travelers max',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  Wrap(
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      _TripFact(
-                        icon: Icons.calendar_today_outlined,
-                        label: formatTripDate(trip.startDate),
-                      ),
-                      _TripFact(
-                        icon: Icons.event_seat_outlined,
-                        label: trip.isCancelled
-                            ? 'Cancelled'
-                            : '${trip.openSeats} ${trip.openSeats == 1 ? 'seat' : 'seats'}',
-                      ),
-                      _TripFact(
-                        icon: Icons.payments_outlined,
-                        label:
-                            '${formatTripMoney(trip.estimatedFullGroupShare, trip.currency)} each',
-                      ),
-                    ],
-                  ),
+                  _HostAndPrice(trip: trip),
                 ],
               ),
             ),
@@ -94,7 +74,16 @@ class _TripCover extends StatelessWidget {
   Widget build(BuildContext context) {
     final photo = TripCoverImages.forTrip(trip);
     if (photo == null) {
-      return _RouteBanner(trip: trip);
+      return Stack(
+        children: [
+          const MountainIllustration(),
+          Positioned(
+            top: AppSpacing.sm,
+            left: AppSpacing.sm,
+            child: _SeatsLabel(trip: trip),
+          ),
+        ],
+      );
     }
 
     return Semantics(
@@ -113,7 +102,7 @@ class _TripCover extends StatelessWidget {
               cacheWidth: 1280,
               excludeFromSemantics: true,
               errorBuilder: (context, error, stackTrace) =>
-                  _RouteBanner(trip: trip),
+                  const MountainIllustration(),
             ),
             const DecoratedBox(
               decoration: BoxDecoration(
@@ -128,7 +117,7 @@ class _TripCover extends StatelessWidget {
             Positioned(
               top: AppSpacing.sm,
               left: AppSpacing.sm,
-              child: _ImageLabel(label: trip.travelStyle.toUpperCase()),
+              child: _SeatsLabel(trip: trip),
             ),
             Positioned(
               top: AppSpacing.xs,
@@ -170,134 +159,97 @@ class _TripCover extends StatelessWidget {
   }
 }
 
-class _ImageLabel extends StatelessWidget {
-  const _ImageLabel({required this.label});
+class _SeatsLabel extends StatelessWidget {
+  const _SeatsLabel({required this.trip});
 
-  final String label;
+  final Trip trip;
+
+  String get _label {
+    if (trip.isCancelled) {
+      return 'Cancelled';
+    }
+    return switch (trip.openSeats) {
+      0 => 'Full',
+      1 => '1 seat left',
+      final seats => '$seats seats left',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
+        vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.58),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        label,
+        _label,
         style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.05,
+          color: AppColors.ink,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 }
 
-class _RouteBanner extends StatelessWidget {
-  const _RouteBanner({required this.trip});
+class _HostAndPrice extends StatelessWidget {
+  const _HostAndPrice({required this.trip});
 
   final Trip trip;
 
+  String get _initials {
+    final parts = trip.hostName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2);
+    return parts.map((part) => part[0].toUpperCase()).join();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 112,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      color: AppColors.greenSoft,
-      child: Stack(
-        children: [
-          Positioned(
-            right: -16,
-            top: -28,
-            child: Container(
-              width: 104,
-              height: 104,
-              decoration: const BoxDecoration(
-                color: AppColors.terracottaSoft,
-                shape: BoxShape.circle,
-              ),
-            ),
+    final textTheme = Theme.of(context).textTheme;
+    final muted = textTheme.bodySmall?.copyWith(color: AppColors.muted);
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 18,
+          backgroundColor: AppColors.terracottaSoft,
+          child: Text(
+            _initials,
+            style: textTheme.labelMedium?.copyWith(color: AppColors.ink),
           ),
-          Column(
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text(trip.hostName, style: textTheme.titleSmall),
               Text(
-                trip.travelStyle.toUpperCase(),
-                style: const TextStyle(
-                  color: AppColors.green,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.1,
-                ),
-              ),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.trip_origin_rounded,
-                    color: AppColors.green,
-                    size: 16,
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 2,
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.xs,
-                      ),
-                      color: AppColors.green,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.location_on_rounded,
-                    color: AppColors.terracotta,
-                    size: 23,
-                  ),
-                ],
+                trip.hostVerified ? 'LinkedIn verified' : 'Not verified yet',
+                style: muted,
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HostBadge extends StatelessWidget {
-  const _HostBadge({required this.verified});
-
-  final bool verified;
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(
-      verified ? Icons.verified_rounded : Icons.person_outline_rounded,
-      color: verified ? AppColors.green : AppColors.muted,
-      size: 20,
-      semanticLabel: verified ? 'Verified host' : 'Host',
-    );
-  }
-}
-
-class _TripFact extends StatelessWidget {
-  const _TripFact({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: AppColors.green),
-        const SizedBox(width: AppSpacing.xxs),
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              formatTripMoney(trip.estimatedFullGroupShare, trip.currency),
+              style: textTheme.titleSmall,
+            ),
+            Text('estimated', style: muted),
+          ],
+        ),
       ],
     );
   }

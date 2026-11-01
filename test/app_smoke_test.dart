@@ -529,35 +529,22 @@ void main() {
       find.byKey(const ValueKey('trip-stop-city-0')),
       'Erg Chigaga',
     );
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('trip-lodging')),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.tap(find.byKey(const ValueKey('trip-continue')));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const ValueKey('trip-lodging')), '3200');
     await tester.enterText(find.byKey(const ValueKey('trip-transport')), '800');
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('trip-summary')),
-      320,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.tap(find.byKey(const ValueKey('trip-continue')));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('trip-summary')),
       'Two quiet nights focused on desert landscapes and clear skies.',
     );
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('publish-trip')),
-      280,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.drag(find.byType(ListView), const Offset(0, -120));
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('publish-trip')));
     await tester.pumpAndSettle();
 
     expect(find.text('My trips'), findsWidgets);
     expect(find.text('Desert night skies'), findsOneWidget);
-    expect(find.text('Ouarzazate to Erg Chigaga'), findsOneWidget);
+    expect(find.text('Ouarzazate → Erg Chigaga'), findsOneWidget);
     expect(analytics.events.last.event, ProductEvent.tripPublished);
   });
 

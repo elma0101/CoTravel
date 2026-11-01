@@ -198,6 +198,11 @@ class Trip {
   final String summary;
   final TripStatus status;
 
+  String get routeSummary {
+    final places = [originCity, for (final stop in stops) stop.city];
+    return places.join(' → ');
+  }
+
   bool get isCancelled => status == TripStatus.cancelled;
   DateTime get freeCancellationUntil =>
       startDate.subtract(const Duration(days: freeCancellationDays));

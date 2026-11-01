@@ -12,6 +12,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/analytics/product_analytics.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../application/trip_catalog_controller.dart';
 import '../domain/trip.dart';
 import 'trip_formatters.dart';
 
@@ -36,6 +37,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   ];
   static const _currencies = ['MAD', 'EUR', 'USD'];
 
+  int _step = 0;
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _originController = TextEditingController();
@@ -233,6 +235,258 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     return (lodging + transport) / _capacity;
   }
 
+  List<Widget> _routeFields() {
+    return [
+      TextFormField(
+        key: const ValueKey('trip-title'),
+        controller: _titleController,
+        textCapitalization: TextCapitalization.sentences,
+        maxLength: 80,
+        decoration: const InputDecoration(
+          labelText: 'Trip title',
+          hintText: 'Atlas villages weekend',
+        ),
+        validator: (value) {
+          final length = value?.trim().length ?? 0;
+          return length < 4 ? 'Use at least 4 characters' : null;
+        },
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      TextFormField(
+        key: const ValueKey('trip-origin'),
+        controller: _originController,
+        textCapitalization: TextCapitalization.words,
+        decoration: const InputDecoration(
+          labelText: 'Leaving from',
+          prefixIcon: Icon(Icons.trip_origin_rounded),
+        ),
+        validator: (value) =>
+            (value?.trim().length ?? 0) < 2 ? 'Add a departure city' : null,
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      OutlinedButton.icon(
+        key: const ValueKey('trip-date-range'),
+        onPressed: _chooseTripDates,
+        icon: const Icon(Icons.date_range_outlined),
+        label: Text(formatTripDateRange(_dateRange.start, _dateRange.end)),
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Route',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          Text(
+            '${_stops.length}/8 stops',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      for (var index = 0; index < _stops.length; index++) ...[
+        _StopEditor(
+          key: ValueKey('trip-stop-$index'),
+          index: index,
+          fields: _stops[index],
+          canRemove: _stops.length > 1,
+          onChooseDate: () => _chooseStopDate(index),
+          onRemove: () => _removeStop(index),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+      ],
+      OutlinedButton.icon(
+        onPressed: _stops.length == 8 ? null : _addStop,
+        icon: const Icon(Icons.add_location_alt_outlined),
+        label: const Text('Add another stop'),
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      DropdownButtonFormField<int>(
+        key: const ValueKey('trip-capacity'),
+        initialValue: _capacity,
+        decoration: const InputDecoration(
+          labelText: 'Total group size',
+          prefixIcon: Icon(Icons.group_outlined),
+        ),
+        items: [
+          for (var count = _minimumCapacity; count <= 12; count++)
+            DropdownMenuItem(value: count, child: Text('$count people')),
+        ],
+        onChanged: (value) {
+          if (value != null) {
+            setState(() => _capacity = value);
+          }
+        },
+      ),
+    ];
+  }
+
+  List<Widget> _budgetFields() {
+    return [
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: TextFormField(
+              key: const ValueKey('trip-lodging'),
+              controller: _lodgingController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+              ],
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(labelText: 'Lodging total'),
+              validator: _validateCost,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: TextFormField(
+              key: const ValueKey('trip-transport'),
+              controller: _transportController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+              ],
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(labelText: 'Transport total'),
+              validator: _validateCost,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      DropdownButtonFormField<String>(
+        initialValue: _currency,
+        decoration: const InputDecoration(labelText: 'Currency'),
+        items: {..._currencies, _currency}
+            .map(
+              (currency) =>
+                  DropdownMenuItem(value: currency, child: Text(currency)),
+            )
+            .toList(),
+        onChanged: (value) {
+          if (value != null) {
+            setState(() => _currency = value);
+          }
+        },
+      ),
+      const SizedBox(height: AppSpacing.md),
+      _CostPreview(
+        capacity: _capacity,
+        estimatedShare: _estimatedShare,
+        currency: _currency,
+      ),
+    ];
+  }
+
+  List<Widget> _detailFields() {
+    return [
+      Text('Travel style', style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: AppSpacing.xs),
+      Wrap(
+        spacing: AppSpacing.xs,
+        runSpacing: AppSpacing.xs,
+        children: {..._travelStyles, _travelStyle}
+            .map(
+              (style) => ChoiceChip(
+                label: Text(style),
+                selected: _travelStyle == style,
+                onSelected: (_) {
+                  setState(() => _travelStyle = style);
+                },
+              ),
+            )
+            .toList(),
+      ),
+      const SizedBox(height: AppSpacing.lg),
+      TextFormField(
+        key: const ValueKey('trip-summary'),
+        controller: _summaryController,
+        minLines: 4,
+        maxLines: 7,
+        maxLength: 600,
+        textCapitalization: TextCapitalization.sentences,
+        decoration: const InputDecoration(
+          labelText: 'What should travelers expect?',
+          hintText:
+              'Describe the pace, activities, and the kind of group you hope to form.',
+        ),
+        validator: (value) => (value?.trim().length ?? 0) < 20
+            ? 'Write at least 20 characters'
+            : null,
+      ),
+    ];
+  }
+
+  Widget _publishButton(TripCatalogController catalog) {
+    return FilledButton.icon(
+      key: const ValueKey('publish-trip'),
+      onPressed: catalog.isPublishing ? null : _publish,
+      icon: catalog.isPublishing
+          ? const SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.public_rounded),
+      label: Text(
+        catalog.isPublishing
+            ? 'Saving…'
+            : _isEditing
+            ? 'Save changes'
+            : 'Publish trip',
+      ),
+    );
+  }
+
+  static const _stepTitles = [
+    (
+      'Start with the route.',
+      'You can adjust costs and traveler preferences later.',
+    ),
+    ('Estimate the budget.', 'Totals are split equally across the full group.'),
+    ('Set the expectations.', 'Help the right travelers recognize this trip.'),
+  ];
+
+  void _continue() {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _step++);
+    }
+  }
+
+  void _back() => setState(() => _step--);
+
+  Widget _bottomAction(TripCatalogController catalog) {
+    final Widget action = _isEditing || _step == 2
+        ? _publishButton(catalog)
+        : FilledButton(
+            key: const ValueKey('trip-continue'),
+            onPressed: _continue,
+            child: Text(
+              _step == 0 ? 'Continue to budget' : 'Continue to details',
+            ),
+          );
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        child: action,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final catalog = ref.watch(tripCatalogProvider);
@@ -251,241 +505,79 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     return ListenableBuilder(
       listenable: catalog,
       builder: (context, child) {
-        return Scaffold(
-          appBar: AppBar(title: Text(_isEditing ? 'Edit trip' : 'Plan a trip')),
-          body: SafeArea(
-            child: Form(
+        return PopScope(
+          canPop: _isEditing || _step == 0,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) {
+              _back();
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(_isEditing ? 'Edit trip' : 'Create a trip'),
+              centerTitle: true,
+              leading: !_isEditing && _step > 0
+                  ? BackButton(onPressed: _back)
+                  : null,
+              actions: [
+                if (!_isEditing)
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.md),
+                    child: Center(child: Text('${_step + 1} of 3')),
+                  ),
+              ],
+              bottom: _isEditing
+                  ? null
+                  : PreferredSize(
+                      preferredSize: const Size.fromHeight(4),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        child: LinearProgressIndicator(
+                          value: (_step + 1) / 3,
+                          backgroundColor: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+            ),
+            bottomNavigationBar: _bottomAction(catalog),
+            body: Form(
               key: _formKey,
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
-                  AppSpacing.sm,
+                  AppSpacing.md,
                   AppSpacing.lg,
-                  96,
+                  AppSpacing.lg,
                 ),
-                children: [
-                  Text(
-                    'A clear plan attracts the right people.',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Share enough detail to make the route, pace, and expected costs easy to understand.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  const _SectionLabel(number: '01', title: 'The idea'),
-                  const SizedBox(height: AppSpacing.md),
-                  TextFormField(
-                    key: const ValueKey('trip-title'),
-                    controller: _titleController,
-                    textCapitalization: TextCapitalization.sentences,
-                    maxLength: 80,
-                    decoration: const InputDecoration(
-                      labelText: 'Trip title',
-                      hintText: 'Atlas villages weekend',
-                    ),
-                    validator: (value) {
-                      final length = value?.trim().length ?? 0;
-                      return length < 4 ? 'Use at least 4 characters' : null;
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TextFormField(
-                    key: const ValueKey('trip-origin'),
-                    controller: _originController,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Leaving from',
-                      prefixIcon: Icon(Icons.trip_origin_rounded),
-                    ),
-                    validator: (value) => (value?.trim().length ?? 0) < 2
-                        ? 'Add a departure city'
-                        : null,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton.icon(
-                    key: const ValueKey('trip-date-range'),
-                    onPressed: _chooseTripDates,
-                    icon: const Icon(Icons.date_range_outlined),
-                    label: Text(
-                      formatTripDateRange(_dateRange.start, _dateRange.end),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  _SectionLabel(
-                    number: '02',
-                    title: 'The route',
-                    trailing: '${_stops.length}/8 stops',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  for (var index = 0; index < _stops.length; index++) ...[
-                    _StopEditor(
-                      key: ValueKey('trip-stop-$index'),
-                      index: index,
-                      fields: _stops[index],
-                      canRemove: _stops.length > 1,
-                      onChooseDate: () => _chooseStopDate(index),
-                      onRemove: () => _removeStop(index),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ],
-                  OutlinedButton.icon(
-                    onPressed: _stops.length == 8 ? null : _addStop,
-                    icon: const Icon(Icons.add_location_alt_outlined),
-                    label: const Text('Add another stop'),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  const _SectionLabel(number: '03', title: 'Group and budget'),
-                  const SizedBox(height: AppSpacing.md),
-                  DropdownButtonFormField<int>(
-                    key: const ValueKey('trip-capacity'),
-                    initialValue: _capacity,
-                    decoration: const InputDecoration(
-                      labelText: 'Total group size',
-                      prefixIcon: Icon(Icons.group_outlined),
-                    ),
-                    items: [
-                      for (var count = _minimumCapacity; count <= 12; count++)
-                        DropdownMenuItem(
-                          value: count,
-                          child: Text('$count people'),
+                children: _isEditing
+                    ? [
+                        ..._routeFields(),
+                        const SizedBox(height: AppSpacing.lg),
+                        ..._budgetFields(),
+                        const SizedBox(height: AppSpacing.lg),
+                        ..._detailFields(),
+                      ]
+                    : [
+                        Text(
+                          _stepTitles[_step].$1,
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _capacity = value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          key: const ValueKey('trip-lodging'),
-                          controller: _lodgingController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}'),
-                            ),
-                          ],
-                          onChanged: (_) => setState(() {}),
-                          decoration: const InputDecoration(
-                            labelText: 'Lodging total',
-                          ),
-                          validator: _validateCost,
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          _stepTitles[_step].$2,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.muted),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: TextFormField(
-                          key: const ValueKey('trip-transport'),
-                          controller: _transportController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d{0,2}'),
-                            ),
-                          ],
-                          onChanged: (_) => setState(() {}),
-                          decoration: const InputDecoration(
-                            labelText: 'Transport total',
-                          ),
-                          validator: _validateCost,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  DropdownButtonFormField<String>(
-                    initialValue: _currency,
-                    decoration: const InputDecoration(labelText: 'Currency'),
-                    items: {..._currencies, _currency}
-                        .map(
-                          (currency) => DropdownMenuItem(
-                            value: currency,
-                            child: Text(currency),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _currency = value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _CostPreview(
-                    capacity: _capacity,
-                    estimatedShare: _estimatedShare,
-                    currency: _currency,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(
-                    'Travel style',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: {..._travelStyles, _travelStyle}
-                        .map(
-                          (style) => ChoiceChip(
-                            label: Text(style),
-                            selected: _travelStyle == style,
-                            onSelected: (_) {
-                              setState(() => _travelStyle = style);
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  TextFormField(
-                    key: const ValueKey('trip-summary'),
-                    controller: _summaryController,
-                    minLines: 4,
-                    maxLines: 7,
-                    maxLength: 600,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      labelText: 'What should travelers expect?',
-                      hintText:
-                          'Describe the pace, activities, and the kind of group you hope to form.',
-                    ),
-                    validator: (value) => (value?.trim().length ?? 0) < 20
-                        ? 'Write at least 20 characters'
-                        : null,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  FilledButton.icon(
-                    key: const ValueKey('publish-trip'),
-                    onPressed: catalog.isPublishing ? null : _publish,
-                    icon: catalog.isPublishing
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.public_rounded),
-                    label: Text(
-                      catalog.isPublishing
-                          ? 'Saving…'
-                          : _isEditing
-                          ? 'Save changes'
-                          : 'Publish trip',
-                    ),
-                  ),
-                ],
+                        const SizedBox(height: AppSpacing.lg),
+                        ...switch (_step) {
+                          0 => _routeFields(),
+                          1 => _budgetFields(),
+                          _ => _detailFields(),
+                        },
+                      ],
               ),
             ),
           ),
@@ -538,53 +630,6 @@ class _StopFields {
   void dispose() {
     cityController.dispose();
     notesController.dispose();
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({
-    required this.number,
-    required this.title,
-    this.trailing,
-  });
-
-  final String number;
-  final String title;
-  final String? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            color: AppColors.greenSoft,
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            number,
-            style: const TextStyle(
-              color: AppColors.green,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-        ),
-        if (trailing != null)
-          Text(
-            trailing!,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
-          ),
-      ],
-    );
   }
 }
 

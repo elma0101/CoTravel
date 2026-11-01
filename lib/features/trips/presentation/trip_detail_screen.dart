@@ -62,12 +62,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
         }
         final catalog = ref.watch(tripCatalogProvider);
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Trip details'),
-            backgroundColor: AppColors.green,
-            foregroundColor: Colors.white,
-            surfaceTintColor: Colors.transparent,
-          ),
+          appBar: AppBar(title: const Text('Trip details')),
           body: ListenableBuilder(
             listenable: catalog,
             builder: (context, child) {

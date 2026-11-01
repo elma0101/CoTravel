@@ -48,3 +48,12 @@ accounts:
 - Government ID verification and automated risk scoring are outside v0.
 - Security-definer functions require migration-owner protection and must never
   be editable by authenticated roles.
+
+## Account switching and deletion
+
+Controllers holding one user's data rebuild when the signed-in user changes
+(`sessionUserIdProvider`). `delete_my_account` refuses while the caller hosts an
+upcoming trip with confirmed travelers, leaves confirmed trips so seats are
+released, removes the sender name from chat messages, and keeps safety reports
+without the account linked. The Play Store also requires a web page for requesting
+deletion, which is still to do before release.

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../legal/domain/legal_documents.dart';
 import '../domain/user_profile.dart';
 
 abstract interface class ProfileRepository {
@@ -15,6 +16,12 @@ abstract interface class ProfileRepository {
   });
 
   Future<bool> syncLinkedInVerification(String userId);
+
+  Future<void> acceptTerms(String version);
+
+  Future<TrustFacts?> fetchTrustFacts(String userId);
+
+  Future<void> deleteAccount(String userId);
 }
 
 class SupabaseProfileRepository implements ProfileRepository {
@@ -70,6 +77,8 @@ class SupabaseProfileRepository implements ProfileRepository {
         'p_travel_styles': draft.travelStyles,
         'p_languages': draft.languages,
         'p_avatar_path': avatarPath,
+        'p_instagram_handle': draft.instagramHandle,
+        'p_occupation': draft.occupation,
       },
     );
 
@@ -84,6 +93,40 @@ class SupabaseProfileRepository implements ProfileRepository {
   Future<bool> syncLinkedInVerification(String userId) async {
     final result = await _client.rpc<bool>('sync_my_linkedin_verification');
     return result;
+  }
+
+  @override
+  Future<void> acceptTerms(String version) async {
+    await _client.rpc('accept_terms', params: {'p_version': version});
+  }
+
+  @override
+  Future<TrustFacts?> fetchTrustFacts(String userId) async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'member_trust_facts',
+      params: {'p_user_id': userId},
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    final row = rows.first as Map<String, dynamic>;
+    return TrustFacts(
+      memberSince: DateTime.parse(row['member_since'] as String).toLocal(),
+      tripsHosted: row['trips_hosted'] as int,
+      tripsJoined: row['trips_joined'] as int,
+    );
+  }
+
+  @override
+  Future<void> deleteAccount(String userId) async {
+    // The database cannot remove storage files, and the policy that lets a user
+    // remove their own photo needs the session that deletion ends.
+    final bucket = _client.storage.from('avatars');
+    final files = await bucket.list(path: userId);
+    if (files.isNotEmpty) {
+      await bucket.remove([for (final file in files) '$userId/${file.name}']);
+    }
+    await _client.rpc('delete_my_account');
   }
 
   UserProfile _fromMap(Map<String, dynamic> data) {
@@ -103,6 +146,9 @@ class SupabaseProfileRepository implements ProfileRepository {
       languages: List<String>.from(data['languages'] as List? ?? const []),
       isLinkedInVerified: data['linkedin_verified_at'] != null,
       isOnboardingComplete: data['onboarding_completed_at'] != null,
+      instagramHandle: data['instagram_handle'] as String?,
+      occupation: data['occupation'] as String?,
+      acceptedTermsVersion: data['terms_version'] as String?,
     );
   }
 
@@ -196,6 +242,9 @@ class PreviewProfileRepository implements ProfileRepository {
       languages: draft.languages,
       isLinkedInVerified: true,
       isOnboardingComplete: true,
+      instagramHandle: _emptyToNull(draft.instagramHandle.replaceAll('@', '')),
+      occupation: _emptyToNull(draft.occupation),
+      acceptedTermsVersion: _acceptedTermsVersion ?? currentTermsVersion,
     );
     _profiles[userId] = profile;
     return profile;
@@ -203,4 +252,27 @@ class PreviewProfileRepository implements ProfileRepository {
 
   @override
   Future<bool> syncLinkedInVerification(String userId) async => true;
+
+  @override
+  Future<void> acceptTerms(String version) async {
+    _acceptedTermsVersion = version;
+  }
+
+  @override
+  Future<TrustFacts?> fetchTrustFacts(String userId) async {
+    return TrustFacts(
+      memberSince: DateTime(2025, 3),
+      tripsHosted: userId == 'host-amina' ? 4 : 1,
+      tripsJoined: 2,
+    );
+  }
+
+  @override
+  Future<void> deleteAccount(String userId) async {
+    _profiles.remove(userId);
+  }
+
+  String? _acceptedTermsVersion;
+
+  String? _emptyToNull(String value) => value.isEmpty ? null : value;
 }

@@ -599,7 +599,20 @@ void main() {
       find.widgetWithText(TextFormField, 'Languages'),
       'Arabic, French',
     );
-    await tester.ensureVisible(find.text('Complete profile'));
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('accept-terms')),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('accept-terms')));
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Complete profile'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Complete profile'));
     await tester.pumpAndSettle();
 

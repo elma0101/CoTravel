@@ -1,3 +1,4 @@
+import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -5,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../data/notification_repository.dart';
 import '../domain/app_notification.dart';
 
-class NotificationController extends ChangeNotifier {
+class NotificationController extends ChangeNotifier with DisposeSafeNotifier {
   NotificationController({required NotificationRepository repository})
     : this._(repository);
 

@@ -62,6 +62,7 @@ final betaFeedbackRepositoryProvider = Provider<BetaFeedbackRepository>((ref) {
 });
 
 final betaFeedbackControllerProvider = Provider<BetaFeedbackController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final controller = BetaFeedbackController(
     ref.watch(betaFeedbackRepositoryProvider),
   );
@@ -84,7 +85,25 @@ final appAuthStateProvider = Provider<AppAuthState>((ref) {
   return controller;
 });
 
+class _SessionUserId extends Notifier<String?> {
+  @override
+  String? build() {
+    final authState = ref.watch(appAuthStateProvider);
+    void update() => state = authState.profile?.id;
+    authState.addListener(update);
+    ref.onDispose(() => authState.removeListener(update));
+    return authState.profile?.id;
+  }
+}
+
+/// Everything holding one user's data watches this, so it is rebuilt when another
+/// account signs in rather than keeping the previous user's id and rows.
+final sessionUserIdProvider = NotifierProvider<_SessionUserId, String?>(
+  _SessionUserId.new,
+);
+
 final tripCatalogProvider = Provider<TripCatalogController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final authState = ref.watch(appAuthStateProvider);
   final profile = authState.profile ?? const UserProfile.preview();
   final controller = TripCatalogController(
@@ -107,6 +126,7 @@ final safetyRepositoryProvider = Provider<SafetyRepository>((ref) {
 });
 
 final safetyControllerProvider = Provider<SafetyController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final controller = SafetyController(
     repository: ref.watch(safetyRepositoryProvider),
     tripCatalog: ref.watch(tripCatalogProvider),
@@ -132,6 +152,7 @@ final logisticsRepositoryProvider = Provider<LogisticsRepository>((ref) {
 });
 
 final logisticsControllerProvider = Provider<LogisticsController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final controller = LogisticsController(
     repository: ref.watch(logisticsRepositoryProvider),
     tripCatalog: ref.watch(tripCatalogProvider),
@@ -151,6 +172,7 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 });
 
 final chatControllerProvider = Provider<ChatController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final profile = ref.watch(appAuthStateProvider).profile;
   final controller = ChatController(
     repository: ref.watch(chatRepositoryProvider),
@@ -169,6 +191,7 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
 });
 
 final notificationControllerProvider = Provider<NotificationController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final controller = NotificationController(
     repository: ref.watch(notificationRepositoryProvider),
   );
@@ -192,6 +215,7 @@ final joinRequestRepositoryProvider = Provider<JoinRequestRepository>((ref) {
 });
 
 final joinRequestControllerProvider = Provider<JoinRequestController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final authState = ref.watch(appAuthStateProvider);
   final profile = authState.profile ?? const UserProfile.preview();
   final controller = JoinRequestController(

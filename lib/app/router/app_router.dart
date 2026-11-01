@@ -15,6 +15,8 @@ import '../../features/join_requests/presentation/trip_requests_screen.dart';
 import '../../features/logistics/presentation/trip_logistics_screen.dart';
 import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/messages/presentation/conversation_screen.dart';
+import '../../features/legal/domain/legal_documents.dart';
+import '../../features/legal/presentation/legal_screen.dart';
 import '../../features/notifications/domain/app_notification.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
@@ -42,6 +44,8 @@ abstract final class AppRoutes {
   static const betaFeedback = '/beta-feedback';
   static const notifications = '/notifications';
   static const editProfile = '/profile/edit';
+  static const terms = '/legal/terms';
+  static const privacy = '/legal/privacy';
 
   static String tripDetails(String tripId) => '/trip/$tripId';
   static String editTrip(String tripId) => '/trip/$tripId/edit';
@@ -111,6 +115,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: sessionStatus,
     redirect: (context, state) {
       final location = state.matchedLocation;
+      final isLegalRoute =
+          location == AppRoutes.terms || location == AppRoutes.privacy;
 
       if (authState.status == AppSessionStatus.loading ||
           authState.status == AppSessionStatus.failure) {
@@ -119,12 +125,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       if (authState.status == AppSessionStatus.signedOut) {
         final isPublicRoute =
-            location == AppRoutes.welcome || location == AppRoutes.checkEmail;
+            location == AppRoutes.welcome ||
+            location == AppRoutes.checkEmail ||
+            isLegalRoute;
         return isPublicRoute ? null : AppRoutes.welcome;
       }
 
       if (authState.status == AppSessionStatus.onboardingRequired) {
-        return location == AppRoutes.onboarding ? null : AppRoutes.onboarding;
+        return location == AppRoutes.onboarding || isLegalRoute
+            ? null
+            : AppRoutes.onboarding;
       }
 
       if (location == AppRoutes.welcome ||
@@ -186,6 +196,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           return CreateTripScreen(tripId: state.pathParameters['tripId']);
         },
+      ),
+      GoRoute(
+        path: AppRoutes.terms,
+        builder: (context, state) => const LegalScreen(document: termsOfUse),
+      ),
+      GoRoute(
+        path: AppRoutes.privacy,
+        builder: (context, state) => const LegalScreen(document: privacyPolicy),
       ),
       GoRoute(
         path: AppRoutes.notifications,

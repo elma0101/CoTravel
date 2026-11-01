@@ -1,3 +1,4 @@
+import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -9,7 +10,7 @@ import '../../trips/domain/trip.dart';
 import '../data/join_request_repository.dart';
 import '../domain/trip_join_request.dart';
 
-class JoinRequestController extends ChangeNotifier {
+class JoinRequestController extends ChangeNotifier with DisposeSafeNotifier {
   JoinRequestController({
     required JoinRequestRepository repository,
     required String userId,

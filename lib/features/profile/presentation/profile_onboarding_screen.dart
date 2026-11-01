@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../app/providers/app_providers.dart';
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../domain/user_profile.dart';
@@ -37,6 +38,8 @@ class _ProfileOnboardingScreenState
   final _bioController = TextEditingController();
   final _cityController = TextEditingController();
   final _languagesController = TextEditingController();
+  final _occupationController = TextEditingController();
+  final _instagramController = TextEditingController();
   final _imagePicker = ImagePicker();
   final _selectedStyles = <String>{};
 
@@ -44,6 +47,7 @@ class _ProfileOnboardingScreenState
   String _avatarExtension = 'jpg';
   bool _isSaving = false;
   bool _isLinking = false;
+  bool _acceptedTerms = false;
 
   @override
   void initState() {
@@ -54,6 +58,9 @@ class _ProfileOnboardingScreenState
       _bioController.text = profile.bio ?? '';
       _cityController.text = profile.homeCity ?? '';
       _languagesController.text = profile.languages.join(', ');
+      _occupationController.text = profile.occupation ?? '';
+      _instagramController.text = profile.instagramHandle ?? '';
+      _acceptedTerms = profile.hasAcceptedCurrentTerms;
       _selectedStyles.addAll(profile.travelStyles);
     }
     unawaited(_restoreLostImage());
@@ -65,6 +72,8 @@ class _ProfileOnboardingScreenState
     _bioController.dispose();
     _cityController.dispose();
     _languagesController.dispose();
+    _occupationController.dispose();
+    _instagramController.dispose();
     super.dispose();
   }
 
@@ -147,6 +156,11 @@ class _ProfileOnboardingScreenState
       return;
     }
 
+    if (!widget.isEditing && !_acceptedTerms) {
+      _showMessage('Accept the terms of use to continue.');
+      return;
+    }
+
     setState(() => _isSaving = true);
     final authState = ref.read(appAuthStateProvider);
     final draft = ProfileDraft(
@@ -155,6 +169,8 @@ class _ProfileOnboardingScreenState
       homeCity: _cityController.text.trim(),
       travelStyles: _selectedStyles.toList(),
       languages: languages,
+      instagramHandle: _instagramController.text.trim(),
+      occupation: _occupationController.text.trim(),
     );
     try {
       if (widget.isEditing) {
@@ -306,6 +322,37 @@ class _ProfileOnboardingScreenState
                   helperText: 'Separate languages with commas',
                 ),
               ),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                key: const ValueKey('profile-occupation'),
+                controller: _occupationController,
+                textCapitalization: TextCapitalization.sentences,
+                maxLength: 80,
+                decoration: const InputDecoration(
+                  labelText: 'Occupation (optional)',
+                  helperText:
+                      'Shown as you enter it. CoTravel does not check it.',
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                key: const ValueKey('profile-instagram'),
+                controller: _instagramController,
+                autocorrect: false,
+                decoration: const InputDecoration(
+                  labelText: 'Instagram username (optional)',
+                  helperText:
+                      'Shown as you enter it. CoTravel does not check it.',
+                  prefixText: '@',
+                ),
+                validator: (value) {
+                  final handle = (value ?? '').trim().replaceFirst('@', '');
+                  return handle.isEmpty ||
+                          RegExp(r'^[A-Za-z0-9._]{1,30}$').hasMatch(handle)
+                      ? null
+                      : 'Enter a valid Instagram username';
+                },
+              ),
               const SizedBox(height: AppSpacing.xl),
               _VerificationCard(
                 isVerified: isVerified,
@@ -315,6 +362,34 @@ class _ProfileOnboardingScreenState
                 onRefresh: authState.refreshProfile,
               ),
               const SizedBox(height: AppSpacing.xl),
+              if (!widget.isEditing) ...[
+                CheckboxListTile(
+                  key: const ValueKey('accept-terms'),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  value: _acceptedTerms,
+                  onChanged: (value) {
+                    setState(() => _acceptedTerms = value ?? false);
+                  },
+                  title: const Text(
+                    'I accept the terms of use and privacy policy. CoTravel '
+                    'is a coordination tool, not a travel agency.',
+                  ),
+                ),
+                Wrap(
+                  children: [
+                    TextButton(
+                      onPressed: () => context.push(AppRoutes.terms),
+                      child: const Text('Read the terms'),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push(AppRoutes.privacy),
+                      child: const Text('Read the privacy policy'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               FilledButton(
                 key: const ValueKey('save-profile'),
                 onPressed: _isSaving ? null : _saveProfile,

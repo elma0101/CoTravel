@@ -1,3 +1,5 @@
+import '../../legal/domain/legal_documents.dart';
+
 class UserProfile {
   const UserProfile({
     required this.id,
@@ -9,6 +11,9 @@ class UserProfile {
     required this.languages,
     required this.isLinkedInVerified,
     required this.isOnboardingComplete,
+    this.instagramHandle,
+    this.occupation,
+    this.acceptedTermsVersion,
   });
 
   const UserProfile.preview()
@@ -20,7 +25,10 @@ class UserProfile {
       travelStyles = const ['Culture', 'Road trips'],
       languages = const ['Arabic', 'French', 'English'],
       isLinkedInVerified = true,
-      isOnboardingComplete = true;
+      isOnboardingComplete = true,
+      instagramHandle = null,
+      occupation = null,
+      acceptedTermsVersion = currentTermsVersion;
 
   const UserProfile.incompletePreview()
     : id = 'preview-user',
@@ -31,7 +39,10 @@ class UserProfile {
       travelStyles = const [],
       languages = const [],
       isLinkedInVerified = true,
-      isOnboardingComplete = false;
+      isOnboardingComplete = false,
+      instagramHandle = null,
+      occupation = null,
+      acceptedTermsVersion = null;
 
   final String id;
   final String? displayName;
@@ -42,6 +53,12 @@ class UserProfile {
   final List<String> languages;
   final bool isLinkedInVerified;
   final bool isOnboardingComplete;
+  final String? instagramHandle;
+  final String? occupation;
+  final String? acceptedTermsVersion;
+
+  bool get hasAcceptedCurrentTerms =>
+      acceptedTermsVersion == currentTermsVersion;
 
   String get initials {
     final parts = (displayName ?? '')
@@ -61,6 +78,8 @@ class ProfileDraft {
     required this.homeCity,
     required this.travelStyles,
     required this.languages,
+    this.instagramHandle = '',
+    this.occupation = '',
   });
 
   final String displayName;
@@ -68,4 +87,19 @@ class ProfileDraft {
   final String homeCity;
   final List<String> travelStyles;
   final List<String> languages;
+  final String instagramHandle;
+  final String occupation;
+}
+
+/// Facts shown on a profile instead of a reputation score.
+class TrustFacts {
+  const TrustFacts({
+    required this.memberSince,
+    required this.tripsHosted,
+    required this.tripsJoined,
+  });
+
+  final DateTime memberSince;
+  final int tripsHosted;
+  final int tripsJoined;
 }

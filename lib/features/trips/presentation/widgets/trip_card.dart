@@ -64,8 +64,9 @@ class TripCard extends StatelessWidget {
                       ),
                       _TripFact(
                         icon: Icons.event_seat_outlined,
-                        label:
-                            '${trip.openSeats} ${trip.openSeats == 1 ? 'seat' : 'seats'}',
+                        label: trip.isCancelled
+                            ? 'Cancelled'
+                            : '${trip.openSeats} ${trip.openSeats == 1 ? 'seat' : 'seats'}',
                       ),
                       _TripFact(
                         icon: Icons.payments_outlined,

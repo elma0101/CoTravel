@@ -27,6 +27,8 @@ abstract interface class JoinRequestRepository {
   });
 
   Future<TripJoinRequest> withdrawRequest(String requestId);
+
+  Future<TripJoinRequest> leaveTrip(String requestId);
 }
 
 class SupabaseJoinRequestRepository implements JoinRequestRepository {
@@ -117,6 +119,12 @@ class SupabaseJoinRequestRepository implements JoinRequestRepository {
     return _fetchRequest(requestId);
   }
 
+  @override
+  Future<TripJoinRequest> leaveTrip(String requestId) async {
+    await _client.rpc('leave_trip', params: {'p_request_id': requestId});
+    return _fetchRequest(requestId);
+  }
+
   Future<TripJoinRequest> _fetchRequest(String requestId) async {
     final row = await _client
         .from('trip_join_requests')
@@ -155,6 +163,7 @@ class SupabaseJoinRequestRepository implements JoinRequestRepository {
       'confirmed' => JoinRequestStatus.confirmed,
       'declined' => JoinRequestStatus.declined,
       'withdrawn' => JoinRequestStatus.withdrawn,
+      'left' => JoinRequestStatus.left,
       _ => throw StateError('Unsupported join request status: $value'),
     };
   }
@@ -165,27 +174,32 @@ class PreviewJoinRequestRepository implements JoinRequestRepository {
     required PreviewTripRepository tripRepository,
     DateTime? now,
     Future<void> Function(TripJoinRequest request)? onConfirmed,
-  }) : this._(tripRepository, now ?? DateTime.now(), onConfirmed);
+    Future<void> Function(TripJoinRequest request)? onLeft,
+  }) : this._(tripRepository, now ?? DateTime.now(), onConfirmed, onLeft);
 
   PreviewJoinRequestRepository._(
     this._tripRepository,
     DateTime now,
     this._onConfirmed,
+    this._onLeft,
   ) : _requests = _seedRequests(now);
 
   final PreviewTripRepository _tripRepository;
   final Future<void> Function(TripJoinRequest request)? _onConfirmed;
+  final Future<void> Function(TripJoinRequest request)? _onLeft;
   final List<TripJoinRequest> _requests;
   int _nextId = 1;
 
   @override
   Future<List<TripJoinRequest>> fetchTravelerRequests(String userId) async {
+    await _declineCancelledTrips();
     return _requests.where((request) => request.travelerId == userId).toList()
       ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
   }
 
   @override
   Future<List<TripJoinRequest>> fetchHostRequests(String userId) async {
+    await _declineCancelledTrips();
     return _requests.where((request) => request.hostId == userId).toList()
       ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
   }
@@ -275,6 +289,30 @@ class PreviewJoinRequestRepository implements JoinRequestRepository {
       throw StateError('Only a pending request can be withdrawn.');
     }
     return _replace(request, JoinRequestStatus.withdrawn);
+  }
+
+  @override
+  Future<TripJoinRequest> leaveTrip(String requestId) async {
+    final request = _requireRequest(requestId);
+    if (request.status != JoinRequestStatus.confirmed) {
+      throw StateError('Only a confirmed traveler can leave the trip.');
+    }
+    await _tripRepository.releaseSeat(request.tripId);
+    await _onLeft?.call(request);
+    return _replace(request, JoinRequestStatus.left);
+  }
+
+  Future<void> _declineCancelledTrips() async {
+    for (final request in List.of(_requests)) {
+      if (request.status != JoinRequestStatus.pendingHost &&
+          request.status != JoinRequestStatus.pendingTraveler) {
+        continue;
+      }
+      final trip = await _tripRepository.fetchTrip(request.tripId);
+      if (trip?.isCancelled == true) {
+        _replace(request, JoinRequestStatus.declined);
+      }
+    }
   }
 
   TripJoinRequest _requireRequest(String requestId) {

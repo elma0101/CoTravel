@@ -12,9 +12,9 @@ does not mean the milestone meets the specification; see the completion plan.
 | --- | --- | --- |
 | 0 | Development baseline: repository, CI, local mobile toolchains, environments | Complete |
 | 1 | Application architecture: routing, Riverpod, configuration, shared async states | Complete |
-| 2 | Authentication and trust: email onboarding, profile, avatar, LinkedIn status | Implemented; not yet verified on a live backend; no profile editing |
-| 3 | Itinerary and discovery: creation, ordered stops, capacity, costs, feed, filters, details | Implemented; no map view, host tags, or editing |
-| 4 | Mutual approval: traveler request, host decision, traveler confirmation, seat locking | Implemented; backend confirmation fixed after database tests exposed a failure; no notifications |
+| 2 | Authentication and trust: email onboarding, profile, avatar, LinkedIn status | Implemented; not yet verified on a live backend |
+| 3 | Itinerary and discovery: creation, ordered stops, capacity, costs, feed, filters, details | Implemented; no map view or host tags |
+| 4 | Mutual approval: traveler request, host decision, traveler confirmation, seat locking | Implemented; backend confirmation fixed after database tests exposed a failure |
 | 5 | Group coordination: confirmed-member conversation, realtime messages, paginated history, resilient delivery, unread state | Implemented; backend send fixed after database tests exposed a failure |
 | 6 | Costs and logistics: live cost splits, host shortlist, external booking links | Implemented; links are entered by hand |
 | 7 | Safety and release hardening: report/block, moderation, authorization audit, analytics | Implemented; manual audit not yet run; no integration or accessibility test suite |
@@ -25,8 +25,8 @@ does not mean the milestone meets the specification; see the completion plan.
 
 | Phase | Scope | Status |
 | --- | --- | --- |
-| 1 | Foundation: toolchain, baseline screens, source documents, release guard, database tests | In progress |
-| 2 | Core flow: notifications, trip editing and cancellation, leaving a trip, cancellation windows, hiding past trips, profile editing | Not started |
+| 1 | Foundation: toolchain, baseline screens, source documents, release guard, database tests | Complete |
+| 2 | Core flow: in-app notifications, trip editing and cancellation, leaving a trip, cancellation windows, hiding past trips, profile editing | Implemented; push notifications need Firebase credentials |
 | 3 | Trust and legal: occupation, structured join details, host filters and tags, terms, consent, account deletion | Not started |
 | 4 | Match the mockups: shared design pieces, then Explore, Trip details, Create trip, and Join request | Not started |
 | 5 | Discovery and logistics: map view, place search with coordinates, pre-filled booking links, saved trips | Not started |
@@ -38,7 +38,9 @@ These settle or narrow specification items for the PoC:
 
 - Instagram is an optional, unverified handle, not OAuth.
 - Occupation is self-declared and carries no verified badge.
-- Late withdrawals are handled by cancellation windows, not deposits.
+- Late withdrawals are handled by a cancellation window, not deposits. Leaving
+  is free until seven days before departure; later departures are still allowed,
+  and are recorded and reported to the host.
 - Joining part of a trip is deferred; only whole trips can be joined.
 - Reputation scores are deferred; profiles show facts such as trips hosted.
 - Trips use photos where available and the mockup illustration as a fallback.

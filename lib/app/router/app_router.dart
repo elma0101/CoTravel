@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,6 +13,7 @@ import '../../features/join_requests/presentation/trip_requests_screen.dart';
 import '../../features/logistics/presentation/trip_logistics_screen.dart';
 import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/messages/presentation/conversation_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/profile_onboarding_screen.dart';
 import '../../features/profile/domain/traveler_action_target.dart';
@@ -35,8 +37,11 @@ abstract final class AppRoutes {
   static const profile = '/profile';
   static const safety = '/safety';
   static const betaFeedback = '/beta-feedback';
+  static const notifications = '/notifications';
+  static const editProfile = '/profile/edit';
 
   static String tripDetails(String tripId) => '/trip/$tripId';
+  static String editTrip(String tripId) => '/trip/$tripId/edit';
   static String tripRoute(String tripId) => '/trip/$tripId/route';
   static String tripRequests(String tripId) => '/trip/$tripId/requests';
   static String tripLogistics(String tripId) => '/trip/$tripId/logistics';
@@ -60,12 +65,37 @@ abstract final class AppRoutes {
   }
 }
 
+// Redirects depend only on the session status. Refreshing on every profile change
+// would also discard a pop made while the refresh is being processed.
+class _SessionStatusListenable extends ChangeNotifier {
+  _SessionStatusListenable(this._authState) : _status = _authState.status {
+    _authState.addListener(_onChanged);
+  }
+
+  final AppAuthState _authState;
+  AppSessionStatus _status;
+
+  void _onChanged() {
+    if (_authState.status != _status) {
+      _status = _authState.status;
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _authState.removeListener(_onChanged);
+    super.dispose();
+  }
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(appAuthStateProvider);
+  final sessionStatus = _SessionStatusListenable(authState);
 
   final router = GoRouter(
     initialLocation: AppRoutes.explore,
-    refreshListenable: authState,
+    refreshListenable: sessionStatus,
     redirect: (context, state) {
       final location = state.matchedLocation;
 
@@ -136,6 +166,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/trip/:tripId/logistics',
         builder: (context, state) {
           return TripLogisticsScreen(tripId: state.pathParameters['tripId']!);
+        },
+      ),
+      GoRoute(
+        path: '/trip/:tripId/edit',
+        builder: (context, state) {
+          return CreateTripScreen(tripId: state.pathParameters['tripId']);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.editProfile,
+        builder: (context, state) {
+          return const ProfileOnboardingScreen(isEditing: true);
         },
       ),
       GoRoute(
@@ -216,5 +262,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 
   ref.onDispose(router.dispose);
+  ref.onDispose(sessionStatus.dispose);
   return router;
 });

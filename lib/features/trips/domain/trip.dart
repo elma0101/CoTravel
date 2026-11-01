@@ -124,6 +124,8 @@ class TripStop {
   }
 }
 
+enum TripStatus { published, closed, cancelled }
+
 class TripDraft {
   const TripDraft({
     required this.title,
@@ -171,7 +173,11 @@ class Trip {
     required this.currency,
     required this.travelStyle,
     required this.summary,
+    this.status = TripStatus.published,
   });
+
+  // Travelers can leave freely until this many days before departure.
+  static const freeCancellationDays = 7;
 
   final String id;
   final String hostId;
@@ -190,6 +196,17 @@ class Trip {
   final String currency;
   final String travelStyle;
   final String summary;
+  final TripStatus status;
+
+  bool get isCancelled => status == TripStatus.cancelled;
+  DateTime get freeCancellationUntil =>
+      startDate.subtract(const Duration(days: freeCancellationDays));
+
+  bool hasStarted(DateTime now) =>
+      DateTime(now.year, now.month, now.day).isAfter(startDate);
+
+  bool isLateToLeave(DateTime now) =>
+      DateTime(now.year, now.month, now.day).isAfter(freeCancellationUntil);
 
   String get destinationCity => stops.last.city;
   int get participantCount => 1 + confirmedTravelerCount;
@@ -203,6 +220,7 @@ class Trip {
     int? confirmedTravelerCount,
     double? lodgingTotal,
     double? transportTotal,
+    TripStatus? status,
   }) {
     return Trip(
       id: id,
@@ -223,6 +241,7 @@ class Trip {
       currency: currency,
       travelStyle: travelStyle,
       summary: summary,
+      status: status ?? this.status,
     );
   }
 }

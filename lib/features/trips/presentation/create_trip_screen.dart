@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,11 +11,15 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/analytics/product_analytics.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../domain/trip.dart';
 import 'trip_formatters.dart';
 
 class CreateTripScreen extends ConsumerStatefulWidget {
-  const CreateTripScreen({super.key});
+  const CreateTripScreen({this.tripId, super.key});
+
+  // Edits this hosted trip when set; otherwise creates a new one.
+  final String? tripId;
 
   @override
   ConsumerState<CreateTripScreen> createState() => _CreateTripScreenState();
@@ -43,13 +48,27 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   String _travelStyle = _travelStyles.first;
   String _currency = _currencies.first;
   int _capacity = 4;
+  int _minimumCapacity = 2;
+  Trip? _editedTrip;
+
+  bool get _isEditing => widget.tripId != null;
 
   @override
   void initState() {
     super.initState();
-    unawaited(
-      ref.read(productAnalyticsProvider).track(ProductEvent.tripBuilderOpened),
-    );
+    if (_isEditing) {
+      final trip = ref.read(tripCatalogProvider).tripById(widget.tripId!);
+      if (trip != null) {
+        _loadTrip(trip);
+        return;
+      }
+    } else {
+      unawaited(
+        ref
+            .read(productAnalyticsProvider)
+            .track(ProductEvent.tripBuilderOpened),
+      );
+    }
     final today = DateTime.now();
     final start = DateTime(
       today.year,
@@ -61,6 +80,23 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
       end: start.add(const Duration(days: 3)),
     );
     _stops.add(_StopFields(arrivalDate: _dateRange.end));
+  }
+
+  void _loadTrip(Trip trip) {
+    _editedTrip = trip;
+    _titleController.text = trip.title;
+    _originController.text = trip.originCity;
+    _lodgingController.text = trip.lodgingTotal.toStringAsFixed(2);
+    _transportController.text = trip.transportTotal.toStringAsFixed(2);
+    _summaryController.text = trip.summary;
+    _dateRange = DateTimeRange(start: trip.startDate, end: trip.endDate);
+    _travelStyle = trip.travelStyle;
+    _currency = trip.currency;
+    _capacity = trip.capacity;
+    _minimumCapacity = max(2, trip.participantCount);
+    for (final stop in trip.stops) {
+      _stops.add(_StopFields.fromStop(stop));
+    }
   }
 
   @override
@@ -146,32 +182,30 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     }
 
     final catalog = ref.read(tripCatalogProvider);
+    final draft = TripDraft(
+      title: _titleController.text.trim(),
+      originCity: _originController.text.trim(),
+      startDate: _dateRange.start,
+      endDate: _dateRange.end,
+      stops: _stops.map((stop) => stop.toStop(_optional)).toList(),
+      capacity: _capacity,
+      lodgingTotal: lodging,
+      transportTotal: transport,
+      currency: _currency,
+      travelStyle: _travelStyle,
+      summary: _summaryController.text.trim(),
+    );
     try {
-      await catalog.createTrip(
-        TripDraft(
-          title: _titleController.text.trim(),
-          originCity: _originController.text.trim(),
-          startDate: _dateRange.start,
-          endDate: _dateRange.end,
-          stops: _stops
-              .map(
-                (stop) => TripStop(
-                  city: stop.cityController.text.trim(),
-                  arrivalDate: stop.arrivalDate,
-                  notes: _optional(stop.notesController.text),
-                ),
-              )
-              .toList(),
-          capacity: _capacity,
-          lodgingTotal: lodging,
-          transportTotal: transport,
-          currency: _currency,
-          travelStyle: _travelStyle,
-          summary: _summaryController.text.trim(),
-        ),
-      );
-      if (mounted) {
-        context.go(AppRoutes.trips);
+      if (_isEditing) {
+        await catalog.updateTrip(widget.tripId!, draft);
+        if (mounted) {
+          context.pop();
+        }
+      } else {
+        await catalog.createTrip(draft);
+        if (mounted) {
+          context.go(AppRoutes.trips);
+        }
       }
     } on Object {
       if (mounted) {
@@ -203,11 +237,22 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   Widget build(BuildContext context) {
     final catalog = ref.watch(tripCatalogProvider);
 
+    if (_isEditing && _editedTrip == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Edit trip')),
+        body: const EmptyState(
+          icon: Icons.search_off_rounded,
+          title: 'Trip not found',
+          message: 'Only trips you host can be edited.',
+        ),
+      );
+    }
+
     return ListenableBuilder(
       listenable: catalog,
       builder: (context, child) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Plan a trip')),
+          appBar: AppBar(title: Text(_isEditing ? 'Edit trip' : 'Plan a trip')),
           body: SafeArea(
             child: Form(
               key: _formKey,
@@ -303,7 +348,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                       prefixIcon: Icon(Icons.group_outlined),
                     ),
                     items: [
-                      for (var count = 2; count <= 12; count++)
+                      for (var count = _minimumCapacity; count <= 12; count++)
                         DropdownMenuItem(
                           value: count,
                           child: Text('$count people'),
@@ -364,7 +409,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                   DropdownButtonFormField<String>(
                     initialValue: _currency,
                     decoration: const InputDecoration(labelText: 'Currency'),
-                    items: _currencies
+                    items: {..._currencies, _currency}
                         .map(
                           (currency) => DropdownMenuItem(
                             value: currency,
@@ -393,7 +438,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                   Wrap(
                     spacing: AppSpacing.xs,
                     runSpacing: AppSpacing.xs,
-                    children: _travelStyles
+                    children: {..._travelStyles, _travelStyle}
                         .map(
                           (style) => ChoiceChip(
                             label: Text(style),
@@ -433,7 +478,11 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
                           )
                         : const Icon(Icons.public_rounded),
                     label: Text(
-                      catalog.isPublishing ? 'Publishing…' : 'Publish trip',
+                      catalog.isPublishing
+                          ? 'Saving…'
+                          : _isEditing
+                          ? 'Save changes'
+                          : 'Publish trip',
                     ),
                   ),
                 ],
@@ -454,9 +503,37 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
 class _StopFields {
   _StopFields({required this.arrivalDate});
 
+  _StopFields.fromStop(TripStop stop)
+    : arrivalDate = stop.arrivalDate,
+      _source = stop {
+    cityController.text = stop.city;
+    notesController.text = stop.notes ?? '';
+  }
+
   final cityController = TextEditingController();
   final notesController = TextEditingController();
   DateTime arrivalDate;
+  TripStop? _source;
+
+  TripStop toStop(String? Function(String) optional) {
+    final city = cityController.text.trim();
+    final notes = optional(notesController.text);
+    final source = _source;
+    // Route details the form does not show survive unless the place changes.
+    return source == null || source.city != city
+        ? TripStop(city: city, arrivalDate: arrivalDate, notes: notes)
+        : TripStop(
+            city: city,
+            arrivalDate: arrivalDate,
+            notes: notes,
+            latitude: source.latitude,
+            longitude: source.longitude,
+            type: source.type,
+            travelMode: source.travelMode,
+            travelDurationMinutes: source.travelDurationMinutes,
+            isOptional: source.isOptional,
+          );
+  }
 
   void dispose() {
     cityController.dispose();

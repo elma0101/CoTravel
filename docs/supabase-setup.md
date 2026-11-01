@@ -67,6 +67,8 @@ The remaining migrations add:
 - route coordinates and stop details for the interactive map
 - fixes for traveler confirmation and chat sending, and explicit API-role
   permissions that block direct profile writes and operator-only functions
+- trip editing and cancellation, leaving a trip with a seven-day cancellation
+  window, and an in-app notification inbox delivered through realtime
 
 Run the database tests with Docker available:
 

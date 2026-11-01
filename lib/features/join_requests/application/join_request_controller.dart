@@ -175,6 +175,16 @@ class JoinRequestController extends ChangeNotifier {
     );
   }
 
+  Future<void> leaveTrip(TripJoinRequest request) async {
+    await _updateRequest(
+      request,
+      () => _repository.leaveTrip(request.id),
+      updateHostList: false,
+    );
+    await _tripCatalog.load();
+    await _refreshChats?.call();
+  }
+
   Future<void> _updateRequest(
     TripJoinRequest request,
     Future<TripJoinRequest> Function() operation, {

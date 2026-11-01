@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../app/providers/app_providers.dart';
@@ -11,7 +12,9 @@ import '../../../app/theme/app_spacing.dart';
 import '../domain/user_profile.dart';
 
 class ProfileOnboardingScreen extends ConsumerStatefulWidget {
-  const ProfileOnboardingScreen({super.key});
+  const ProfileOnboardingScreen({this.isEditing = false, super.key});
+
+  final bool isEditing;
 
   @override
   ConsumerState<ProfileOnboardingScreen> createState() =>
@@ -145,20 +148,31 @@ class _ProfileOnboardingScreenState
     }
 
     setState(() => _isSaving = true);
+    final authState = ref.read(appAuthStateProvider);
+    final draft = ProfileDraft(
+      displayName: _nameController.text.trim(),
+      bio: _bioController.text.trim(),
+      homeCity: _cityController.text.trim(),
+      travelStyles: _selectedStyles.toList(),
+      languages: languages,
+    );
     try {
-      await ref
-          .read(appAuthStateProvider)
-          .completeProfile(
-            draft: ProfileDraft(
-              displayName: _nameController.text.trim(),
-              bio: _bioController.text.trim(),
-              homeCity: _cityController.text.trim(),
-              travelStyles: _selectedStyles.toList(),
-              languages: languages,
-            ),
-            avatarBytes: _avatarBytes,
-            avatarExtension: _avatarExtension,
-          );
+      if (widget.isEditing) {
+        await authState.updateProfile(
+          draft: draft,
+          avatarBytes: _avatarBytes,
+          avatarExtension: _avatarExtension,
+        );
+        if (mounted) {
+          context.pop();
+        }
+      } else {
+        await authState.completeProfile(
+          draft: draft,
+          avatarBytes: _avatarBytes,
+          avatarExtension: _avatarExtension,
+        );
+      }
     } on Object catch (error) {
       if (mounted) {
         _showMessage(_messageFor(error));
@@ -179,12 +193,13 @@ class _ProfileOnboardingScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your travel profile'),
+        title: Text(widget.isEditing ? 'Edit profile' : 'Your travel profile'),
         actions: [
-          TextButton(
-            onPressed: authState.signOut,
-            child: const Text('Sign out'),
-          ),
+          if (!widget.isEditing)
+            TextButton(
+              onPressed: authState.signOut,
+              child: const Text('Sign out'),
+            ),
         ],
       ),
       body: SafeArea(
@@ -301,8 +316,15 @@ class _ProfileOnboardingScreenState
               ),
               const SizedBox(height: AppSpacing.xl),
               FilledButton(
+                key: const ValueKey('save-profile'),
                 onPressed: _isSaving ? null : _saveProfile,
-                child: Text(_isSaving ? 'Saving profile…' : 'Complete profile'),
+                child: Text(
+                  _isSaving
+                      ? 'Saving profile…'
+                      : widget.isEditing
+                      ? 'Save changes'
+                      : 'Complete profile',
+                ),
               ),
             ],
           ),

@@ -7,8 +7,9 @@ Row Level Security and security-definer RPC validation are authoritative.
 | Resource | Read boundary | Mutation boundary | Automated control |
 | --- | --- | --- | --- |
 | Profiles | Authenticated users can read completed profiles unless either account blocked the other; users always see themselves | Only through `complete_profile` and `sync_my_linkedin_verification`; no direct writes | No authenticated write grants |
-| Trips and stops | Published trips are discoverable unless either account blocked the host; hosts see their own trips | Verified, onboarded host through `create_trip` | Trip/stops RLS and validated RPC |
-| Join requests | Requesting traveler and relevant host only | Explicit state RPCs; confirmation locks the trip row before taking a seat | Request RLS, uniqueness index, transaction locks, block trigger |
+| Trips and stops | Published trips are discoverable unless either account blocked the host; hosts see their own trips; travelers can open trips they requested, unless blocked | Verified, onboarded host through `create_trip`; the trip host through `update_trip` and `cancel_trip` | Trip/stops RLS and validated RPCs |
+| Notifications | Recipient only | Created only by database triggers and internal functions; recipient marks read through `mark_notifications_read` | RLS, no authenticated write grants |
+| Join requests | Requesting traveler and relevant host only | Explicit state RPCs, including `leave_trip`; confirmation and leaving lock the trip row before changing a seat | Request RLS, uniqueness index, transaction locks, block trigger |
 | Conversations | Confirmed conversation members only | Members through validated message/read RPCs | Membership helper, RLS, confirmation trigger |
 | Logistics | Trip host and confirmed travelers only; a host/traveler block removes traveler access | Host through `save_trip_logistics` | Membership helper and RLS |
 | Blocks | Returned only to the blocking user through `my_blocked_users` | Blocking user through block/unblock RPCs | No direct authenticated table grants |

@@ -35,9 +35,11 @@ class ProfileScreen extends ConsumerWidget {
               _VerificationTile(
                 isVerified: profile?.isLinkedInVerified == true,
               ),
-              const _ProfileTile(
+              _ProfileTile(
+                key: const ValueKey('open-edit-profile'),
                 icon: Icons.tune_rounded,
-                title: 'Travel preferences',
+                title: 'Edit profile and preferences',
+                onTap: () => context.push(AppRoutes.editProfile),
               ),
               _ProfileTile(
                 key: const ValueKey('open-safety-center'),
@@ -166,6 +168,7 @@ class _VerificationTile extends StatelessWidget {
             : 'Connect a professional identity to strengthen trust.',
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => context.push(AppRoutes.editProfile),
     );
   }
 }
@@ -174,13 +177,13 @@ class _ProfileTile extends StatelessWidget {
   const _ProfileTile({
     required this.icon,
     required this.title,
-    this.onTap,
+    required this.onTap,
     super.key,
   });
 
   final IconData icon;
   final String title;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +192,7 @@ class _ProfileTile extends StatelessWidget {
       leading: Icon(icon, color: AppColors.green),
       title: Text(title),
       trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: onTap ?? () {},
+      onTap: onTap,
     );
   }
 }

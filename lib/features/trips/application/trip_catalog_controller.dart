@@ -118,6 +118,45 @@ class TripCatalogController extends ChangeNotifier {
     }
   }
 
+  Future<Trip> updateTrip(String tripId, TripDraft draft) async {
+    _isPublishing = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updated = await _repository.updateTrip(
+        tripId: tripId,
+        draft: draft,
+      );
+      _hostedTrips = _replaced(_hostedTrips, updated);
+      _discoverableTrips = _replaced(_discoverableTrips, updated);
+      return updated;
+    } on Object {
+      _errorMessage = 'Your changes could not be saved. Please try again.';
+      rethrow;
+    } finally {
+      _isPublishing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> cancelTrip(Trip trip) async {
+    await _repository.cancelTrip(trip.id);
+    _hostedTrips = _replaced(
+      _hostedTrips,
+      trip.copyWith(status: TripStatus.cancelled),
+    );
+    _discoverableTrips = _discoverableTrips
+        .where((item) => item.id != trip.id)
+        .toList(growable: false);
+    notifyListeners();
+  }
+
+  List<Trip> _replaced(List<Trip> trips, Trip updated) {
+    return trips.map((trip) => trip.id == updated.id ? updated : trip).toList()
+      ..sort((left, right) => left.startDate.compareTo(right.startDate));
+  }
+
   Future<Trip?> findTrip(String tripId) async {
     final loadedTrip = tripById(tripId);
     if (loadedTrip != null) {

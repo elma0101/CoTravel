@@ -273,7 +273,8 @@ class _TravelerRequestCard extends StatelessWidget {
       JoinRequestStatus.pendingTraveler ||
       JoinRequestStatus.confirmed => AppColors.green,
       JoinRequestStatus.declined ||
-      JoinRequestStatus.withdrawn => AppColors.muted,
+      JoinRequestStatus.withdrawn ||
+      JoinRequestStatus.left => AppColors.muted,
     };
     return Material(
       color: AppColors.surface,

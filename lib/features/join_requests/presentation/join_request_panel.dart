@@ -7,6 +7,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../trips/domain/trip.dart';
+import '../../trips/presentation/trip_formatters.dart';
 import '../application/join_request_controller.dart';
 import '../domain/trip_join_request.dart';
 
@@ -14,6 +15,75 @@ class JoinRequestPanel extends ConsumerWidget {
   const JoinRequestPanel({required this.trip, super.key});
 
   final Trip trip;
+
+  Future<void> _confirmCancelTrip(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel this trip?'),
+        content: Text(
+          trip.confirmedTravelerCount == 0
+              ? 'The trip leaves Explore and pending requests are declined. This cannot be undone.'
+              : 'Your ${trip.confirmedTravelerCount} confirmed ${trip.confirmedTravelerCount == 1 ? 'traveler' : 'travelers'} will be notified and pending requests declined. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep trip'),
+          ),
+          FilledButton(
+            key: const ValueKey('confirm-cancel-trip'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Cancel trip'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+    await _runAction(context, () async {
+      await ref.read(tripCatalogProvider).cancelTrip(trip);
+      await ref.read(joinRequestControllerProvider).load();
+    }, successMessage: 'Trip cancelled.');
+  }
+
+  Future<void> _confirmLeave(
+    BuildContext context,
+    JoinRequestController controller,
+    TripJoinRequest request,
+  ) async {
+    final deadline = formatTripDate(trip.freeCancellationUntil);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave this trip?'),
+        content: Text(
+          trip.isLateToLeave(DateTime.now())
+              ? 'The free cancellation window ended on $deadline. You can still leave, but ${trip.hostName} will be told this was a late departure and remaining costs will rise for the group.'
+              : 'You can leave freely until $deadline. Your seat is released and you leave the group chat.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Stay'),
+          ),
+          FilledButton(
+            key: const ValueKey('confirm-leave-trip'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Leave trip'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await _runAction(
+        context,
+        () => controller.leaveTrip(request),
+        successMessage: 'You left the trip.',
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,6 +97,9 @@ class JoinRequestPanel extends ConsumerWidget {
           return const _PanelShell(
             child: Center(child: CircularProgressIndicator()),
           );
+        }
+        if (trip.isCancelled) {
+          return const _CancelledTripNotice();
         }
         if (trip.hostId == userId) {
           final requests = controller.hostRequestsForTrip(trip.id);
@@ -73,6 +146,20 @@ class JoinRequestPanel extends ConsumerWidget {
                     ),
                   ),
                 ],
+                if (!trip.hasStarted(DateTime.now())) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton(
+                    key: const ValueKey('edit-trip'),
+                    onPressed: () => context.push(AppRoutes.editTrip(trip.id)),
+                    child: const Text('Edit trip'),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.xs),
+                TextButton(
+                  key: const ValueKey('cancel-trip'),
+                  onPressed: () => _confirmCancelTrip(context, ref),
+                  child: const Text('Cancel trip'),
+                ),
               ],
             ),
           );
@@ -114,6 +201,7 @@ class JoinRequestPanel extends ConsumerWidget {
           trip: trip,
           request: request,
           isUpdating: controller.isUpdating(request.id),
+          onLeave: () => _confirmLeave(context, controller, request),
           onWithdraw: () => _runAction(
             context,
             () => controller.withdraw(request),
@@ -320,12 +408,48 @@ class _PanelShell extends StatelessWidget {
   }
 }
 
+class _CancelledTripNotice extends StatelessWidget {
+  const _CancelledTripNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return _PanelShell(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.event_busy_outlined, color: AppColors.terracotta),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'This trip was cancelled',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'It is no longer open for requests. The group chat stays available for anyone already in it.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RequestStatusCard extends StatelessWidget {
   const _RequestStatusCard({
     required this.trip,
     required this.request,
     required this.isUpdating,
     required this.onWithdraw,
+    required this.onLeave,
     required this.onConfirm,
     required this.onDecline,
   });
@@ -334,6 +458,7 @@ class _RequestStatusCard extends StatelessWidget {
   final TripJoinRequest request;
   final bool isUpdating;
   final VoidCallback onWithdraw;
+  final VoidCallback onLeave;
   final VoidCallback onConfirm;
   final VoidCallback onDecline;
 
@@ -356,7 +481,9 @@ class _RequestStatusCard extends StatelessWidget {
         Icons.check_circle_rounded,
         AppColors.green,
         'Your place is confirmed',
-        'Both you and the host agreed. This trip now includes you in its shared group.',
+        trip.isLateToLeave(DateTime.now())
+            ? 'Both you and the host agreed. The free cancellation window ended on ${formatTripDate(trip.freeCancellationUntil)}.'
+            : 'Both you and the host agreed. You can leave freely until ${formatTripDate(trip.freeCancellationUntil)}.',
       ),
       JoinRequestStatus.declined => (
         Icons.cancel_outlined,
@@ -369,6 +496,12 @@ class _RequestStatusCard extends StatelessWidget {
         AppColors.muted,
         'Request withdrawn',
         'No place was reserved and the group size was not changed.',
+      ),
+      JoinRequestStatus.left => (
+        Icons.logout_rounded,
+        AppColors.muted,
+        'You left this trip',
+        'Your seat was released.',
       ),
     };
 
@@ -403,6 +536,15 @@ class _RequestStatusCard extends StatelessWidget {
             TextButton(
               onPressed: isUpdating ? null : onWithdraw,
               child: const Text('Withdraw request'),
+            ),
+          ],
+          if (request.status == JoinRequestStatus.confirmed &&
+              !trip.hasStarted(DateTime.now())) ...[
+            const SizedBox(height: AppSpacing.md),
+            TextButton(
+              key: const ValueKey('leave-trip'),
+              onPressed: isUpdating ? null : onLeave,
+              child: const Text('Leave trip'),
             ),
           ],
           if (request.status == JoinRequestStatus.pendingTraveler) ...[

@@ -259,11 +259,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   }
 }
 
-class _BrandHeader extends StatelessWidget {
+class _BrandHeader extends ConsumerWidget {
   const _BrandHeader();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifications = ref.watch(notificationControllerProvider);
     return Row(
       children: [
         Container(
@@ -278,10 +279,23 @@ class _BrandHeader extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Text('CoTravel', style: Theme.of(context).textTheme.titleLarge),
         const Spacer(),
-        IconButton.filledTonal(
-          onPressed: () {},
-          tooltip: 'Notifications',
-          icon: const Icon(Icons.notifications_none_rounded),
+        ListenableBuilder(
+          listenable: notifications,
+          builder: (context, child) {
+            final unread = notifications.unreadCount;
+            return IconButton.filledTonal(
+              key: const ValueKey('open-notifications'),
+              onPressed: () => context.push(AppRoutes.notifications),
+              tooltip: unread == 0
+                  ? 'Notifications'
+                  : 'Notifications, $unread unread',
+              icon: Badge(
+                isLabelVisible: unread > 0,
+                label: Text('$unread'),
+                child: const Icon(Icons.notifications_none_rounded),
+              ),
+            );
+          },
         ),
       ],
     );

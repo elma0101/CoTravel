@@ -344,6 +344,11 @@ class PreviewChatRepository implements ChatRepository {
     _inboxController.add(null);
   }
 
+  Future<void> removeForDepartedTraveler(TripJoinRequest request) async {
+    _conversations.removeWhere((item) => item.tripId == request.tripId);
+    _inboxController.add(null);
+  }
+
   Future<void> createForConfirmedRequest(TripJoinRequest request) async {
     if (_conversations.any((item) => item.tripId == request.tripId)) {
       final conversation = _conversations.firstWhere(

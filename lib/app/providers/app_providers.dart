@@ -15,6 +15,8 @@ import '../../features/logistics/application/logistics_controller.dart';
 import '../../features/logistics/data/logistics_repository.dart';
 import '../../features/messages/application/chat_controller.dart';
 import '../../features/messages/data/chat_repository.dart';
+import '../../features/notifications/application/notification_controller.dart';
+import '../../features/notifications/data/notification_repository.dart';
 import '../../features/safety/application/safety_controller.dart';
 import '../../features/safety/data/safety_repository.dart';
 import '../../features/trips/application/trip_catalog_controller.dart';
@@ -156,6 +158,22 @@ final chatControllerProvider = Provider<ChatController>((ref) {
   return controller;
 });
 
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return client == null
+      ? PreviewNotificationRepository()
+      : SupabaseNotificationRepository(client);
+});
+
+final notificationControllerProvider = Provider<NotificationController>((ref) {
+  final controller = NotificationController(
+    repository: ref.watch(notificationRepositoryProvider),
+  );
+  unawaited(controller.load());
+  ref.onDispose(controller.dispose);
+  return controller;
+});
+
 final joinRequestRepositoryProvider = Provider<JoinRequestRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
   if (client != null) {
@@ -166,6 +184,7 @@ final joinRequestRepositoryProvider = Provider<JoinRequestRepository>((ref) {
   return PreviewJoinRequestRepository(
     tripRepository: ref.watch(tripRepositoryProvider) as PreviewTripRepository,
     onConfirmed: chatRepository.createForConfirmedRequest,
+    onLeft: chatRepository.removeForDepartedTraveler,
   );
 });
 

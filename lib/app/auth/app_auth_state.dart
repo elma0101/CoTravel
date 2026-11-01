@@ -139,6 +139,23 @@ class AppAuthState extends ChangeNotifier {
     }
   }
 
+  // Unlike completeProfile, this keeps the session status so the router stays
+  // on the current screen.
+  Future<void> updateProfile({
+    required ProfileDraft draft,
+    Uint8List? avatarBytes,
+    String avatarExtension = 'jpg',
+  }) async {
+    final userId = _supabaseClient?.auth.currentUser?.id ?? 'preview-user';
+    _profile = await profileRepository.completeProfile(
+      userId: userId,
+      draft: draft,
+      avatarBytes: avatarBytes,
+      avatarExtension: avatarExtension,
+    );
+    notifyListeners();
+  }
+
   Future<void> signInForPreview() async {
     if (!previewAuthEnabled) {
       throw StateError('Preview authentication is disabled.');

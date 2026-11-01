@@ -16,6 +16,10 @@ abstract interface class TripRepository {
     required UserProfile hostProfile,
     required TripDraft draft,
   });
+
+  Future<Trip> updateTrip({required String tripId, required TripDraft draft});
+
+  Future<void> cancelTrip(String tripId);
 }
 
 class SupabaseTripRepository implements TripRepository {
@@ -51,6 +55,7 @@ class SupabaseTripRepository implements TripRepository {
         .select(_tripSelection)
         .eq('status', 'published')
         .gt('open_seats', 0)
+        .gte('start_date', _dateValue(DateTime.now()))
         .order('start_date');
     return rows.map(_fromMap).toList();
   }
@@ -81,41 +86,64 @@ class SupabaseTripRepository implements TripRepository {
     required UserProfile hostProfile,
     required TripDraft draft,
   }) async {
-    final result = await _client.rpc(
-      'create_trip',
-      params: {
-        'p_title': draft.title,
-        'p_origin_city': draft.originCity,
-        'p_start_date': _dateValue(draft.startDate),
-        'p_end_date': _dateValue(draft.endDate),
-        'p_stops': draft.stops.map((stop) {
-          final resolved = MoroccoRouteCoordinates.resolve(stop);
-          return {
-            'city': resolved.city,
-            'arrival_date': _dateValue(resolved.arrivalDate),
-            'notes': resolved.notes,
-            'latitude': resolved.latitude,
-            'longitude': resolved.longitude,
-            'stop_type': resolved.type.storageValue,
-            'travel_mode': resolved.travelMode?.storageValue,
-            'travel_duration_minutes': resolved.travelDurationMinutes,
-            'is_optional': resolved.isOptional,
-          };
-        }).toList(),
-        'p_capacity': draft.capacity,
-        'p_lodging_total': draft.lodgingTotal,
-        'p_transport_total': draft.transportTotal,
-        'p_currency': draft.currency,
-        'p_travel_style': draft.travelStyle,
-        'p_summary': draft.summary,
-      },
-    );
+    final result = await _client.rpc('create_trip', params: _tripParams(draft));
 
     final trip = await fetchTrip(result as String);
     if (trip == null) {
       throw StateError('Trip was not available after publishing.');
     }
     return trip;
+  }
+
+  @override
+  Future<Trip> updateTrip({
+    required String tripId,
+    required TripDraft draft,
+  }) async {
+    await _client.rpc(
+      'update_trip',
+      params: {'p_trip_id': tripId, ..._tripParams(draft)},
+    );
+
+    final trip = await fetchTrip(tripId);
+    if (trip == null) {
+      throw StateError('Trip was not available after saving.');
+    }
+    return trip;
+  }
+
+  @override
+  Future<void> cancelTrip(String tripId) async {
+    await _client.rpc('cancel_trip', params: {'p_trip_id': tripId});
+  }
+
+  Map<String, Object?> _tripParams(TripDraft draft) {
+    return {
+      'p_title': draft.title,
+      'p_origin_city': draft.originCity,
+      'p_start_date': _dateValue(draft.startDate),
+      'p_end_date': _dateValue(draft.endDate),
+      'p_stops': draft.stops.map((stop) {
+        final resolved = MoroccoRouteCoordinates.resolve(stop);
+        return {
+          'city': resolved.city,
+          'arrival_date': _dateValue(resolved.arrivalDate),
+          'notes': resolved.notes,
+          'latitude': resolved.latitude,
+          'longitude': resolved.longitude,
+          'stop_type': resolved.type.storageValue,
+          'travel_mode': resolved.travelMode?.storageValue,
+          'travel_duration_minutes': resolved.travelDurationMinutes,
+          'is_optional': resolved.isOptional,
+        };
+      }).toList(),
+      'p_capacity': draft.capacity,
+      'p_lodging_total': draft.lodgingTotal,
+      'p_transport_total': draft.transportTotal,
+      'p_currency': draft.currency,
+      'p_travel_style': draft.travelStyle,
+      'p_summary': draft.summary,
+    };
   }
 
   Trip _fromMap(Map<String, dynamic> row) {
@@ -162,6 +190,11 @@ class SupabaseTripRepository implements TripRepository {
       currency: row['currency'] as String,
       travelStyle: row['travel_style'] as String,
       summary: row['summary'] as String,
+      status: switch (row['status']) {
+        'cancelled' => TripStatus.cancelled,
+        'closed' => TripStatus.closed,
+        _ => TripStatus.published,
+      },
     );
   }
 
@@ -174,8 +207,10 @@ class SupabaseTripRepository implements TripRepository {
 
 class PreviewTripRepository implements TripRepository {
   PreviewTripRepository({DateTime? today})
-    : _trips = _seedTrips(today ?? DateTime.now());
+    : _today = today ?? DateTime.now(),
+      _trips = _seedTrips(today ?? DateTime.now());
 
+  final DateTime _today;
   final List<Trip> _trips;
   int _nextId = 1;
 
@@ -210,9 +245,27 @@ class PreviewTripRepository implements TripRepository {
     );
   }
 
+  Future<void> releaseSeat(String tripId) async {
+    final index = _trips.indexWhere((trip) => trip.id == tripId);
+    if (index == -1) {
+      throw StateError('Trip not found.');
+    }
+    final trip = _trips[index];
+    _trips[index] = trip.copyWith(
+      confirmedTravelerCount: trip.confirmedTravelerCount - 1,
+    );
+  }
+
   @override
   Future<List<Trip>> discoverTrips() async {
-    return _trips.where((trip) => trip.openSeats > 0).toList()
+    return _trips
+        .where(
+          (trip) =>
+              trip.openSeats > 0 &&
+              trip.status == TripStatus.published &&
+              !trip.hasStarted(_today),
+        )
+        .toList()
       ..sort((left, right) => left.startDate.compareTo(right.startDate));
   }
 
@@ -259,6 +312,51 @@ class PreviewTripRepository implements TripRepository {
     );
     _trips.add(trip);
     return trip;
+  }
+
+  @override
+  Future<Trip> updateTrip({
+    required String tripId,
+    required TripDraft draft,
+  }) async {
+    final index = _trips.indexWhere((trip) => trip.id == tripId);
+    if (index == -1) {
+      throw StateError('Trip not found.');
+    }
+    final current = _trips[index];
+    if (draft.capacity < current.participantCount) {
+      throw StateError('Capacity cannot be lower than the confirmed group.');
+    }
+    final updated = Trip(
+      id: current.id,
+      hostId: current.hostId,
+      hostName: current.hostName,
+      hostHomeCity: current.hostHomeCity,
+      hostVerified: current.hostVerified,
+      title: draft.title,
+      originCity: draft.originCity,
+      startDate: draft.startDate,
+      endDate: draft.endDate,
+      stops: draft.stops.map(MoroccoRouteCoordinates.resolve).toList(),
+      capacity: draft.capacity,
+      confirmedTravelerCount: current.confirmedTravelerCount,
+      lodgingTotal: draft.lodgingTotal,
+      transportTotal: draft.transportTotal,
+      currency: draft.currency,
+      travelStyle: draft.travelStyle,
+      summary: draft.summary,
+    );
+    _trips[index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> cancelTrip(String tripId) async {
+    final index = _trips.indexWhere((trip) => trip.id == tripId);
+    if (index == -1) {
+      throw StateError('Trip not found.');
+    }
+    _trips[index] = _trips[index].copyWith(status: TripStatus.cancelled);
   }
 
   static List<Trip> _seedTrips(DateTime now) {

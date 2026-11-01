@@ -4,6 +4,7 @@ enum JoinRequestStatus {
   confirmed,
   declined,
   withdrawn,
+  left,
 }
 
 extension JoinRequestStatusPresentation on JoinRequestStatus {
@@ -14,6 +15,7 @@ extension JoinRequestStatusPresentation on JoinRequestStatus {
       JoinRequestStatus.confirmed => 'Spot confirmed',
       JoinRequestStatus.declined => 'Not accepted',
       JoinRequestStatus.withdrawn => 'Withdrawn',
+      JoinRequestStatus.left => 'Left the trip',
     };
   }
 

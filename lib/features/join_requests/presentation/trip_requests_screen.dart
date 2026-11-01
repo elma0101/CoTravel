@@ -300,7 +300,8 @@ class _StatusPill extends StatelessWidget {
       JoinRequestStatus.pendingTraveler ||
       JoinRequestStatus.confirmed => AppColors.green,
       JoinRequestStatus.declined ||
-      JoinRequestStatus.withdrawn => AppColors.muted,
+      JoinRequestStatus.withdrawn ||
+      JoinRequestStatus.left => AppColors.muted,
     };
     return Container(
       padding: const EdgeInsets.symmetric(

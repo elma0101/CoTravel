@@ -7,6 +7,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/auth_errors.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
@@ -196,10 +197,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   }
 
   String _messageFor(Object error) {
-    final message = error.toString();
-    return message.startsWith('AuthException: ')
-        ? message.substring('AuthException: '.length)
-        : tr('We could not send the link. Please try again.');
+    return readableAuthError(error) ??
+        tr('We could not send the link. Please try again.');
   }
 }
 

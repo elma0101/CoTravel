@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,9 +26,9 @@ class MessagesScreen extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const ScreenHeader(
-                title: 'Messages',
-                subtitle: 'Private planning for confirmed trip groups.',
+              ScreenHeader(
+                title: tr('Messages'),
+                subtitle: tr('Private planning for confirmed trip groups.'),
               ),
               Expanded(
                 child: controller.isLoading
@@ -38,11 +39,12 @@ class MessagesScreen extends ConsumerWidget {
                         onRetry: controller.load,
                       )
                     : controller.conversations.isEmpty
-                    ? const EmptyState(
+                    ? EmptyState(
                         icon: Icons.forum_outlined,
-                        title: 'No group chats yet',
-                        message:
-                            'A private conversation opens after both host and traveler confirm a trip.',
+                        title: tr('No group chats yet'),
+                        message: tr(
+                          'A private conversation opens after both host and traveler confirm a trip.',
+                        ),
                       )
                     : RefreshIndicator(
                         onRefresh: controller.load,
@@ -140,7 +142,10 @@ class _ConversationTile extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      '${conversation.routeLabel} · ${conversation.memberCount} members',
+                      tr('{routeLabel} · {memberCount} members', {
+                        'routeLabel': conversation.routeLabel,
+                        'memberCount': conversation.memberCount,
+                      }),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(
@@ -153,7 +158,7 @@ class _ConversationTile extends StatelessWidget {
                         Expanded(
                           child: Text(
                             conversation.lastMessage ??
-                                'The group chat is ready.',
+                                tr('The group chat is ready.'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyMedium
@@ -217,7 +222,7 @@ class _MessagesError extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.sm),
-            TextButton(onPressed: onRetry, child: const Text('Try again')),
+            TextButton(onPressed: onRetry, child: Text(tr('Try again'))),
           ],
         ),
       ),

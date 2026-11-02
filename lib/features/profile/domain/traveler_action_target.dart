@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'user_profile.dart';
 
 class TravelerActionTarget {
@@ -20,7 +21,7 @@ class TravelerActionTarget {
   }) {
     return TravelerActionTarget(
       userId: profile.id,
-      displayName: profile.displayName ?? 'CoTravel member',
+      displayName: profile.displayName ?? tr('CoTravel member'),
       homeCity: profile.homeCity,
       avatarUrl: profile.avatarUrl,
       isVerified: profile.isLinkedInVerified,

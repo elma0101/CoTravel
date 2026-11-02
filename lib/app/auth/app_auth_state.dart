@@ -1,3 +1,4 @@
+import '../../core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -253,7 +254,7 @@ class AppAuthState extends ChangeNotifier {
       AuthException(:final message) => message,
       PostgrestException(:final message) => message,
       StorageException(:final message) => message,
-      _ => 'Something went wrong. Please try again.',
+      _ => tr('Something went wrong. Please try again.'),
     };
   }
 

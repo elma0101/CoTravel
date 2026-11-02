@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,7 +16,7 @@ class SafetyCenterScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(safetyControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Safety Center')),
+      appBar: AppBar(title: Text(tr('Safety Center'))),
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, child) {
@@ -38,12 +39,14 @@ class SafetyCenterScreen extends ConsumerWidget {
               ),
               children: [
                 Text(
-                  'Travel should feel safe and informed.',
+                  tr('Travel should feel safe and informed.'),
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Reports are reviewed by a person. Blocking is immediate and private.',
+                  tr(
+                    'Reports are reviewed by a person. Blocking is immediate and private.',
+                  ),
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
@@ -52,14 +55,14 @@ class SafetyCenterScreen extends ConsumerWidget {
                 const _CommunityStandards(),
                 const SizedBox(height: AppSpacing.xl),
                 Text(
-                  'Blocked people',
+                  tr('Blocked people'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 if (controller.blockedUsers.isEmpty)
-                  const _CompactEmpty(
+                  _CompactEmpty(
                     icon: Icons.person_outline_rounded,
-                    text: 'You have not blocked anyone.',
+                    text: tr('You have not blocked anyone.'),
                   )
                 else
                   ...controller.blockedUsers.map(
@@ -71,20 +74,22 @@ class SafetyCenterScreen extends ConsumerWidget {
                   ),
                 const SizedBox(height: AppSpacing.xl),
                 Text(
-                  'Your reports',
+                  tr('Your reports'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 if (controller.reports.isEmpty)
-                  const _CompactEmpty(
+                  _CompactEmpty(
                     icon: Icons.flag_outlined,
-                    text: 'You have not submitted a report.',
+                    text: tr('You have not submitted a report.'),
                   )
                 else
                   ...controller.reports.map(_ReportCard.new),
                 const SizedBox(height: AppSpacing.xl),
                 Text(
-                  'CoTravel is not an emergency service. Contact local emergency services when anyone is in immediate danger.',
+                  tr(
+                    'CoTravel is not an emergency service. Contact local emergency services when anyone is in immediate danger.',
+                  ),
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
@@ -106,19 +111,21 @@ class SafetyCenterScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Unblock ${user.displayName}?'),
-        content: const Text(
-          'Their published trips may appear in discovery again.',
+        title: Text(
+          tr('Unblock {displayName}?', {'displayName': user.displayName}),
+        ),
+        content: Text(
+          tr('Their published trips may appear in discovery again.'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(tr('Cancel')),
           ),
           FilledButton(
             key: ValueKey('confirm-unblock-${user.userId}'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Unblock'),
+            child: Text(tr('Unblock')),
           ),
         ],
       ),
@@ -130,7 +137,13 @@ class SafetyCenterScreen extends ConsumerWidget {
       await controller.unblock(user.userId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${user.displayName} was unblocked.')),
+          SnackBar(
+            content: Text(
+              tr('{displayName} was unblocked.', {
+                'displayName': user.displayName,
+              }),
+            ),
+          ),
         );
       }
     } on Object {
@@ -150,7 +163,7 @@ class _CommunityStandards extends StatelessWidget {
         color: AppColors.greenSoft,
         borderRadius: BorderRadius.circular(18),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -158,17 +171,17 @@ class _CommunityStandards extends StatelessWidget {
               Icon(Icons.shield_outlined, color: AppColors.green),
               SizedBox(width: AppSpacing.sm),
               Text(
-                'Community standard',
+                tr('Community standard'),
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
           ),
           SizedBox(height: AppSpacing.sm),
-          Text('• Be honest about identity, itinerary, and shared costs.'),
+          Text(tr('• Be honest about identity, itinerary, and shared costs.')),
           SizedBox(height: AppSpacing.xs),
-          Text('• Respect boundaries and never pressure another traveler.'),
+          Text(tr('• Respect boundaries and never pressure another traveler.')),
           SizedBox(height: AppSpacing.xs),
-          Text('• Keep coordination in the confirmed group conversation.'),
+          Text(tr('• Keep coordination in the confirmed group conversation.')),
         ],
       ),
     );
@@ -198,11 +211,11 @@ class _BlockedUserTile extends StatelessWidget {
           child: Icon(Icons.block_rounded),
         ),
         title: Text(user.displayName),
-        subtitle: const Text('Trips hidden and new requests prevented'),
+        subtitle: Text(tr('Trips hidden and new requests prevented')),
         trailing: TextButton(
           key: ValueKey('unblock-${user.userId}'),
           onPressed: isUpdating ? null : onUnblock,
-          child: const Text('Unblock'),
+          child: Text(tr('Unblock')),
         ),
       ),
     );
@@ -239,7 +252,7 @@ class _ReportCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(report.reason.label),
+          Text(tr(report.reason.label)),
           if (report.tripTitle != null)
             Text(
               report.tripTitle!,
@@ -274,7 +287,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        status.label,
+        tr(status.label),
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
@@ -316,9 +329,9 @@ class _SafetyLoadError extends StatelessWidget {
   Widget build(BuildContext context) {
     return EmptyState(
       icon: Icons.shield_outlined,
-      title: 'Safety Center unavailable',
-      message: 'Your safety settings could not be loaded.',
-      action: TextButton(onPressed: onRetry, child: const Text('Try again')),
+      title: tr('Safety Center unavailable'),
+      message: tr('Your safety settings could not be loaded.'),
+      action: TextButton(onPressed: onRetry, child: Text(tr('Try again'))),
     );
   }
 }

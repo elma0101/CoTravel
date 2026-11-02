@@ -1,3 +1,4 @@
+import '../../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -47,8 +48,7 @@ class TripCard extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
-                    '${formatTripDateRange(trip.startDate, trip.endDate)} · '
-                    '${trip.capacity} travelers max',
+                    '${formatTripDateRange(trip.startDate, trip.endDate)} · ${tr('{capacity} travelers max', {'capacity': trip.capacity})}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -88,7 +88,7 @@ class _TripCover extends StatelessWidget {
 
     return Semantics(
       image: true,
-      label: photo.semanticLabel,
+      label: tr(photo.semanticLabel),
       child: SizedBox(
         height: 148,
         width: double.infinity,
@@ -138,7 +138,7 @@ class _TripCover extends StatelessWidget {
                   const SizedBox(width: AppSpacing.xxs),
                   Expanded(
                     child: Text(
-                      photo.placeLabel,
+                      tr(photo.placeLabel),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -166,12 +166,12 @@ class _SeatsLabel extends StatelessWidget {
 
   String get _label {
     if (trip.isCancelled) {
-      return 'Cancelled';
+      return tr('Cancelled');
     }
     return switch (trip.openSeats) {
-      0 => 'Full',
-      1 => '1 seat left',
-      final seats => '$seats seats left',
+      0 => tr('Full'),
+      1 => tr('1 seat left'),
+      final seats => tr('{seats} seats left', {'seats': seats}),
     };
   }
 
@@ -233,7 +233,9 @@ class _HostAndPrice extends StatelessWidget {
             children: [
               Text(trip.hostName, style: textTheme.titleSmall),
               Text(
-                trip.hostVerified ? 'LinkedIn verified' : 'Not verified yet',
+                trip.hostVerified
+                    ? tr('LinkedIn verified')
+                    : tr('Not verified yet'),
                 style: muted,
               ),
             ],
@@ -247,7 +249,7 @@ class _HostAndPrice extends StatelessWidget {
               formatTripMoney(trip.estimatedFullGroupShare, trip.currency),
               style: textTheme.titleSmall,
             ),
-            Text('estimated', style: muted),
+            Text(tr('estimated'), style: muted),
           ],
         ),
       ],

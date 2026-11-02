@@ -1,3 +1,4 @@
+import 'package:cotravel_app/core/l10n/app_strings.dart';
 import 'package:cotravel_app/app/auth/app_auth_state.dart';
 import 'package:cotravel_app/app/config/app_config.dart';
 import 'package:cotravel_app/app/cotravel_app.dart';
@@ -30,6 +31,20 @@ void main() {
     expect(find.text('CoTravel'), findsOneWidget);
     expect(find.text('Find your people, then go.'), findsOneWidget);
     expect(find.text('Explore'), findsOneWidget);
+  });
+
+  testWidgets('follows a French device', (tester) async {
+    tester.platformDispatcher.localesTestValue = const [Locale('fr', 'MA')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(() => appLanguageCode = 'en');
+    final authState = AppAuthState.preview(initiallyAuthenticated: true);
+    addTearDown(authState.dispose);
+
+    await _pumpApp(tester, authState);
+
+    expect(find.text('Explorer'), findsOneWidget);
+    expect(find.text('Rechercher des voyages'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('switches between protected destinations', (tester) async {

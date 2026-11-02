@@ -1,3 +1,5 @@
+import '../../../core/l10n/app_strings.dart';
+
 enum BetaExperienceArea {
   discovery,
   joining,
@@ -7,10 +9,10 @@ enum BetaExperienceArea {
   String get databaseValue => name;
 
   String get label => switch (this) {
-    discovery => 'Finding a trip',
-    joining => 'Joining a group',
-    hosting => 'Hosting a trip',
-    coordination => 'Planning together',
+    discovery => tr('Finding a trip'),
+    joining => tr('Joining a group'),
+    hosting => tr('Hosting a trip'),
+    coordination => tr('Planning together'),
   };
 }
 

@@ -1,3 +1,4 @@
+import '../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,15 +28,15 @@ class AppShell extends ConsumerWidget {
               );
             },
             destinations: [
-              const NavigationDestination(
+              NavigationDestination(
                 icon: Icon(Icons.explore_outlined),
                 selectedIcon: Icon(Icons.explore),
-                label: 'Explore',
+                label: tr('Explore'),
               ),
-              const NavigationDestination(
+              NavigationDestination(
                 icon: Icon(Icons.luggage_outlined),
                 selectedIcon: Icon(Icons.luggage),
-                label: 'My trips',
+                label: tr('My trips'),
               ),
               NavigationDestination(
                 icon: _UnreadIcon(
@@ -46,12 +47,12 @@ class AppShell extends ConsumerWidget {
                   count: unreadCount,
                   child: const Icon(Icons.chat_bubble_rounded),
                 ),
-                label: 'Messages',
+                label: tr('Messages'),
               ),
-              const NavigationDestination(
+              NavigationDestination(
                 icon: Icon(Icons.person_outline_rounded),
                 selectedIcon: Icon(Icons.person_rounded),
-                label: 'Profile',
+                label: tr('Profile'),
               ),
             ],
           ),

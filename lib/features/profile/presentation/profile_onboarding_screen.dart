@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -114,7 +115,7 @@ class _ProfileOnboardingScreenState
     try {
       final launched = await ref.read(appAuthStateProvider).linkLinkedIn();
       if (!launched && mounted) {
-        _showMessage('LinkedIn could not be opened. Please try again.');
+        _showMessage(tr('LinkedIn could not be opened. Please try again.'));
       }
     } on Object catch (error) {
       if (mounted) {
@@ -132,7 +133,7 @@ class _ProfileOnboardingScreenState
       return;
     }
     if (_selectedStyles.isEmpty) {
-      _showMessage('Choose at least one travel style.');
+      _showMessage(tr('Choose at least one travel style.'));
       return;
     }
 
@@ -144,7 +145,7 @@ class _ProfileOnboardingScreenState
         .take(8)
         .toList();
     if (languages.isEmpty) {
-      _showMessage('Add at least one language.');
+      _showMessage(tr('Add at least one language.'));
       return;
     }
 
@@ -152,12 +153,12 @@ class _ProfileOnboardingScreenState
     final profile = ref.read(appAuthStateProvider).profile;
     if (config.requireLinkedInVerification &&
         profile?.isLinkedInVerified != true) {
-      _showMessage('Connect LinkedIn before completing your profile.');
+      _showMessage(tr('Connect LinkedIn before completing your profile.'));
       return;
     }
 
     if (!widget.isEditing && !_acceptedTerms) {
-      _showMessage('Accept the terms of use to continue.');
+      _showMessage(tr('Accept the terms of use to continue.'));
       return;
     }
 
@@ -209,12 +210,14 @@ class _ProfileOnboardingScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit profile' : 'Your travel profile'),
+        title: Text(
+          widget.isEditing ? tr('Edit profile') : tr('Your travel profile'),
+        ),
         actions: [
           if (!widget.isEditing)
             TextButton(
               onPressed: authState.signOut,
-              child: const Text('Sign out'),
+              child: Text(tr('Sign out')),
             ),
         ],
       ),
@@ -230,12 +233,14 @@ class _ProfileOnboardingScreenState
             ),
             children: [
               Text(
-                'Help people know who they will travel with.',
+                tr('Help people know who they will travel with.'),
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Keep it brief, honest, and useful. You can edit these details later.',
+                tr(
+                  'Keep it brief, honest, and useful. You can edit these details later.',
+                ),
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
@@ -252,11 +257,11 @@ class _ProfileOnboardingScreenState
               TextFormField(
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Display name'),
+                decoration: InputDecoration(labelText: tr('Display name')),
                 validator: (value) {
                   final length = value?.trim().length ?? 0;
                   return length < 2 || length > 60
-                      ? 'Use between 2 and 60 characters'
+                      ? tr('Use between 2 and 60 characters')
                       : null;
                 },
               ),
@@ -266,30 +271,32 @@ class _ProfileOnboardingScreenState
                 minLines: 3,
                 maxLines: 5,
                 maxLength: 280,
-                decoration: const InputDecoration(
-                  labelText: 'Short introduction',
-                  hintText: 'What makes you a good travel companion?',
+                decoration: InputDecoration(
+                  labelText: tr('Short introduction'),
+                  hintText: tr('What makes you a good travel companion?'),
                 ),
                 validator: (value) {
                   final length = value?.trim().length ?? 0;
-                  return length < 20 ? 'Write at least 20 characters' : null;
+                  return length < 20
+                      ? tr('Write at least 20 characters')
+                      : null;
                 },
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
                 controller: _cityController,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Home city',
+                decoration: InputDecoration(
+                  labelText: tr('Home city'),
                   prefixIcon: Icon(Icons.location_city_outlined),
                 ),
                 validator: (value) => (value?.trim().isEmpty ?? true)
-                    ? 'Add your home city'
+                    ? tr('Add your home city')
                     : null,
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Travel styles',
+                tr('Travel styles'),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -298,7 +305,7 @@ class _ProfileOnboardingScreenState
                 runSpacing: AppSpacing.xs,
                 children: _availableStyles.map((style) {
                   return FilterChip(
-                    label: Text(style),
+                    label: Text(tr(style)),
                     selected: _selectedStyles.contains(style),
                     onSelected: (selected) {
                       setState(() {
@@ -316,10 +323,10 @@ class _ProfileOnboardingScreenState
               TextFormField(
                 controller: _languagesController,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Languages',
-                  hintText: 'Arabic, French, English',
-                  helperText: 'Separate languages with commas',
+                decoration: InputDecoration(
+                  labelText: tr('Languages'),
+                  hintText: tr('Arabic, French, English'),
+                  helperText: tr('Separate languages with commas'),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -328,10 +335,11 @@ class _ProfileOnboardingScreenState
                 controller: _occupationController,
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 80,
-                decoration: const InputDecoration(
-                  labelText: 'Occupation (optional)',
-                  helperText:
-                      'Shown as you enter it. CoTravel does not check it.',
+                decoration: InputDecoration(
+                  labelText: tr('Occupation (optional)'),
+                  helperText: tr(
+                    'Shown as you enter it. CoTravel does not check it.',
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -339,10 +347,11 @@ class _ProfileOnboardingScreenState
                 key: const ValueKey('profile-instagram'),
                 controller: _instagramController,
                 autocorrect: false,
-                decoration: const InputDecoration(
-                  labelText: 'Instagram username (optional)',
-                  helperText:
-                      'Shown as you enter it. CoTravel does not check it.',
+                decoration: InputDecoration(
+                  labelText: tr('Instagram username (optional)'),
+                  helperText: tr(
+                    'Shown as you enter it. CoTravel does not check it.',
+                  ),
                   prefixText: '@',
                 ),
                 validator: (value) {
@@ -350,7 +359,7 @@ class _ProfileOnboardingScreenState
                   return handle.isEmpty ||
                           RegExp(r'^[A-Za-z0-9._]{1,30}$').hasMatch(handle)
                       ? null
-                      : 'Enter a valid Instagram username';
+                      : tr('Enter a valid Instagram username');
                 },
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -371,20 +380,21 @@ class _ProfileOnboardingScreenState
                   onChanged: (value) {
                     setState(() => _acceptedTerms = value ?? false);
                   },
-                  title: const Text(
-                    'I accept the terms of use and privacy policy. CoTravel '
-                    'is a coordination tool, not a travel agency.',
+                  title: Text(
+                    tr(
+                      'I accept the terms of use and privacy policy. CoTravel is a coordination tool, not a travel agency.',
+                    ),
                   ),
                 ),
                 Wrap(
                   children: [
                     TextButton(
                       onPressed: () => context.push(AppRoutes.terms),
-                      child: const Text('Read the terms'),
+                      child: Text(tr('Read the terms')),
                     ),
                     TextButton(
                       onPressed: () => context.push(AppRoutes.privacy),
-                      child: const Text('Read the privacy policy'),
+                      child: Text(tr('Read the privacy policy')),
                     ),
                   ],
                 ),
@@ -395,10 +405,10 @@ class _ProfileOnboardingScreenState
                 onPressed: _isSaving ? null : _saveProfile,
                 child: Text(
                   _isSaving
-                      ? 'Saving profile…'
+                      ? tr('Saving profile…')
                       : widget.isEditing
-                      ? 'Save changes'
-                      : 'Complete profile',
+                      ? tr('Save changes')
+                      : tr('Complete profile'),
                 ),
               ),
             ],
@@ -425,7 +435,7 @@ class _ProfileOnboardingScreenState
         return value.substring(prefix.length);
       }
     }
-    return 'Something went wrong. Please try again.';
+    return tr('Something went wrong. Please try again.');
   }
 }
 
@@ -451,7 +461,7 @@ class _AvatarEditor extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Choose profile photo',
+      label: tr('Choose profile photo'),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
@@ -532,13 +542,15 @@ class _VerificationCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  isVerified ? 'LinkedIn verified' : 'Verify with LinkedIn',
+                  isVerified
+                      ? tr('LinkedIn verified')
+                      : tr('Verify with LinkedIn'),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
               if (isRequired && !isVerified)
-                const Text(
-                  'Required',
+                Text(
+                  tr('Required'),
                   style: TextStyle(
                     color: AppColors.terracotta,
                     fontWeight: FontWeight.w600,
@@ -549,8 +561,10 @@ class _VerificationCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             isVerified
-                ? 'Your professional identity is connected.'
-                : 'This gives future companions a simple trust signal. CoTravel never posts to LinkedIn.',
+                ? tr('Your professional identity is connected.')
+                : tr(
+                    'This gives future companions a simple trust signal. CoTravel never posts to LinkedIn.',
+                  ),
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -562,13 +576,15 @@ class _VerificationCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: isLinking ? null : onLink,
-                    child: Text(isLinking ? 'Opening…' : 'Connect LinkedIn'),
+                    child: Text(
+                      isLinking ? tr('Opening…') : tr('Connect LinkedIn'),
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 IconButton(
                   onPressed: onRefresh,
-                  tooltip: 'Refresh verification',
+                  tooltip: tr('Refresh verification'),
                   icon: const Icon(Icons.refresh_rounded),
                 ),
               ],

@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -44,14 +45,14 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Trip details')),
+            appBar: AppBar(title: Text(tr('Trip details'))),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
         final trip = snapshot.data;
         if (trip == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Trip details')),
+            appBar: AppBar(title: Text(tr('Trip details'))),
             body: _MissingTrip(
               onRetry: () {
                 setState(() {
@@ -67,7 +68,7 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           builder: (context, child) {
             final current = catalog.tripById(widget.tripId) ?? trip;
             return Scaffold(
-              appBar: AppBar(title: const Text('Trip details')),
+              appBar: AppBar(title: Text(tr('Trip details'))),
               body: _TripDetails(trip: current),
               bottomNavigationBar: JoinRequestBar(trip: current),
             );
@@ -101,7 +102,7 @@ class _TripDetails extends StatelessWidget {
               Text(trip.title, style: textTheme.headlineMedium),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '${formatTripDateRange(trip.startDate, trip.endDate)} · ${trip.travelStyle}',
+                '${formatTripDateRange(trip.startDate, trip.endDate)} · ${tr(trip.travelStyle)}',
                 style: textTheme.bodyMedium?.copyWith(color: AppColors.muted),
               ),
             ],
@@ -172,7 +173,7 @@ class _TripHero extends StatelessWidget {
           else ...[
             Semantics(
               image: true,
-              label: photo.semanticLabel,
+              label: tr(photo.semanticLabel),
               child: Image.asset(
                 photo.assetPath,
                 alignment: photo.alignment,
@@ -238,14 +239,18 @@ class _LogisticsAccessCard extends ConsumerWidget {
                   children: [
                     Text(
                       hasAccess
-                          ? 'Shared logistics'
-                          : 'Private group logistics',
+                          ? tr('Shared logistics')
+                          : tr('Private group logistics'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
                       hasAccess
-                          ? 'Calculate each share and open the booking shortlist.'
-                          : 'Links unlock after both sides confirm the trip.',
+                          ? tr(
+                              'Calculate each share and open the booking shortlist.',
+                            )
+                          : tr(
+                              'Links unlock after both sides confirm the trip.',
+                            ),
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -256,7 +261,7 @@ class _LogisticsAccessCard extends ConsumerWidget {
               if (hasAccess)
                 IconButton(
                   key: const ValueKey('open-shared-logistics'),
-                  tooltip: 'Open shared logistics',
+                  tooltip: tr('Open shared logistics'),
                   onPressed: () =>
                       context.push(AppRoutes.tripLogistics(trip.id)),
                   icon: const Icon(Icons.arrow_forward_rounded),
@@ -316,11 +321,11 @@ class _HostRow extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Hosted by ${trip.hostName}',
+                        tr('Hosted by {hostName}', {'hostName': trip.hostName}),
                         style: textTheme.titleMedium,
                       ),
                       Text(
-                        trip.hostHomeCity ?? 'CoTravel member',
+                        trip.hostHomeCity ?? tr('CoTravel member'),
                         style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.muted,
                         ),
@@ -328,8 +333,8 @@ class _HostRow extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const Text(
-                  'View',
+                Text(
+                  tr('View'),
                   style: TextStyle(
                     color: AppColors.green,
                     fontWeight: FontWeight.w600,
@@ -384,7 +389,7 @@ class _VerificationChip extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.xxs),
             Text(
-              verified ? 'LinkedIn verified' : 'Not verified yet',
+              verified ? tr('LinkedIn verified') : tr('Not verified yet'),
               style: TextStyle(
                 color: color,
                 fontSize: 12,
@@ -414,12 +419,12 @@ class _RouteSection extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Route',
+                tr('Route'),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             Text(
-              '$count ${count == 1 ? 'stop' : 'stops'} · ${trip.durationDays} days',
+              '${trPlural(count, '{n} stop', '{n} stops')} · ${trPlural(trip.durationDays, '{n} day', '{n} days')}',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
@@ -439,7 +444,7 @@ class _RouteSection extends StatelessWidget {
               key: const ValueKey('explore-trip-route'),
               onPressed: () => context.push(AppRoutes.tripRoute(trip.id)),
               icon: const Icon(Icons.map_outlined, size: 18),
-              label: const Text('View on map'),
+              label: Text(tr('View on map')),
             ),
           ),
       ],
@@ -546,10 +551,10 @@ class _CostTable extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Estimated cost per traveler', style: textTheme.titleMedium),
+          Text(tr('Estimated cost per traveler'), style: textTheme.titleMedium),
           const SizedBox(height: AppSpacing.sm),
           _CostRow(
-            label: 'Accommodation',
+            label: tr('Accommodation'),
             value: formatTripMoney(
               trip.lodgingTotal / trip.capacity,
               trip.currency,
@@ -557,7 +562,7 @@ class _CostTable extends StatelessWidget {
           ),
           const Divider(height: AppSpacing.md),
           _CostRow(
-            label: 'Shared transport',
+            label: tr('Shared transport'),
             value: formatTripMoney(
               trip.transportTotal / trip.capacity,
               trip.currency,
@@ -565,13 +570,16 @@ class _CostTable extends StatelessWidget {
           ),
           const Divider(height: AppSpacing.md),
           _CostRow(
-            label: 'Total',
+            label: tr('Total'),
             value: formatTripMoney(trip.estimatedFullGroupShare, trip.currency),
             emphasized: true,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'With a full group of ${trip.capacity}. Planning estimate only. The group confirms every booking before paying.',
+            tr(
+              'With a full group of {capacity}. Planning estimate only. The group confirms every booking before paying.',
+              {'capacity': trip.capacity},
+            ),
             style: textTheme.bodySmall?.copyWith(color: AppColors.muted),
           ),
         ],
@@ -621,13 +629,13 @@ class _MissingTrip extends StatelessWidget {
             const Icon(Icons.route_outlined, size: 44, color: AppColors.green),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'This trip is unavailable',
+              tr('This trip is unavailable'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text('It may have been closed or removed by its host.'),
+            Text(tr('It may have been closed or removed by its host.')),
             const SizedBox(height: AppSpacing.md),
-            TextButton(onPressed: onRetry, child: const Text('Try again')),
+            TextButton(onPressed: onRetry, child: Text(tr('Try again'))),
           ],
         ),
       ),

@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,9 +26,9 @@ class ProfileScreen extends ConsumerWidget {
         return SafeArea(
           child: ListView(
             children: [
-              const ScreenHeader(
-                title: 'Profile',
-                subtitle: 'Build trust before the journey begins.',
+              ScreenHeader(
+                title: tr('Profile'),
+                subtitle: tr('Build trust before the journey begins.'),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -40,42 +41,42 @@ class ProfileScreen extends ConsumerWidget {
               _ProfileTile(
                 key: const ValueKey('open-edit-profile'),
                 icon: Icons.tune_rounded,
-                title: 'Edit profile and preferences',
+                title: tr('Edit profile and preferences'),
                 onTap: () => context.push(AppRoutes.editProfile),
               ),
               _ProfileTile(
                 key: const ValueKey('open-safety-center'),
                 icon: Icons.help_outline_rounded,
-                title: 'Help & safety',
+                title: tr('Help & safety'),
                 onTap: () => context.push(AppRoutes.safety),
               ),
               _ProfileTile(
                 key: const ValueKey('open-beta-feedback'),
                 icon: Icons.forum_outlined,
-                title: 'Beta feedback',
+                title: tr('Beta feedback'),
                 onTap: () => context.push(AppRoutes.betaFeedback),
               ),
               _ProfileTile(
                 key: const ValueKey('open-terms'),
                 icon: Icons.description_outlined,
-                title: 'Terms of use',
+                title: tr('Terms of use'),
                 onTap: () => context.push(AppRoutes.terms),
               ),
               _ProfileTile(
                 key: const ValueKey('open-privacy'),
                 icon: Icons.privacy_tip_outlined,
-                title: 'Privacy policy',
+                title: tr('Privacy policy'),
                 onTap: () => context.push(AppRoutes.privacy),
               ),
               _ProfileTile(
                 icon: Icons.logout_rounded,
-                title: 'Sign out',
+                title: tr('Sign out'),
                 onTap: authState.signOut,
               ),
               _ProfileTile(
                 key: const ValueKey('delete-account'),
                 icon: Icons.delete_outline_rounded,
-                title: 'Delete account',
+                title: tr('Delete account'),
                 onTap: () => _confirmDeleteAccount(context, authState),
               ),
             ],
@@ -94,21 +95,21 @@ Future<void> _confirmDeleteAccount(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: const Text('Delete your account?'),
-        content: const Text(
-          'This removes your profile, photo, requests, and the trips you '
-          'created, and it cannot be undone. Messages you sent stay visible to '
-          'their group as "Former member", and safety reports are kept.',
+        title: Text(tr('Delete your account?')),
+        content: Text(
+          tr(
+            'This removes your profile, photo, requests, and the trips you created, and it cannot be undone. Messages you sent stay visible to their group as "Former member", and safety reports are kept.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Keep account'),
+            child: Text(tr('Keep account')),
           ),
           TextButton(
             key: const ValueKey('confirm-delete-account'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete account'),
+            child: Text(tr('Delete account')),
           ),
         ],
       );
@@ -125,8 +126,10 @@ Future<void> _confirmDeleteAccount(
     messenger.showSnackBar(SnackBar(content: Text(error.message)));
   } on Object {
     messenger.showSnackBar(
-      const SnackBar(
-        content: Text('Your account could not be deleted. Please try again.'),
+      SnackBar(
+        content: Text(
+          tr('Your account could not be deleted. Please try again.'),
+        ),
       ),
     );
   }
@@ -173,12 +176,12 @@ class _ProfileSummary extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile?.displayName ?? 'Your travel profile',
+                      profile?.displayName ?? tr('Your travel profile'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
-                      profile?.homeCity ?? 'Add your home city',
+                      profile?.homeCity ?? tr('Add your home city'),
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -201,7 +204,7 @@ class _ProfileSummary extends StatelessWidget {
               children: profile!.travelStyles
                   .map(
                     (style) => Chip(
-                      label: Text(style),
+                      label: Text(tr(style)),
                       visualDensity: VisualDensity.compact,
                     ),
                   )
@@ -227,11 +230,13 @@ class _VerificationTile extends StatelessWidget {
         isVerified ? Icons.verified_rounded : Icons.verified_user_outlined,
         color: isVerified ? AppColors.green : AppColors.terracotta,
       ),
-      title: Text(isVerified ? 'LinkedIn verified' : 'Verification pending'),
+      title: Text(
+        isVerified ? tr('LinkedIn verified') : tr('Verification pending'),
+      ),
       subtitle: Text(
         isVerified
-            ? 'Your professional identity is connected.'
-            : 'Connect a professional identity to strengthen trust.',
+            ? tr('Your professional identity is connected.')
+            : tr('Connect a professional identity to strengthen trust.'),
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: () => context.push(AppRoutes.editProfile),

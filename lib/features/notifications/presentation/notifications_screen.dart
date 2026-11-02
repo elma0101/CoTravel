@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -30,13 +31,13 @@ class NotificationsScreen extends ConsumerWidget {
       builder: (context, child) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Notifications'),
+            title: Text(tr('Notifications')),
             actions: [
               if (controller.unreadCount > 0)
                 TextButton(
                   key: const ValueKey('mark-all-notifications-read'),
                   onPressed: controller.markAllRead,
-                  child: const Text('Mark all read'),
+                  child: Text(tr('Mark all read')),
                 ),
             ],
           ),
@@ -54,16 +55,16 @@ class NotificationsScreen extends ConsumerWidget {
     if (controller.errorMessage != null) {
       return EmptyState(
         icon: Icons.cloud_off_outlined,
-        title: 'Notifications are unavailable',
+        title: tr('Notifications are unavailable'),
         message: controller.errorMessage!,
       );
     }
     final notifications = controller.notifications;
     if (notifications.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.notifications_none_rounded,
-        title: 'Nothing new yet',
-        message: 'Requests, approvals, and trip changes will appear here.',
+        title: tr('Nothing new yet'),
+        message: tr('Requests, approvals, and trip changes will appear here.'),
       );
     }
     return RefreshIndicator(

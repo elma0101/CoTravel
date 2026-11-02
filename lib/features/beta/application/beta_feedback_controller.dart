@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/state/dispose_safe_notifier.dart';
 import 'package:flutter/foundation.dart';
 
@@ -35,10 +36,10 @@ class BetaFeedbackController extends ChangeNotifier with DisposeSafeNotifier {
 
   Future<BetaFeedback> submit(BetaFeedbackDraft draft) async {
     if (draft.safeInformedScore < 1 || draft.safeInformedScore > 5) {
-      throw ArgumentError('Choose a rating from 1 to 5.');
+      throw ArgumentError(tr('Choose a rating from 1 to 5.'));
     }
     if (draft.comments.trim().length > 1000) {
-      throw ArgumentError('Keep your note under 1000 characters.');
+      throw ArgumentError(tr('Keep your note under 1000 characters.'));
     }
 
     _isSubmitting = true;
@@ -77,6 +78,6 @@ class BetaFeedbackController extends ChangeNotifier with DisposeSafeNotifier {
         return message.substring(prefix.length).split(', code:').first;
       }
     }
-    return 'Your feedback could not be sent. Please try again.';
+    return tr('Your feedback could not be sent. Please try again.');
   }
 }

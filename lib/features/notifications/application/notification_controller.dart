@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
@@ -33,7 +34,9 @@ class NotificationController extends ChangeNotifier with DisposeSafeNotifier {
     try {
       _notifications = await _repository.fetchNotifications();
     } on Object {
-      _errorMessage = 'Notifications could not be loaded. Please try again.';
+      _errorMessage = tr(
+        'Notifications could not be loaded. Please try again.',
+      );
     } finally {
       _isLoading = false;
       notifyListeners();

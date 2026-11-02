@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -37,30 +38,28 @@ class _RouteExplorerScreenState extends ConsumerState<RouteExplorerScreen> {
       future: _trip,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return Scaffold(body: Center(child: CircularProgressIndicator()));
         }
         final trip = snapshot.data;
         if (trip == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Explore route')),
+            appBar: AppBar(title: Text(tr('Explore route'))),
             body: Center(
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.map_outlined, size: 42),
-                    const SizedBox(height: AppSpacing.md),
+                    Icon(Icons.map_outlined, size: 42),
+                    SizedBox(height: AppSpacing.md),
                     Text(
-                      'This route is no longer available.',
+                      tr('This route is no longer available.'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
                     FilledButton(
                       onPressed: () => context.pop(),
-                      child: const Text('Go back'),
+                      child: Text(tr('Go back')),
                     ),
                   ],
                 ),
@@ -255,7 +254,7 @@ class _InteractiveRouteExplorerState extends State<_InteractiveRouteExplorer> {
     } on Object {
       if (mounted) {
         setState(() {
-          _mapError = 'The route map could not be prepared.';
+          _mapError = tr('The route map could not be prepared.');
         });
       }
     } finally {
@@ -444,14 +443,14 @@ class _InteractiveRouteExplorerState extends State<_InteractiveRouteExplorer> {
                 child: Row(
                   children: [
                     _MapActionButton(
-                      tooltip: 'Back to trip',
+                      tooltip: tr('Back to trip'),
                       icon: Icons.arrow_back_rounded,
                       onPressed: () => context.pop(),
                     ),
                     const Spacer(),
                     _MapActionButton(
                       key: const ValueKey('show-entire-route'),
-                      tooltip: 'Show entire route',
+                      tooltip: tr('Show entire route'),
                       icon: Icons.route_rounded,
                       onPressed: mappedPoints.isEmpty
                           ? null
@@ -463,7 +462,7 @@ class _InteractiveRouteExplorerState extends State<_InteractiveRouteExplorer> {
             ),
           ),
           if (!_mapReady && _mapError == null)
-            const Positioned(
+            Positioned(
               top: 88,
               left: 0,
               right: 0,
@@ -486,7 +485,7 @@ class _InteractiveRouteExplorerState extends State<_InteractiveRouteExplorer> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                         SizedBox(width: AppSpacing.sm),
-                        Text('Preparing route…'),
+                        Text(tr('Preparing route…')),
                       ],
                     ),
                   ),
@@ -620,7 +619,10 @@ class _RouteItinerarySheet extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
-                      '${trip.durationDays} days · ${route.points.length} points',
+                      tr('{durationDays} days · {length} points', {
+                        'durationDays': trip.durationDays,
+                        'length': route.points.length,
+                      }),
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -639,12 +641,12 @@ class _RouteItinerarySheet extends StatelessWidget {
                     key: const ValueKey('start-guided-route'),
                     onPressed: onStartGuided,
                     icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Start guided route'),
+                    label: Text(tr('Start guided route')),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(
-                  'Itinerary',
+                  tr('Itinerary'),
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ],
@@ -726,7 +728,7 @@ class _RoutePointCard extends StatelessWidget {
                         ),
                         const SizedBox(width: AppSpacing.xxs),
                         Text(
-                          point.isOrigin ? 'Departure' : point.type.label,
+                          point.isOrigin ? tr('Departure') : point.type.label,
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
                                 color: AppColors.terracotta,
@@ -735,8 +737,8 @@ class _RoutePointCard extends StatelessWidget {
                         ),
                         if (point.isOptional) ...[
                           const SizedBox(width: AppSpacing.xs),
-                          const Text(
-                            'Optional',
+                          Text(
+                            tr('Optional'),
                             style: TextStyle(
                               color: AppColors.muted,
                               fontSize: 12,
@@ -768,7 +770,7 @@ class _RoutePointCard extends StatelessWidget {
                     ],
                     if (point.coordinate == null) ...[
                       const SizedBox(height: AppSpacing.xs),
-                      const Row(
+                      Row(
                         children: [
                           Icon(
                             Icons.location_off_outlined,
@@ -777,7 +779,7 @@ class _RoutePointCard extends StatelessWidget {
                           ),
                           SizedBox(width: AppSpacing.xxs),
                           Text(
-                            'Map location unavailable',
+                            tr('Map location unavailable'),
                             style: TextStyle(color: AppColors.muted),
                           ),
                         ],
@@ -829,7 +831,10 @@ class _GuidedRouteSheet extends StatelessWidget {
         Row(
           children: [
             Text(
-              'Step ${point.index + 1}/$pointCount',
+              tr('Step {index}/{pointCount}', {
+                'index': point.index + 1,
+                'pointCount': pointCount,
+              }),
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: AppColors.terracotta,
                 fontWeight: FontWeight.w700,
@@ -838,13 +843,13 @@ class _GuidedRouteSheet extends StatelessWidget {
             const Spacer(),
             IconButton(
               key: const ValueKey('route-previous'),
-              tooltip: 'Previous stop',
+              tooltip: tr('Previous stop'),
               onPressed: onPrevious,
               icon: const Icon(Icons.arrow_back_rounded),
             ),
             IconButton.filled(
               key: const ValueKey('route-next'),
-              tooltip: isLast ? 'Finish route' : 'Next stop',
+              tooltip: isLast ? tr('Finish route') : tr('Next stop'),
               onPressed: onNext,
               icon: Icon(
                 isLast ? Icons.check_rounded : Icons.arrow_forward_rounded,
@@ -858,7 +863,7 @@ class _GuidedRouteSheet extends StatelessWidget {
             Icon(_iconForPoint(point), color: AppColors.terracotta, size: 18),
             const SizedBox(width: AppSpacing.xs),
             Text(
-              point.isOrigin ? 'Departure' : point.type.label,
+              point.isOrigin ? tr('Departure') : point.type.label,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: AppColors.terracotta,
                 fontWeight: FontWeight.w700,
@@ -866,7 +871,7 @@ class _GuidedRouteSheet extends StatelessWidget {
             ),
             if (point.isOptional) ...[
               const SizedBox(width: AppSpacing.xs),
-              const Chip(label: Text('Optional')),
+              Chip(label: Text(tr('Optional'))),
             ],
           ],
         ),
@@ -916,7 +921,7 @@ class _GuidedRouteSheet extends StatelessWidget {
         TextButton(
           key: const ValueKey('exit-guided-route'),
           onPressed: onExit,
-          child: Text('Exit guided route · ${trip.title}'),
+          child: Text(tr('Exit guided route · {title}', {'title': trip.title})),
         ),
       ],
     );
@@ -1009,9 +1014,14 @@ String _pointMeta(TripRoutePoint point) {
 }
 
 String _travelDescription(TripRoutePoint point) {
-  final mode = point.travelMode?.label ?? 'Transfer';
+  final mode = point.travelMode?.label ?? tr('Transfer');
   final duration = point.travelDurationMinutes;
-  return duration == null ? mode : '$mode · about ${_formatDuration(duration)}';
+  return duration == null
+      ? mode
+      : tr('{mode} · about {value}', {
+          'value': _formatDuration(duration),
+          'mode': mode,
+        });
 }
 
 String _formatDuration(int minutes) {

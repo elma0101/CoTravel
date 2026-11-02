@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,7 +19,7 @@ class TripRequestsScreen extends ConsumerWidget {
     final controller = ref.watch(joinRequestControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Traveler requests')),
+      appBar: AppBar(title: Text(tr('Traveler requests'))),
       body: SafeArea(
         child: ListenableBuilder(
           listenable: controller,
@@ -69,18 +70,20 @@ class TripRequestsScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Decline this request?'),
+        title: Text(tr('Decline this request?')),
         content: Text(
-          '${request.travelerName} will see that the request was not accepted.',
+          tr('{travelerName} will see that the request was not accepted.', {
+            'travelerName': request.travelerName,
+          }),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep reviewing'),
+            child: Text(tr('Keep reviewing')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Decline'),
+            child: Text(tr('Decline')),
           ),
         ],
       ),
@@ -103,8 +106,10 @@ class TripRequestsScreen extends ConsumerWidget {
           SnackBar(
             content: Text(
               accept
-                  ? 'Approved. ${request.travelerName} must now confirm.'
-                  : 'Request declined.',
+                  ? tr('Approved. {travelerName} must now confirm.', {
+                      'travelerName': request.travelerName,
+                    })
+                  : tr('Request declined.'),
             ),
           ),
         );
@@ -114,7 +119,7 @@ class TripRequestsScreen extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              controller.errorMessage ?? 'Request could not be updated.',
+              controller.errorMessage ?? tr('Request could not be updated.'),
             ),
           ),
         );
@@ -146,7 +151,9 @@ class _RequestsIntro extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Review the traveler’s profile and note. Approval invites them to confirm; it does not lock a seat yet.',
+          tr(
+            'Review the traveler’s profile and note. Approval invites them to confirm; it does not lock a seat yet.',
+          ),
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
@@ -211,7 +218,7 @@ class _CandidateCard extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      request.travelerHomeCity ?? 'CoTravel traveler',
+                      request.travelerHomeCity ?? tr('CoTravel traveler'),
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -249,7 +256,7 @@ class _CandidateCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: isUpdating ? null : onDecline,
-                    child: const Text('Decline'),
+                    child: Text(tr('Decline')),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -257,7 +264,7 @@ class _CandidateCard extends StatelessWidget {
                   child: FilledButton(
                     key: ValueKey('approve-request-${request.id}'),
                     onPressed: isUpdating ? null : onAccept,
-                    child: const Text('Approve'),
+                    child: Text(tr('Approve')),
                   ),
                 ),
               ],
@@ -266,7 +273,7 @@ class _CandidateCard extends StatelessWidget {
           if (request.status == JoinRequestStatus.pendingTraveler) ...[
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Approved by you. Waiting for the traveler to confirm.',
+              tr('Approved by you. Waiting for the traveler to confirm.'),
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.green),
@@ -313,7 +320,7 @@ class _StatusPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        status == JoinRequestStatus.pendingHost ? 'New' : status.label,
+        status == JoinRequestStatus.pendingHost ? tr('New') : status.label,
         style: TextStyle(
           color: color,
           fontSize: 11,
@@ -342,12 +349,14 @@ class _EmptyRequests extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'No traveler requests yet',
+              tr('No traveler requests yet'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'New requests will appear here with the traveler’s profile and introduction.',
+            Text(
+              tr(
+                'New requests will appear here with the traveler’s profile and introduction.',
+              ),
               textAlign: TextAlign.center,
             ),
           ],

@@ -1,4 +1,39 @@
+import '../../../core/l10n/app_strings.dart';
+
+const _frenchShortMonths = [
+  'janv.',
+  'févr.',
+  'mars',
+  'avr.',
+  'mai',
+  'juin',
+  'juil.',
+  'août',
+  'sept.',
+  'oct.',
+  'nov.',
+  'déc.',
+];
+
+const _frenchMonths = [
+  'janvier',
+  'février',
+  'mars',
+  'avril',
+  'mai',
+  'juin',
+  'juillet',
+  'août',
+  'septembre',
+  'octobre',
+  'novembre',
+  'décembre',
+];
+
 String formatTripDate(DateTime value) {
+  if (appLanguageCode == 'fr') {
+    return '${value.day} ${_frenchShortMonths[value.month - 1]}';
+  }
   const months = [
     'Jan',
     'Feb',
@@ -37,6 +72,9 @@ String formatTripMoney(double value, String currency) {
 }
 
 String formatMonthYear(DateTime date) {
+  if (appLanguageCode == 'fr') {
+    return '${_frenchMonths[date.month - 1]} ${date.year}';
+  }
   const months = [
     'January',
     'February',

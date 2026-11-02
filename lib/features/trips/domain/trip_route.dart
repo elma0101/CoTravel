@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'trip.dart';
 
 class TripRoutePoint {
@@ -38,7 +39,7 @@ class TripRoute {
           date: trip.startDate,
           type: TripStopType.waypoint,
           coordinate: MoroccoRouteCoordinates.lookup(trip.originCity),
-          note: 'Departure',
+          note: tr('Departure'),
           isOrigin: true,
         ),
         for (var index = 0; index < trip.stops.length; index++)

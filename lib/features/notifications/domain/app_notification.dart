@@ -1,3 +1,5 @@
+import '../../../core/l10n/app_strings.dart';
+
 enum NotificationKind {
   joinRequestReceived('join_request_received'),
   requestApproved('request_approved'),
@@ -44,26 +46,48 @@ class AppNotification {
   final bool isRead;
 
   String get message {
-    final actor = actorName ?? 'Someone';
+    final actor = actorName ?? tr('Someone');
     return switch (kind) {
-      NotificationKind.joinRequestReceived =>
-        '$actor asked to join $tripTitle.',
-      NotificationKind.requestApproved =>
-        '$actor approved your request for $tripTitle. Confirm to lock your place.',
-      NotificationKind.requestDeclined =>
-        'Your request for $tripTitle was not accepted.',
-      NotificationKind.travelerConfirmed =>
-        '$actor confirmed their place on $tripTitle.',
-      NotificationKind.travelerDeclined =>
-        '$actor declined the invitation to $tripTitle.',
-      NotificationKind.travelerWithdrew =>
-        '$actor withdrew their request for $tripTitle.',
-      NotificationKind.travelerLeft => '$actor left $tripTitle.',
-      NotificationKind.travelerLeftLate =>
-        '$actor left $tripTitle within 7 days of departure.',
-      NotificationKind.tripUpdated =>
-        '$actor updated $tripTitle. Check the latest plan.',
-      NotificationKind.tripCancelled => '$actor cancelled $tripTitle.',
+      NotificationKind.joinRequestReceived => tr(
+        '{actor} asked to join {tripTitle}.',
+        {'actor': actor, 'tripTitle': tripTitle},
+      ),
+      NotificationKind.requestApproved => tr(
+        '{actor} approved your request for {tripTitle}. Confirm to lock your place.',
+        {'actor': actor, 'tripTitle': tripTitle},
+      ),
+      NotificationKind.requestDeclined => tr(
+        'Your request for {tripTitle} was not accepted.',
+        {'tripTitle': tripTitle},
+      ),
+      NotificationKind.travelerConfirmed => tr(
+        '{actor} confirmed their place on {tripTitle}.',
+        {'actor': actor, 'tripTitle': tripTitle},
+      ),
+      NotificationKind.travelerDeclined => tr(
+        '{actor} declined the invitation to {tripTitle}.',
+        {'actor': actor, 'tripTitle': tripTitle},
+      ),
+      NotificationKind.travelerWithdrew => tr(
+        '{actor} withdrew their request for {tripTitle}.',
+        {'actor': actor, 'tripTitle': tripTitle},
+      ),
+      NotificationKind.travelerLeft => tr('{actor} left {tripTitle}.', {
+        'actor': actor,
+        'tripTitle': tripTitle,
+      }),
+      NotificationKind.travelerLeftLate => tr(
+        '{actor} left {tripTitle} within 7 days of departure.',
+        {'actor': actor, 'tripTitle': tripTitle},
+      ),
+      NotificationKind.tripUpdated => tr(
+        '{actor} updated {tripTitle}. Check the latest plan.',
+        {'actor': actor, 'tripTitle': tripTitle},
+      ),
+      NotificationKind.tripCancelled => tr('{actor} cancelled {tripTitle}.', {
+        'actor': actor,
+        'tripTitle': tripTitle,
+      }),
     };
   }
 

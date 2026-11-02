@@ -1,3 +1,5 @@
+import '../../../core/l10n/app_strings.dart';
+
 enum JoinRequestStatus {
   pendingHost,
   pendingTraveler,
@@ -10,12 +12,12 @@ enum JoinRequestStatus {
 extension JoinRequestStatusPresentation on JoinRequestStatus {
   String get label {
     return switch (this) {
-      JoinRequestStatus.pendingHost => 'Awaiting host',
-      JoinRequestStatus.pendingTraveler => 'Your confirmation needed',
-      JoinRequestStatus.confirmed => 'Spot confirmed',
-      JoinRequestStatus.declined => 'Not accepted',
-      JoinRequestStatus.withdrawn => 'Withdrawn',
-      JoinRequestStatus.left => 'Left the trip',
+      JoinRequestStatus.pendingHost => tr('Awaiting host'),
+      JoinRequestStatus.pendingTraveler => tr('Your confirmation needed'),
+      JoinRequestStatus.confirmed => tr('Spot confirmed'),
+      JoinRequestStatus.declined => tr('Not accepted'),
+      JoinRequestStatus.withdrawn => tr('Withdrawn'),
+      JoinRequestStatus.left => tr('Left the trip'),
     };
   }
 

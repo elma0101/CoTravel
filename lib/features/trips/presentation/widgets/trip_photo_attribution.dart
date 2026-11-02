@@ -1,3 +1,4 @@
+import '../../../../core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ class TripPhotoAttributionButton extends StatelessWidget {
       color: Colors.black.withValues(alpha: 0.5),
       shape: const CircleBorder(),
       child: IconButton(
-        tooltip: 'Photo details',
+        tooltip: tr('Photo details'),
         visualDensity: VisualDensity.compact,
         onPressed: () => _showPhotoDetails(context, photo),
         icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
@@ -45,19 +46,24 @@ void _showPhotoDetails(BuildContext context, TripCoverPhoto photo) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                photo.placeLabel,
+                tr(photo.placeLabel),
                 style: Theme.of(sheetContext).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Photo by ${photo.photographer} · ${photo.licenseName}',
+                tr('Photo by {photographer} · {licenseName}', {
+                  'photographer': photo.photographer,
+                  'licenseName': photo.licenseName,
+                }),
                 style: Theme.of(
                   sheetContext,
                 ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
               ),
               const SizedBox(height: AppSpacing.xs),
-              const Text(
-                'Wikimedia preview resized for the app and displayed with a crop.',
+              Text(
+                tr(
+                  'Wikimedia preview resized for the app and displayed with a crop.',
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               Row(
@@ -68,7 +74,7 @@ void _showPhotoDetails(BuildContext context, TripCoverPhoto photo) {
                         _openPhotoLink(sheetContext, photo.licenseUrl),
                       ),
                       icon: const Icon(Icons.description_outlined),
-                      label: const Text('License'),
+                      label: Text(tr('License')),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -78,7 +84,7 @@ void _showPhotoDetails(BuildContext context, TripCoverPhoto photo) {
                         _openPhotoLink(sheetContext, photo.sourceUrl),
                       ),
                       icon: const Icon(Icons.open_in_new_rounded),
-                      label: const Text('Source'),
+                      label: Text(tr('Source')),
                     ),
                   ),
                 ],
@@ -104,6 +110,6 @@ Future<void> _openPhotoLink(BuildContext context, String value) async {
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Could not open this link.')));
+    ).showSnackBar(SnackBar(content: Text(tr('Could not open this link.'))));
   }
 }

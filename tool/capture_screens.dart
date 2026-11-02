@@ -5,12 +5,14 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:cotravel_app/core/l10n/app_strings.dart';
 import 'package:cotravel_app/app/auth/app_auth_state.dart';
 import 'package:cotravel_app/app/config/app_config.dart';
 import 'package:cotravel_app/app/providers/app_providers.dart';
 import 'package:cotravel_app/app/router/app_router.dart';
 import 'package:cotravel_app/app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,6 +42,12 @@ Future<void> _loadFont(String family, List<String> files) async {
   }
   await loader.load();
 }
+
+// Pass --dart-define=CAPTURE_LANGUAGE=fr to check French layouts.
+const _language = String.fromEnvironment(
+  'CAPTURE_LANGUAGE',
+  defaultValue: 'en',
+);
 
 // CoTravelApp with a real font: the test engine draws text in blocks otherwise.
 class _CaptureApp extends ConsumerWidget {
@@ -72,6 +80,13 @@ class _CaptureApp extends ConsumerWidget {
         ),
       ),
       routerConfig: ref.watch(appRouterProvider),
+      locale: const Locale(_language),
+      supportedLocales: supportedAppLocales,
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      builder: (context, child) {
+        appLanguageCode = _language;
+        return child ?? const SizedBox.shrink();
+      },
     );
   }
 }

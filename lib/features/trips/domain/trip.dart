@@ -1,3 +1,5 @@
+import '../../../core/l10n/app_strings.dart';
+
 enum TripStopType { waypoint, activity, overnight, breakStop }
 
 extension TripStopTypeValue on TripStopType {
@@ -9,10 +11,10 @@ extension TripStopTypeValue on TripStopType {
   };
 
   String get label => switch (this) {
-    TripStopType.waypoint => 'Waypoint',
-    TripStopType.activity => 'Activity',
-    TripStopType.overnight => 'Overnight',
-    TripStopType.breakStop => 'Break',
+    TripStopType.waypoint => tr('Waypoint'),
+    TripStopType.activity => tr('Activity'),
+    TripStopType.overnight => tr('Overnight'),
+    TripStopType.breakStop => tr('Break'),
   };
 
   static TripStopType fromStorage(String? value) => switch (value) {
@@ -36,12 +38,12 @@ extension TripTravelModeValue on TripTravelMode {
   };
 
   String get label => switch (this) {
-    TripTravelMode.drive => 'Drive',
-    TripTravelMode.sharedTaxi => 'Shared taxi',
-    TripTravelMode.train => 'Train',
-    TripTravelMode.bus => 'Bus',
-    TripTravelMode.walk => 'Walk',
-    TripTravelMode.other => 'Transfer',
+    TripTravelMode.drive => tr('Drive'),
+    TripTravelMode.sharedTaxi => tr('Shared taxi'),
+    TripTravelMode.train => tr('Train'),
+    TripTravelMode.bus => tr('Bus'),
+    TripTravelMode.walk => tr('Walk'),
+    TripTravelMode.other => tr('Transfer'),
   };
 
   static TripTravelMode? fromStorage(String? value) => switch (value) {

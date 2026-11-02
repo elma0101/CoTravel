@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
@@ -59,7 +60,7 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
       _discoverableTrips = results[0];
       _hostedTrips = results[1];
     } on Object {
-      _errorMessage = 'Trips could not be loaded. Please try again.';
+      _errorMessage = tr('Trips could not be loaded. Please try again.');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -111,7 +112,7 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
       );
       return trip;
     } on Object {
-      _errorMessage = 'Your trip could not be published. Please try again.';
+      _errorMessage = tr('Your trip could not be published. Please try again.');
       rethrow;
     } finally {
       _isPublishing = false;
@@ -133,7 +134,7 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
       _discoverableTrips = _replaced(_discoverableTrips, updated);
       return updated;
     } on Object {
-      _errorMessage = 'Your changes could not be saved. Please try again.';
+      _errorMessage = tr('Your changes could not be saved. Please try again.');
       rethrow;
     } finally {
       _isPublishing = false;

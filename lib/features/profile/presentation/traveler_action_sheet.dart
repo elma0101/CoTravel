@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,11 +69,12 @@ class _TravelerActionSheet extends ConsumerWidget {
         final isSelf = currentUserId == target.userId;
         final canMessage = target.conversationId != null && !isBlocked;
         final messageSubtitle = switch ((isBlocked, canMessage)) {
-          (true, _) => 'Unblock this traveler before messaging.',
-          (false, true) when openedFromConversation =>
+          (true, _) => tr('Unblock this traveler before messaging.'),
+          (false, true) when openedFromConversation => tr(
             'Return to your shared trip conversation.',
-          (false, true) => 'Open your shared trip conversation.',
-          _ => 'Available after your place on this trip is confirmed.',
+          ),
+          (false, true) => tr('Open your shared trip conversation.'),
+          _ => tr('Available after your place on this trip is confirmed.'),
         };
 
         return SingleChildScrollView(
@@ -131,7 +133,7 @@ class _TravelerActionSheet extends ConsumerWidget {
                             ],
                           ),
                           Text(
-                            target.homeCity ?? 'CoTravel member',
+                            target.homeCity ?? tr('CoTravel member'),
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: AppColors.muted),
                           ),
@@ -144,10 +146,10 @@ class _TravelerActionSheet extends ConsumerWidget {
                 _ActionTile(
                   key: ValueKey('view-profile-${target.userId}'),
                   icon: Icons.person_outline_rounded,
-                  title: isSelf ? 'View your profile' : 'View profile',
+                  title: isSelf ? tr('View your profile') : tr('View profile'),
                   subtitle: isBlocked
-                      ? 'Profile hidden while this traveler is blocked.'
-                      : 'See their bio, travel style, and languages.',
+                      ? tr('Profile hidden while this traveler is blocked.')
+                      : tr('See their bio, travel style, and languages.'),
                   onTap: isBlocked
                       ? null
                       : () => Navigator.of(
@@ -159,8 +161,8 @@ class _TravelerActionSheet extends ConsumerWidget {
                   key: ValueKey('message-user-${target.userId}'),
                   icon: Icons.chat_bubble_outline_rounded,
                   title: openedFromConversation
-                      ? 'Back to trip chat'
-                      : 'Message',
+                      ? tr('Back to trip chat')
+                      : tr('Message'),
                   subtitle: messageSubtitle,
                   onTap: canMessage
                       ? () {

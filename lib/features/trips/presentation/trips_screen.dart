@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,9 +39,11 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const ScreenHeader(
-                    title: 'My trips',
-                    subtitle: 'Host thoughtfully and keep requests visible.',
+                  ScreenHeader(
+                    title: tr('My trips'),
+                    subtitle: tr(
+                      'Host thoughtfully and keep requests visible.',
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -48,18 +51,20 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                     ),
                     child: SegmentedButton<int>(
                       segments: [
-                        const ButtonSegment(
+                        ButtonSegment(
                           value: 0,
                           icon: Icon(Icons.route_outlined),
-                          label: Text('Hosting'),
+                          label: Text(tr('Hosting')),
                         ),
                         ButtonSegment(
                           value: 1,
                           icon: const Icon(Icons.handshake_outlined),
                           label: Text(
                             requests.travelerRequests.isEmpty
-                                ? 'Requests'
-                                : 'Requests ${requests.travelerRequests.length}',
+                                ? tr('Requests')
+                                : tr('Requests {length}', {
+                                    'length': requests.travelerRequests.length,
+                                  }),
                           ),
                         ),
                       ],
@@ -82,7 +87,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                         key: const ValueKey('plan-trip'),
                         onPressed: () => context.push(AppRoutes.createTrip),
                         icon: const Icon(Icons.add_rounded),
-                        label: const Text('Plan a new trip'),
+                        label: Text(tr('Plan a new trip')),
                       ),
                     ),
                   Expanded(
@@ -120,11 +125,12 @@ class _HostedTripsView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (trips.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.luggage_outlined,
-        title: 'No trips yet',
-        message:
-            'Create your first itinerary. A clear route and honest budget are enough to begin.',
+        title: tr('No trips yet'),
+        message: tr(
+          'Create your first itinerary. A clear route and honest budget are enough to begin.',
+        ),
       );
     }
     return RefreshIndicator(
@@ -199,7 +205,11 @@ class _PendingRequestBanner extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  '$count new ${count == 1 ? 'request' : 'requests'} to review',
+                  trPlural(
+                    count,
+                    '{n} new request to review',
+                    '{n} new requests to review',
+                  ),
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
               ),
@@ -229,11 +239,12 @@ class _TravelerRequestsView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (requests.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.handshake_outlined,
-        title: 'No join requests',
-        message:
-            'When a trip feels right, introduce yourself to the host from its detail page.',
+        title: tr('No join requests'),
+        message: tr(
+          'When a trip feels right, introduce yourself to the host from its detail page.',
+        ),
       );
     }
     return RefreshIndicator(

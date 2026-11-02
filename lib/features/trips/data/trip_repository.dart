@@ -20,6 +20,12 @@ abstract interface class TripRepository {
   Future<Trip> updateTrip({required String tripId, required TripDraft draft});
 
   Future<void> cancelTrip(String tripId);
+
+  Future<List<Trip>> fetchSavedTrips(String userId);
+
+  Future<void> saveTrip({required String userId, required String tripId});
+
+  Future<void> unsaveTrip({required String userId, required String tripId});
 }
 
 class SupabaseTripRepository implements TripRepository {
@@ -58,6 +64,47 @@ class SupabaseTripRepository implements TripRepository {
         .gte('start_date', _dateValue(DateTime.now()))
         .order('start_date');
     return rows.map(_fromMap).toList();
+  }
+
+  @override
+  Future<List<Trip>> fetchSavedTrips(String userId) async {
+    final saved = await _client
+        .from('saved_trips')
+        .select('trip_id')
+        .eq('user_id', userId);
+    if (saved.isEmpty) {
+      return const [];
+    }
+    final rows = await _client
+        .from('trips')
+        .select(_tripSelection)
+        .inFilter('id', saved.map((row) => row['trip_id'] as String).toList())
+        .order('start_date');
+    return rows.map(_fromMap).toList();
+  }
+
+  @override
+  Future<void> saveTrip({
+    required String userId,
+    required String tripId,
+  }) async {
+    // Do nothing on a repeat save: members have no update grant on this table.
+    await _client.from('saved_trips').upsert({
+      'user_id': userId,
+      'trip_id': tripId,
+    }, ignoreDuplicates: true);
+  }
+
+  @override
+  Future<void> unsaveTrip({
+    required String userId,
+    required String tripId,
+  }) async {
+    await _client
+        .from('saved_trips')
+        .delete()
+        .eq('user_id', userId)
+        .eq('trip_id', tripId);
   }
 
   @override
@@ -212,7 +259,29 @@ class PreviewTripRepository implements TripRepository {
 
   final DateTime _today;
   final List<Trip> _trips;
+  final Set<String> _savedTripIds = {};
   int _nextId = 1;
+
+  @override
+  Future<List<Trip>> fetchSavedTrips(String userId) async {
+    return _trips.where((trip) => _savedTripIds.contains(trip.id)).toList();
+  }
+
+  @override
+  Future<void> saveTrip({
+    required String userId,
+    required String tripId,
+  }) async {
+    _savedTripIds.add(tripId);
+  }
+
+  @override
+  Future<void> unsaveTrip({
+    required String userId,
+    required String tripId,
+  }) async {
+    _savedTripIds.remove(tripId);
+  }
 
   Future<Trip> updateCostEstimates({
     required String tripId,

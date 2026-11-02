@@ -31,6 +31,7 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
 
   List<Trip> _discoverableTrips = const [];
   List<Trip> _hostedTrips = const [];
+  List<Trip> _savedTrips = const [];
   TripFilter _filter = const TripFilter();
   Set<String> _blockedHostIds = const {};
   bool _isLoading = true;
@@ -42,6 +43,10 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
       .where(_filter.matches)
       .toList(growable: false);
   List<Trip> get hostedTrips => List.unmodifiable(_hostedTrips);
+  List<Trip> get savedTrips => _savedTrips
+      .where((trip) => !_blockedHostIds.contains(trip.hostId))
+      .toList(growable: false);
+  bool isSaved(String tripId) => _savedTrips.any((trip) => trip.id == tripId);
   TripFilter get filter => _filter;
   bool get isLoading => _isLoading;
   bool get isPublishing => _isPublishing;
@@ -56,14 +61,39 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
       final results = await Future.wait([
         _repository.discoverTrips(),
         _repository.fetchHostedTrips(_userId),
+        _repository.fetchSavedTrips(_userId),
       ]);
       _discoverableTrips = results[0];
       _hostedTrips = results[1];
+      _savedTrips = results[2];
     } on Object {
       _errorMessage = tr('Trips could not be loaded. Please try again.');
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Updates the list first so the bookmark responds at once, and restores it
+  /// if the server refuses.
+  Future<void> toggleSaved(Trip trip) async {
+    final previous = _savedTrips;
+    final wasSaved = isSaved(trip.id);
+    _savedTrips = wasSaved
+        ? previous.where((item) => item.id != trip.id).toList(growable: false)
+        : ([...previous, trip]
+            ..sort((left, right) => left.startDate.compareTo(right.startDate)));
+    notifyListeners();
+    try {
+      if (wasSaved) {
+        await _repository.unsaveTrip(userId: _userId, tripId: trip.id);
+      } else {
+        await _repository.saveTrip(userId: _userId, tripId: trip.id);
+      }
+    } on Object {
+      _savedTrips = previous;
+      notifyListeners();
+      rethrow;
     }
   }
 
@@ -132,6 +162,7 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
       );
       _hostedTrips = _replaced(_hostedTrips, updated);
       _discoverableTrips = _replaced(_discoverableTrips, updated);
+      _savedTrips = _replaced(_savedTrips, updated);
       return updated;
     } on Object {
       _errorMessage = tr('Your changes could not be saved. Please try again.');

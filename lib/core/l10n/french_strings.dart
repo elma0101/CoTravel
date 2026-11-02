@@ -613,6 +613,15 @@ const frenchStrings = <String, String>{
   "1 seat left": "1 place restante",
   "{seats} seats left": "{seats} places restantes",
 
+  "Save trip": "Enregistrer le voyage",
+  "Remove from saved": "Retirer des voyages enregistrés",
+  "Your saved trips could not be updated.":
+      "Vos voyages enregistrés n’ont pas pu être mis à jour.",
+  "Saved": "Enregistrés",
+  "No saved trips": "Aucun voyage enregistré",
+  "Tap the bookmark on a trip to keep it here for later.":
+      "Touchez le signet d’un voyage pour le retrouver ici plus tard.",
+
   // Photos
   "Photo details": "Détails de la photo",
   "Photo by {photographer} · {licenseName}":

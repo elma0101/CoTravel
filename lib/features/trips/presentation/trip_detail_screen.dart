@@ -68,12 +68,48 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           builder: (context, child) {
             final current = catalog.tripById(widget.tripId) ?? trip;
             return Scaffold(
-              appBar: AppBar(title: Text(tr('Trip details'))),
+              appBar: AppBar(
+                title: Text(tr('Trip details')),
+                actions: [_SaveTripButton(trip: current)],
+              ),
               body: _TripDetails(trip: current),
               bottomNavigationBar: JoinRequestBar(trip: current),
             );
           },
         );
+      },
+    );
+  }
+}
+
+class _SaveTripButton extends ConsumerWidget {
+  const _SaveTripButton({required this.trip});
+
+  final Trip trip;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catalog = ref.watch(tripCatalogProvider);
+    final saved = catalog.isSaved(trip.id);
+    return IconButton(
+      key: const ValueKey('save-trip'),
+      tooltip: saved ? tr('Remove from saved') : tr('Save trip'),
+      isSelected: saved,
+      icon: Icon(
+        saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+      ),
+      onPressed: () async {
+        try {
+          await catalog.toggleSaved(trip);
+        } on Object {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(tr('Your saved trips could not be updated.')),
+              ),
+            );
+          }
+        }
       },
     );
   }

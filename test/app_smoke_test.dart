@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:cotravel_app/core/l10n/app_strings.dart';
 import 'package:cotravel_app/app/auth/app_auth_state.dart';
 import 'package:cotravel_app/app/config/app_config.dart';
 import 'package:cotravel_app/app/cotravel_app.dart';
 import 'package:cotravel_app/app/providers/app_providers.dart';
+import 'package:cotravel_app/app/router/app_router.dart';
 import 'package:cotravel_app/core/analytics/product_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   testWidgets('guards app routes while signed out', (tester) async {
@@ -28,8 +32,8 @@ void main() {
     await tester.tap(find.text('Preview the app'));
     await tester.pumpAndSettle();
 
-    expect(find.text('CoTravel'), findsOneWidget);
     expect(find.text('Find your people, then go.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('explore-filter-chips')), findsOneWidget);
     expect(find.text('Explore'), findsOneWidget);
   });
 
@@ -43,7 +47,8 @@ void main() {
     await _pumpApp(tester, authState);
 
     expect(find.text('Explorer'), findsOneWidget);
-    expect(find.text('Rechercher des voyages'), findsOneWidget);
+    expect(find.text('Trouvez vos compagnons, puis partez.'), findsOneWidget);
+    expect(find.text('Hôtes vérifiés'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -64,20 +69,17 @@ void main() {
     addTearDown(authState.dispose);
 
     await _pumpApp(tester, authState);
+    await tester.tap(find.byKey(const ValueKey('filter-destination')));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('explore-destination')),
       'Essaouira',
     );
-    await tester.tap(find.text('Search open trips'));
+    await tester.tap(find.byKey(const ValueKey('explore-destination-apply')));
     await tester.pumpAndSettle();
 
-    expect(find.text('1 matching trips'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Coast, food, and surf'),
-      260,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Coast, food, and surf'));
+    expect(find.text('1 of 1'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('swipe-card-essaouira-coast')));
     await tester.pumpAndSettle();
 
     expect(find.text('Trip details'), findsOneWidget);
@@ -117,19 +119,7 @@ void main() {
     addTearDown(authState.dispose);
 
     await _pumpApp(tester, authState);
-    await tester.enterText(
-      find.byKey(const ValueKey('explore-destination')),
-      'Imlil',
-    );
-    await tester.tap(find.text('Search open trips'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Atlas villages weekend'),
-      260,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Atlas villages weekend'));
-    await tester.pumpAndSettle();
+    await _openTrip(tester, 'atlas-weekend');
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('confirm-trip-place')),
       320,
@@ -198,19 +188,7 @@ void main() {
     addTearDown(authState.dispose);
 
     await _pumpApp(tester, authState);
-    await tester.enterText(
-      find.byKey(const ValueKey('explore-destination')),
-      'Boumalne',
-    );
-    await tester.tap(find.text('Search open trips'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Dades slow road'),
-      260,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Dades slow road'));
-    await tester.pumpAndSettle();
+    await _openTrip(tester, 'dades-slow-road');
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('host-actions-host-leila')),
       360,
@@ -270,19 +248,7 @@ void main() {
     addTearDown(authState.dispose);
 
     await _pumpApp(tester, authState);
-    await tester.enterText(
-      find.byKey(const ValueKey('explore-destination')),
-      'Boumalne',
-    );
-    await tester.tap(find.text('Search open trips'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Dades slow road'),
-      260,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Dades slow road'));
-    await tester.pumpAndSettle();
+    await _openTrip(tester, 'dades-slow-road');
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('open-shared-logistics')),
       320,
@@ -361,27 +327,7 @@ void main() {
     addTearDown(authState.dispose);
 
     await _pumpApp(tester, authState);
-    await tester.tap(find.byTooltip('More filters'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('explore-origin')),
-      'Tangier',
-    );
-    await tester.tap(find.text('Apply filters'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('explore-destination')),
-      'Tetouan',
-    );
-    await tester.tap(find.text('Search open trips'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Northern colors'),
-      260,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Northern colors'));
-    await tester.pumpAndSettle();
+    await _openTrip(tester, 'northern-colors');
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('safety-options-host-salma')),
       320,
@@ -482,27 +428,7 @@ void main() {
     addTearDown(authState.dispose);
 
     await _pumpApp(tester, authState);
-    await tester.tap(find.byTooltip('More filters'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('explore-origin')),
-      'Tangier',
-    );
-    await tester.tap(find.text('Apply filters'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('explore-destination')),
-      'Tetouan',
-    );
-    await tester.tap(find.text('Search open trips'));
-    await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Northern colors'),
-      260,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Northern colors'));
-    await tester.pumpAndSettle();
+    await _openTrip(tester, 'northern-colors');
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('request-to-join')),
       320,
@@ -622,6 +548,15 @@ void main() {
       findsOneWidget,
     );
   });
+}
+
+Future<void> _openTrip(WidgetTester tester, String tripId) async {
+  unawaited(
+    GoRouter.of(
+      tester.element(find.byType(Scaffold).first),
+    ).push(AppRoutes.tripDetails(tripId)),
+  );
+  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpApp(

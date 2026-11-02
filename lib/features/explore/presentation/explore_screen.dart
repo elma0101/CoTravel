@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,10 +10,17 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/widgets/step_flow.dart';
+import '../../profile/presentation/linkedin_gate.dart';
+import '../../trips/application/trip_catalog_controller.dart';
 import '../../trips/domain/trip.dart';
+import '../../trips/presentation/plan_trip_screen.dart';
 import '../../trips/presentation/trip_formatters.dart';
 import '../../trips/presentation/widgets/trip_card.dart';
+import 'widgets/trip_swipe_deck.dart';
 
+/// Discovery: swipeable trip cards, or a list, with filter chips that apply
+/// as soon as they are tapped.
 class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
 
@@ -18,178 +28,211 @@ class ExploreScreen extends ConsumerStatefulWidget {
   ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
 }
 
+enum _DateChoice { thisWeekend, nextTwoWeeks, thisMonth, custom }
+
 class _ExploreScreenState extends ConsumerState<ExploreScreen> {
-  static const _travelStyles = [
-    'Culture',
-    'Food',
-    'Nature',
-    'Road trips',
-    'Budget',
-    'Remote work',
-  ];
+  bool _showList = false;
+  _DateChoice? _dateChoice;
 
-  final _originController = TextEditingController();
-  final _destinationController = TextEditingController();
-  final _hostBackgroundController = TextEditingController();
-  DateTimeRange? _dateRange;
-  String? _travelStyle;
-  bool _verifiedOnly = false;
+  TripCatalogController get _catalog => ref.read(tripCatalogProvider);
+  TripFilter get _filter => _catalog.filter;
 
-  @override
-  void dispose() {
-    _originController.dispose();
-    _destinationController.dispose();
-    _hostBackgroundController.dispose();
-    super.dispose();
-  }
-
-  void _applyFilters() {
-    FocusScope.of(context).unfocus();
-    ref
-        .read(tripCatalogProvider)
-        .applyFilter(
-          TripFilter(
-            originQuery: _originController.text,
-            destinationQuery: _destinationController.text,
-            startDate: _dateRange?.start,
-            endDate: _dateRange?.end,
-            travelStyle: _travelStyle,
-            verifiedHostsOnly: _verifiedOnly,
-            hostBackgroundQuery: _hostBackgroundController.text,
-          ),
-        );
+  void _apply(TripFilter filter) {
+    unawaited(HapticFeedback.selectionClick());
+    _catalog.applyFilter(filter);
   }
 
   void _clearFilters() {
-    _originController.clear();
-    _destinationController.clear();
-    _hostBackgroundController.clear();
-    setState(() {
-      _dateRange = null;
-      _travelStyle = null;
-      _verifiedOnly = false;
-    });
-    ref.read(tripCatalogProvider).clearFilter();
+    setState(() => _dateChoice = null);
+    _catalog.clearFilter();
   }
 
-  Future<void> _pickDates() async {
-    final now = DateTime.now();
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year, now.month, now.day),
-      lastDate: DateTime(now.year + 2),
-      initialDateRange: _dateRange,
+  /// The filter without dates. copyWith cannot clear a date.
+  TripFilter _withDates(DateTime? start, DateTime? end) {
+    final filter = _filter;
+    return TripFilter(
+      originQuery: filter.originQuery,
+      destinationQuery: filter.destinationQuery,
+      startDate: start,
+      endDate: end,
+      travelStyle: filter.travelStyle,
+      verifiedHostsOnly: filter.verifiedHostsOnly,
+      hostBackgroundQuery: filter.hostBackgroundQuery,
     );
-    if (picked != null && mounted) {
-      setState(() => _dateRange = picked);
-    }
   }
 
-  Future<void> _openFilters() async {
-    var nextStyle = _travelStyle;
-    var nextVerified = _verifiedOnly;
+  static DateTime get _today {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
 
-    final shouldApply = await showModalBottomSheet<bool>(
+  Future<void> _chooseDestination() async {
+    final chosen = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      tr('Refine your search'),
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TextField(
-                      key: const ValueKey('explore-origin'),
-                      controller: _originController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                        hintText: tr('Leaving from'),
-                        prefixIcon: Icon(Icons.trip_origin_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Text(
-                      tr('Travel style'),
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Wrap(
-                      spacing: AppSpacing.xs,
-                      runSpacing: AppSpacing.xs,
-                      children: _travelStyles
-                          .map(
-                            (style) => ChoiceChip(
-                              label: Text(tr(style)),
-                              selected: nextStyle == style,
-                              onSelected: (selected) {
-                                setSheetState(
-                                  () => nextStyle = selected ? style : null,
-                                );
-                              },
-                            ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      key: const ValueKey('explore-host-background'),
-                      controller: _hostBackgroundController,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        labelText: tr('Host background'),
-                        hintText: tr('Designer, teacher, engineer…'),
-                        helperText: tr('Declared by hosts and not checked.'),
-                        prefixIcon: const Icon(Icons.work_outline_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    SwitchListTile.adaptive(
-                      contentPadding: EdgeInsets.zero,
-                      value: nextVerified,
-                      onChanged: (value) {
-                        setSheetState(() => nextVerified = value);
-                      },
-                      title: Text(tr('Verified hosts only')),
-                      subtitle: Text(
-                        tr('Show hosts with a linked professional identity.'),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: Text(tr('Apply filters')),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (context) =>
+          _DestinationSheet(current: _filter.destinationQuery),
     );
-
-    if (shouldApply == true && mounted) {
-      setState(() {
-        _travelStyle = nextStyle;
-        _verifiedOnly = nextVerified;
-      });
-      _applyFilters();
+    if (chosen != null && mounted) {
+      _apply(_filter.copyWith(destinationQuery: chosen));
     }
+  }
+
+  Future<void> _chooseDates() async {
+    final choice = await showModalBottomSheet<_DateChoice?>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => _SheetLayout(
+        title: tr('When?'),
+        children: [
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              for (final (choice, label) in [
+                (_DateChoice.thisWeekend, tr('This weekend')),
+                (_DateChoice.nextTwoWeeks, tr('Next two weeks')),
+                (_DateChoice.thisMonth, tr('Next 30 days')),
+              ])
+                ChoicePill(
+                  label: label,
+                  selected: _dateChoice == choice,
+                  onTap: () => Navigator.pop(context, choice),
+                ),
+              ChoicePill(
+                label: tr('Choose dates'),
+                icon: Icons.edit_calendar_outlined,
+                selected: _dateChoice == _DateChoice.custom,
+                onTap: () => Navigator.pop(context, _DateChoice.custom),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: Text(tr('Any dates')),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+    final today = _today;
+    DateTimeRange? range;
+    switch (choice) {
+      case _DateChoice.thisWeekend:
+        final friday = today.add(
+          Duration(days: (DateTime.friday - today.weekday) % 7),
+        );
+        // From today when the weekend has already started.
+        final start = today.weekday >= DateTime.friday ? today : friday;
+        range = DateTimeRange(
+          start: start,
+          end: friday.add(const Duration(days: 2)),
+        );
+      case _DateChoice.nextTwoWeeks:
+        range = DateTimeRange(
+          start: today,
+          end: today.add(const Duration(days: 14)),
+        );
+      case _DateChoice.thisMonth:
+        range = DateTimeRange(
+          start: today,
+          end: today.add(const Duration(days: 30)),
+        );
+      case _DateChoice.custom:
+        range = await showDateRangePicker(
+          context: context,
+          firstDate: today,
+          lastDate: DateTime(today.year + 2),
+        );
+        if (range == null || !mounted) {
+          return;
+        }
+      case null:
+        range = null;
+    }
+    setState(() => _dateChoice = choice);
+    _apply(_withDates(range?.start, range?.end));
+  }
+
+  Future<void> _openMoreFilters() async {
+    final result = await showModalBottomSheet<(String, String)>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => _MoreFiltersSheet(
+        origin: _filter.originQuery,
+        background: _filter.hostBackgroundQuery,
+      ),
+    );
+    if (result != null && mounted) {
+      _apply(
+        _filter.copyWith(
+          originQuery: result.$1,
+          hostBackgroundQuery: result.$2,
+        ),
+      );
+    }
+  }
+
+  void _toggleStyle(String style) {
+    _apply(
+      _filter.travelStyle == style
+          ? _filter.copyWith(clearTravelStyle: true)
+          : _filter.copyWith(travelStyle: style),
+    );
+  }
+
+  void _openTrip(Trip trip) {
+    unawaited(context.push(AppRoutes.tripDetails(trip.id)));
+  }
+
+  Future<void> _saveTrip(Trip trip) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _catalog.toggleSaved(trip);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 2),
+            content: Text(tr('Saved. Find it in My trips.')),
+          ),
+        );
+    } on Object {
+      messenger.showSnackBar(
+        SnackBar(content: Text(tr('The trip could not be saved. Try again.'))),
+      );
+    }
+  }
+
+  Future<void> _planOwnTrip() async {
+    final verified = await ensureLinkedInVerified(
+      context,
+      ref,
+      reason: LinkedInGateReason.host,
+    );
+    if (verified && mounted) {
+      unawaited(context.push(AppRoutes.createTrip));
+    }
+  }
+
+  String get _datesLabel {
+    final filter = _filter;
+    return switch (_dateChoice) {
+      _DateChoice.thisWeekend => tr('This weekend'),
+      _DateChoice.nextTwoWeeks => tr('Next two weeks'),
+      _DateChoice.thisMonth => tr('Next 30 days'),
+      _ when filter.startDate != null && filter.endDate != null =>
+        formatTripDateRange(filter.startDate!, filter.endDate!),
+      _ => tr('Any dates'),
+    };
   }
 
   @override
@@ -201,112 +244,215 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         listenable: catalog,
         builder: (context, child) {
           final trips = catalog.discoverableTrips;
-          return RefreshIndicator(
-            onRefresh: catalog.load,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                AppSpacing.xl,
+          final filter = catalog.filter;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  0,
+                ),
+                child: _Header(
+                  showList: _showList,
+                  onToggleView: () {
+                    unawaited(HapticFeedback.selectionClick());
+                    setState(() => _showList = !_showList);
+                  },
+                ),
               ),
-              children: [
-                const _BrandHeader(),
-                const SizedBox(height: AppSpacing.lg),
-                const _HeroCopy(),
-                const SizedBox(height: AppSpacing.md),
-                _TripSearch(
-                  destinationController: _destinationController,
-                  dateRange: _dateRange,
-                  hasAdvancedFilters:
-                      _originController.text.trim().isNotEmpty ||
-                      _hostBackgroundController.text.trim().isNotEmpty ||
-                      _travelStyle != null ||
-                      _verifiedOnly,
-                  onPickDates: _pickDates,
-                  onSearch: _applyFilters,
-                  onFilters: _openFilters,
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                _SectionHeading(
-                  resultCount: trips.length,
-                  hasFilter: catalog.filter.isActive,
-                  onClear: _clearFilters,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                if (catalog.isLoading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (catalog.errorMessage != null)
-                  _CatalogMessage(
-                    icon: Icons.cloud_off_outlined,
-                    title: tr('Trips are taking a detour'),
-                    message: catalog.errorMessage!,
-                    actionLabel: tr('Try again'),
-                    onAction: catalog.load,
-                  )
-                else if (trips.isEmpty)
-                  _CatalogMessage(
-                    icon: Icons.search_off_rounded,
-                    title: tr('No matching trips'),
-                    message: tr(
-                      'Try a nearby city, a wider date range, or fewer filters.',
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: 48,
+                child: ListView(
+                  key: const ValueKey('explore-filter-chips'),
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  children: [
+                    _FilterChip(
+                      key: const ValueKey('filter-destination'),
+                      icon: Icons.location_on_outlined,
+                      label: filter.destinationQuery.trim().isEmpty
+                          ? tr('Anywhere')
+                          : filter.destinationQuery.trim(),
+                      active: filter.destinationQuery.trim().isNotEmpty,
+                      dropdown: true,
+                      onTap: _chooseDestination,
                     ),
-                    actionLabel: tr('Clear filters'),
-                    onAction: _clearFilters,
-                  )
-                else
-                  for (var index = 0; index < trips.length; index++) ...[
-                    TripCard(
-                      trip: trips[index],
-                      onTap: () =>
-                          context.push(AppRoutes.tripDetails(trips[index].id)),
+                    _FilterChip(
+                      key: const ValueKey('filter-dates'),
+                      icon: Icons.calendar_today_outlined,
+                      label: _datesLabel,
+                      active: filter.startDate != null,
+                      dropdown: true,
+                      onTap: _chooseDates,
                     ),
-                    if (index != trips.length - 1)
-                      const SizedBox(height: AppSpacing.md),
+                    _FilterChip(
+                      key: const ValueKey('filter-verified'),
+                      icon: Icons.verified_outlined,
+                      label: tr('Verified hosts'),
+                      active: filter.verifiedHostsOnly,
+                      onTap: () => _apply(
+                        filter.copyWith(
+                          verifiedHostsOnly: !filter.verifiedHostsOnly,
+                        ),
+                      ),
+                    ),
+                    for (final style in PlanTripScreen.travelStyles)
+                      _FilterChip(
+                        label: tr(style),
+                        active: filter.travelStyle == style,
+                        onTap: () => _toggleStyle(style),
+                      ),
+                    _FilterChip(
+                      key: const ValueKey('filter-more'),
+                      icon: Icons.tune_rounded,
+                      label: tr('More'),
+                      active:
+                          filter.originQuery.trim().isNotEmpty ||
+                          filter.hostBackgroundQuery.trim().isNotEmpty,
+                      onTap: _openMoreFilters,
+                    ),
+                    if (filter.isActive)
+                      Padding(
+                        padding: const EdgeInsets.only(left: AppSpacing.xs),
+                        child: TextButton(
+                          key: const ValueKey('filter-clear'),
+                          onPressed: _clearFilters,
+                          child: Text(tr('Clear')),
+                        ),
+                      ),
                   ],
-              ],
-            ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Expanded(child: _body(catalog, trips)),
+            ],
           );
         },
       ),
     );
   }
+
+  Widget _body(TripCatalogController catalog, List<Trip> trips) {
+    if (catalog.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (catalog.errorMessage != null) {
+      return _CatalogMessage(
+        icon: Icons.cloud_off_outlined,
+        title: tr('Trips are taking a detour'),
+        message: catalog.errorMessage!,
+        actionLabel: tr('Try again'),
+        onAction: catalog.load,
+      );
+    }
+    if (trips.isEmpty) {
+      return _CatalogMessage(
+        icon: Icons.search_off_rounded,
+        title: catalog.filter.isActive
+            ? tr('No matching trips')
+            : tr('No open trips yet'),
+        message: catalog.filter.isActive
+            ? tr('Try a nearby city, a wider date range, or fewer filters.')
+            : tr('Be the first: plan a trip and others can join you.'),
+        actionLabel: catalog.filter.isActive
+            ? tr('Clear filters')
+            : tr('Plan a new trip'),
+        onAction: catalog.filter.isActive ? _clearFilters : _planOwnTrip,
+      );
+    }
+    if (_showList) {
+      return RefreshIndicator(
+        onRefresh: catalog.load,
+        child: ListView.separated(
+          key: const ValueKey('explore-list'),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.xs,
+            AppSpacing.lg,
+            AppSpacing.xl,
+          ),
+          itemCount: trips.length,
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: AppSpacing.md),
+          itemBuilder: (context, index) => TripCard(
+            trip: trips[index],
+            onTap: () => _openTrip(trips[index]),
+          ),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      child: TripSwipeDeck(
+        trips: trips,
+        isSaved: (trip) => catalog.isSaved(trip.id),
+        onOpen: _openTrip,
+        onSave: _saveTrip,
+        emptyState: (startOver) => _CatalogMessage(
+          icon: Icons.travel_explore_rounded,
+          title: tr('You have seen every trip'),
+          message: tr(
+            'Saved trips wait for you in My trips. New trips appear here as hosts publish them.',
+          ),
+          actionLabel: tr('Start over'),
+          onAction: startOver,
+          secondaryLabel: tr('Plan your own trip'),
+          onSecondary: _planOwnTrip,
+        ),
+      ),
+    );
+  }
 }
 
-class _BrandHeader extends ConsumerWidget {
-  const _BrandHeader();
+class _Header extends ConsumerWidget {
+  const _Header({required this.showList, required this.onToggleView});
+
+  final bool showList;
+  final VoidCallback onToggleView;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = ref.watch(notificationControllerProvider);
     return Row(
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppColors.green,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(Icons.route_rounded, color: Colors.white, size: 22),
-        ),
-        const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
-            'CoTravel',
-            maxLines: 1,
+            tr('Find your people, then go.'),
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleLarge,
           ),
+        ),
+        IconButton(
+          key: const ValueKey('explore-toggle-view'),
+          tooltip: showList ? tr('Show as cards') : tr('Show as a list'),
+          onPressed: onToggleView,
+          icon: Icon(
+            showList ? Icons.style_outlined : Icons.view_agenda_outlined,
+          ),
+        ),
+        IconButton(
+          key: const ValueKey('open-trip-map'),
+          tooltip: tr('Map'),
+          onPressed: () => context.push(AppRoutes.tripMap),
+          icon: const Icon(Icons.map_outlined),
         ),
         ListenableBuilder(
           listenable: notifications,
           builder: (context, child) {
             final unread = notifications.unreadCount;
-            return IconButton.filledTonal(
+            return IconButton(
               key: const ValueKey('open-notifications'),
               onPressed: () => context.push(AppRoutes.notifications),
               tooltip: unread == 0
@@ -325,137 +471,137 @@ class _BrandHeader extends ConsumerWidget {
   }
 }
 
-class _HeroCopy extends StatelessWidget {
-  const _HeroCopy();
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+    this.icon,
+    this.dropdown = false,
+    super.key,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  final IconData? icon;
+  final bool dropdown;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      tr('Find your people, then go.'),
-      style: Theme.of(context).textTheme.headlineMedium,
+    final foreground = active ? Colors.white : AppColors.ink;
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSpacing.xs),
+      child: Semantics(
+        button: true,
+        selected: active,
+        child: Material(
+          color: active ? AppColors.green : AppColors.surface,
+          shape: StadiumBorder(
+            side: BorderSide(
+              color: active ? AppColors.green : AppColors.border,
+            ),
+          ),
+          child: InkWell(
+            customBorder: const StadiumBorder(),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 18, color: foreground),
+                    const SizedBox(width: AppSpacing.xxs),
+                  ],
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 160),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (dropdown)
+                    Icon(
+                      Icons.expand_more_rounded,
+                      size: 18,
+                      color: foreground,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _TripSearch extends StatelessWidget {
-  const _TripSearch({
-    required this.destinationController,
-    required this.dateRange,
-    required this.hasAdvancedFilters,
-    required this.onPickDates,
-    required this.onSearch,
-    required this.onFilters,
-  });
+class _DestinationSheet extends StatefulWidget {
+  const _DestinationSheet({required this.current});
 
-  final TextEditingController destinationController;
-  final DateTimeRange? dateRange;
-  final bool hasAdvancedFilters;
-  final VoidCallback onPickDates;
-  final VoidCallback onSearch;
-  final VoidCallback onFilters;
+  final String current;
+
+  @override
+  State<_DestinationSheet> createState() => _DestinationSheetState();
+}
+
+class _DestinationSheetState extends State<_DestinationSheet> {
+  late final _controller = TextEditingController(text: widget.current);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final range = dateRange;
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
+    return _SheetLayout(
+      title: tr('Where to?'),
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+        TextField(
+          key: const ValueKey('explore-destination'),
+          controller: _controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: tr('Search a place'),
+            prefixIcon: const Icon(Icons.search_rounded),
           ),
-          child: Column(
-            children: [
-              TextField(
-                key: const ValueKey('explore-destination'),
-                controller: destinationController,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => onSearch(),
-                decoration: InputDecoration(
-                  labelText: tr('Destination'),
-                  hintText: tr('Anywhere'),
-                  floatingLabelBehavior: FloatingLabelBehavior.always,
-                  prefixIcon: Icon(Icons.location_on_outlined),
-                  filled: false,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                ),
-              ),
-              const Divider(indent: AppSpacing.md, endIndent: AppSpacing.md),
-              InkWell(
-                key: const ValueKey('explore-dates'),
-                onTap: onPickDates,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    0,
-                    AppSpacing.sm,
-                    AppSpacing.sm,
-                    AppSpacing.sm,
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(
-                        width: 48,
-                        child: Icon(
-                          Icons.calendar_today_outlined,
-                          color: AppColors.muted,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xxs),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              tr('Dates'),
-                              style: textTheme.bodySmall?.copyWith(
-                                color: AppColors.muted,
-                              ),
-                            ),
-                            Text(
-                              range == null
-                                  ? tr('Any dates')
-                                  : formatTripDateRange(range.start, range.end),
-                              style: textTheme.bodyLarge,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.muted,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+          onSubmitted: (value) => Navigator.pop(context, value.trim()),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.md),
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: [
+            for (final place in PlanTripScreen.popularDestinations)
+              ChoicePill(
+                label: place,
+                selected: widget.current == place,
+                onTap: () => Navigator.pop(context, place),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
-            IconButton.outlined(
-              onPressed: onFilters,
-              tooltip: tr('More filters'),
-              icon: Badge(
-                isLabelVisible: hasAdvancedFilters,
-                child: const Icon(Icons.tune_rounded),
-              ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, ''),
+              child: Text(tr('Anywhere')),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: onSearch,
-                child: Text(tr('Search open trips')),
-              ),
+            const Spacer(),
+            FilledButton(
+              key: const ValueKey('explore-destination-apply'),
+              onPressed: () => Navigator.pop(context, _controller.text.trim()),
+              child: Text(tr('Show trips')),
             ),
           ],
         ),
@@ -464,39 +610,92 @@ class _TripSearch extends StatelessWidget {
   }
 }
 
-class _SectionHeading extends StatelessWidget {
-  const _SectionHeading({
-    required this.resultCount,
-    required this.hasFilter,
-    required this.onClear,
-  });
+class _MoreFiltersSheet extends StatefulWidget {
+  const _MoreFiltersSheet({required this.origin, required this.background});
 
-  final int resultCount;
-  final bool hasFilter;
-  final VoidCallback onClear;
+  final String origin;
+  final String background;
+
+  @override
+  State<_MoreFiltersSheet> createState() => _MoreFiltersSheetState();
+}
+
+class _MoreFiltersSheetState extends State<_MoreFiltersSheet> {
+  late final _origin = TextEditingController(text: widget.origin);
+  late final _background = TextEditingController(text: widget.background);
+
+  @override
+  void dispose() {
+    _origin.dispose();
+    _background.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return _SheetLayout(
+      title: tr('More filters'),
       children: [
-        Expanded(
-          child: Text(
-            hasFilter
-                ? tr('{resultCount} matching trips', {
-                    'resultCount': resultCount,
-                  })
-                : tr('Open trips'),
-            style: Theme.of(context).textTheme.titleMedium,
+        TextField(
+          key: const ValueKey('explore-origin'),
+          controller: _origin,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            labelText: tr('Leaving from'),
+            prefixIcon: const Icon(Icons.trip_origin_rounded),
           ),
         ),
-        TextButton.icon(
-          key: const ValueKey('open-trip-map'),
-          onPressed: () => context.push(AppRoutes.tripMap),
-          icon: const Icon(Icons.map_outlined, size: 18),
-          label: Text(tr('Map')),
+        const SizedBox(height: AppSpacing.md),
+        TextField(
+          key: const ValueKey('explore-host-background'),
+          controller: _background,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            labelText: tr('Host background'),
+            hintText: tr('Designer, teacher, engineer…'),
+            helperText: tr('Declared by hosts and not checked.'),
+            prefixIcon: const Icon(Icons.work_outline_rounded),
+          ),
         ),
-        if (hasFilter) TextButton(onPressed: onClear, child: Text(tr('Clear'))),
+        const SizedBox(height: AppSpacing.md),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, (
+            _origin.text.trim(),
+            _background.text.trim(),
+          )),
+          child: Text(tr('Apply filters')),
+        ),
       ],
+    );
+  }
+}
+
+class _SheetLayout extends StatelessWidget {
+  const _SheetLayout({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          MediaQuery.viewInsetsOf(context).bottom + AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.md),
+            ...children,
+          ],
+        ),
+      ),
     );
   }
 }
@@ -508,6 +707,8 @@ class _CatalogMessage extends StatelessWidget {
     required this.message,
     required this.actionLabel,
     required this.onAction,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
   final IconData icon;
@@ -515,32 +716,38 @@ class _CatalogMessage extends StatelessWidget {
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 36, color: AppColors.green),
-          const SizedBox(height: AppSpacing.sm),
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          TextButton(onPressed: onAction, child: Text(actionLabel)),
-        ],
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 56, color: AppColors.green),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            FilledButton(onPressed: onAction, child: Text(actionLabel)),
+            if (secondaryLabel != null)
+              TextButton(onPressed: onSecondary, child: Text(secondaryLabel!)),
+          ],
+        ),
       ),
     );
   }

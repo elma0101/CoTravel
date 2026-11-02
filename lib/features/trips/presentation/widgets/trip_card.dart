@@ -1,8 +1,8 @@
-import '../../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/l10n/app_strings.dart';
 import '../../domain/trip.dart';
 import '../trip_formatters.dart';
 import 'mountain_illustration.dart';

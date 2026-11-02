@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +6,7 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../join_requests/presentation/join_request_panel.dart';
 import '../../join_requests/domain/trip_join_request.dart';
 import '../../profile/domain/traveler_action_target.dart';
@@ -68,12 +68,52 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
           builder: (context, child) {
             final current = catalog.tripById(widget.tripId) ?? trip;
             return Scaffold(
-              appBar: AppBar(title: Text(tr('Trip details'))),
+              appBar: AppBar(
+                title: Text(tr('Trip details')),
+                actions: [_SaveTripButton(trip: current)],
+              ),
               body: _TripDetails(trip: current),
               bottomNavigationBar: JoinRequestBar(trip: current),
             );
           },
         );
+      },
+    );
+  }
+}
+
+extension on String {
+  String ifEmpty(String fallback) => isEmpty ? fallback : this;
+}
+
+class _SaveTripButton extends ConsumerWidget {
+  const _SaveTripButton({required this.trip});
+
+  final Trip trip;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catalog = ref.watch(tripCatalogProvider);
+    final saved = catalog.isSaved(trip.id);
+    return IconButton(
+      key: const ValueKey('save-trip'),
+      tooltip: saved ? tr('Remove from saved') : tr('Save trip'),
+      isSelected: saved,
+      icon: Icon(
+        saved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+      ),
+      onPressed: () async {
+        try {
+          await catalog.toggleSaved(trip);
+        } on Object {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(tr('Your saved trips could not be updated.')),
+              ),
+            );
+          }
+        }
       },
     );
   }
@@ -325,7 +365,10 @@ class _HostRow extends ConsumerWidget {
                         style: textTheme.titleMedium,
                       ),
                       Text(
-                        trip.hostHomeCity ?? tr('CoTravel member'),
+                        [
+                          ?trip.hostOccupation,
+                          ?trip.hostHomeCity,
+                        ].join(' · ').ifEmpty(tr('CoTravel member')),
                         style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.muted,
                         ),

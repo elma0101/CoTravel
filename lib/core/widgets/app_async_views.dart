@@ -1,9 +1,9 @@
-import '../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_theme.dart';
+import '../../core/l10n/app_strings.dart';
 
 class AppLoadingView extends StatelessWidget {
   const AppLoadingView({this.message, super.key});

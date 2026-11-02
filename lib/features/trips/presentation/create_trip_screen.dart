@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -12,10 +11,12 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/analytics/product_analytics.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../application/trip_catalog_controller.dart';
 import '../domain/trip.dart';
 import 'trip_formatters.dart';
+import 'widgets/place_field.dart';
 
 class CreateTripScreen extends ConsumerStatefulWidget {
   const CreateTripScreen({this.tripId, super.key});
@@ -253,14 +254,11 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
         },
       ),
       SizedBox(height: AppSpacing.sm),
-      TextFormField(
-        key: ValueKey('trip-origin'),
+      PlaceField(
+        fieldKey: const ValueKey('trip-origin'),
         controller: _originController,
-        textCapitalization: TextCapitalization.words,
-        decoration: InputDecoration(
-          labelText: tr('Leaving from'),
-          prefixIcon: Icon(Icons.trip_origin_rounded),
-        ),
+        label: tr('Leaving from'),
+        icon: Icons.trip_origin_rounded,
         validator: (value) =>
             (value?.trim().length ?? 0) < 2 ? tr('Add a departure city') : null,
       ),
@@ -688,14 +686,11 @@ class _StopEditor extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          TextFormField(
-            key: ValueKey('trip-stop-city-$index'),
+          PlaceField(
+            fieldKey: ValueKey('trip-stop-city-$index'),
             controller: fields.cityController,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: tr('City or place'),
-              prefixIcon: Icon(Icons.location_on_outlined),
-            ),
+            label: tr('City or place'),
+            icon: Icons.location_on_outlined,
             validator: (value) => (value?.trim().length ?? 0) < 2
                 ? tr('Add a destination')
                 : null,

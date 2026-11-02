@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +6,7 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../../join_requests/domain/trip_join_request.dart';
@@ -50,21 +50,24 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                       horizontal: AppSpacing.lg,
                     ),
                     child: SegmentedButton<int>(
+                      showSelectedIcon: false,
                       segments: [
-                        ButtonSegment(
-                          value: 0,
-                          icon: Icon(Icons.route_outlined),
-                          label: Text(tr('Hosting')),
-                        ),
+                        ButtonSegment(value: 0, label: Text(tr('Hosting'))),
                         ButtonSegment(
                           value: 1,
-                          icon: const Icon(Icons.handshake_outlined),
                           label: Text(
                             requests.travelerRequests.isEmpty
                                 ? tr('Requests')
                                 : tr('Requests {length}', {
                                     'length': requests.travelerRequests.length,
                                   }),
+                          ),
+                        ),
+                        ButtonSegment(
+                          value: 2,
+                          label: Text(
+                            tr('Saved'),
+                            key: const ValueKey('saved-trips-tab'),
                           ),
                         ),
                       ],
@@ -91,22 +94,63 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                       ),
                     ),
                   Expanded(
-                    child: _selectedView == 0
-                        ? _HostedTripsView(
-                            catalog: catalog,
-                            requests: requests.hostRequests,
-                          )
-                        : _TravelerRequestsView(
-                            requests: requests.travelerRequests,
-                            isLoading: requests.isLoading,
-                            onRefresh: requests.load,
-                          ),
+                    child: switch (_selectedView) {
+                      0 => _HostedTripsView(
+                        catalog: catalog,
+                        requests: requests.hostRequests,
+                      ),
+                      1 => _TravelerRequestsView(
+                        requests: requests.travelerRequests,
+                        isLoading: requests.isLoading,
+                        onRefresh: requests.load,
+                      ),
+                      _ => _SavedTripsView(catalog: catalog),
+                    },
                   ),
                 ],
               );
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _SavedTripsView extends StatelessWidget {
+  const _SavedTripsView({required this.catalog});
+
+  final TripCatalogController catalog;
+
+  @override
+  Widget build(BuildContext context) {
+    final trips = catalog.savedTrips;
+    if (catalog.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (trips.isEmpty) {
+      return EmptyState(
+        icon: Icons.bookmark_border_rounded,
+        title: tr('No saved trips'),
+        message: tr('Tap the bookmark on a trip to keep it here for later.'),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: catalog.load,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
+        itemCount: trips.length,
+        separatorBuilder: (context, index) =>
+            const SizedBox(height: AppSpacing.md),
+        itemBuilder: (context, index) => TripCard(
+          trip: trips[index],
+          onTap: () => context.push(AppRoutes.tripDetails(trips[index].id)),
+        ),
       ),
     );
   }

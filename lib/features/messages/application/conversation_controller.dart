@@ -1,9 +1,9 @@
-import '../../../core/l10n/app_strings.dart';
 import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../core/l10n/app_strings.dart';
 import '../data/chat_repository.dart';
 import '../domain/trip_conversation.dart';
 

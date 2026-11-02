@@ -1,6 +1,6 @@
-import '../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/l10n/app_strings.dart';
 import '../../core/widgets/app_async_views.dart';
 import '../auth/app_auth_state.dart';
 

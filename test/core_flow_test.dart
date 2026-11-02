@@ -182,6 +182,65 @@ void main() {
     expect(find.byKey(const ValueKey('request-to-join')), findsOneWidget);
   });
 
+  testWidgets('a saved trip appears under My trips', (tester) async {
+    await _pumpApp(tester);
+    _go(tester, AppRoutes.tripDetails('dades-slow-road'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('save-trip')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.bookmark_rounded), findsOneWidget);
+
+    GoRouter.of(
+      tester.element(find.byType(Scaffold).first),
+    ).go(AppRoutes.trips);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('saved-trips-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dades slow road'), findsOneWidget);
+  });
+
+  testWidgets('a host sees useful context and the cost if someone joins', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+    _go(tester, AppRoutes.tripRequests('preview-rif-loop'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Useful context'), findsOneWidget);
+    expect(find.text('Free for all the dates'), findsOneWidget);
+    expect(find.text('Arabic, French, English'), findsOneWidget);
+    expect(find.text('Driving licence not checked'), findsOneWidget);
+    expect(find.byKey(const ValueKey('cost-if-joins')), findsOneWidget);
+  });
+
+  testWidgets('logistics offers searches with the trip filled in', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+    _go(tester, AppRoutes.tripLogistics('dades-slow-road'));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, const ValueKey('search-directions'));
+    expect(find.byKey(const ValueKey('search-directions')), findsOneWidget);
+    expect(find.text('Directions on Google Maps'), findsOneWidget);
+  });
+
+  testWidgets('trip creation suggests places the map knows', (tester) async {
+    await _pumpApp(tester);
+    _go(tester, AppRoutes.createTrip);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const ValueKey('trip-origin')), 'chefch');
+    await tester.pumpAndSettle();
+    expect(find.text('This place will not appear on the map.'), findsOneWidget);
+    await tester.tap(find.text('Chefchaouen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chefchaouen'), findsOneWidget);
+    expect(find.text('This place will not appear on the map.'), findsNothing);
+  });
+
   testWidgets('a traveler edits their profile and stays in the app', (
     tester,
   ) async {

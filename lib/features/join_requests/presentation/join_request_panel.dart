@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +6,7 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../trips/domain/trip.dart';
 import '../../trips/presentation/trip_formatters.dart';
 import '../application/join_request_controller.dart';
@@ -365,6 +365,9 @@ class _JoinRequestComposerState extends State<_JoinRequestComposer> {
   final _messageController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isSending = false;
+  bool _availableAllDates = false;
+  bool _budgetFits = false;
+  bool _canShareDriving = false;
 
   @override
   void dispose() {
@@ -381,6 +384,9 @@ class _JoinRequestComposerState extends State<_JoinRequestComposer> {
       await widget.requestController.submitRequest(
         trip: widget.trip,
         message: _messageController.text,
+        availableAllDates: _availableAllDates,
+        budgetFits: _budgetFits,
+        canShareDriving: _canShareDriving,
       );
       if (mounted) {
         Navigator.pop(context, true);
@@ -454,6 +460,43 @@ class _JoinRequestComposerState extends State<_JoinRequestComposer> {
                       ? tr('Write at least 20 characters')
                       : null;
                 },
+              ),
+              SwitchListTile.adaptive(
+                key: const ValueKey('join-available-all-dates'),
+                contentPadding: EdgeInsets.zero,
+                value: _availableAllDates,
+                onChanged: (value) =>
+                    setState(() => _availableAllDates = value),
+                title: Text(tr('I am free for all the dates')),
+                subtitle: Text(
+                  formatTripDateRange(
+                    widget.trip.startDate,
+                    widget.trip.endDate,
+                  ),
+                ),
+              ),
+              SwitchListTile.adaptive(
+                key: const ValueKey('join-budget-fits'),
+                contentPadding: EdgeInsets.zero,
+                value: _budgetFits,
+                onChanged: (value) => setState(() => _budgetFits = value),
+                title: Text(tr('This budget works for me')),
+                subtitle: Text(
+                  tr('About {amount} each with a full group', {
+                    'amount': formatTripMoney(
+                      widget.trip.estimatedFullGroupShare,
+                      widget.trip.currency,
+                    ),
+                  }),
+                ),
+              ),
+              SwitchListTile.adaptive(
+                key: const ValueKey('join-can-drive'),
+                contentPadding: EdgeInsets.zero,
+                value: _canShareDriving,
+                onChanged: (value) => setState(() => _canShareDriving = value),
+                title: Text(tr('I can share driving')),
+                subtitle: Text(tr('CoTravel does not check driving licences.')),
               ),
               const SizedBox(height: AppSpacing.md),
               FilledButton(

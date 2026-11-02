@@ -71,6 +71,28 @@ class TripRoute {
 abstract final class MoroccoRouteCoordinates {
   static const _places = <String, GeoPoint>{
     'agadir': GeoPoint(30.4278, -9.5981),
+    'al hoceima': GeoPoint(35.2517, -3.9372),
+    'asilah': GeoPoint(35.4656, -6.0340),
+    'azrou': GeoPoint(33.4342, -5.2214),
+    'beni mellal': GeoPoint(32.3373, -6.3498),
+    'dakhla': GeoPoint(23.6848, -15.9580),
+    'kenitra': GeoPoint(34.2610, -6.5802),
+    'laayoune': GeoPoint(27.1253, -13.1625),
+    'larache': GeoPoint(35.1932, -6.1557),
+    'meknes': GeoPoint(33.8935, -5.5473),
+    'midelt': GeoPoint(32.6852, -4.7451),
+    'mohammedia': GeoPoint(33.6866, -7.3830),
+    'nador': GeoPoint(35.1681, -2.9335),
+    'oualidia': GeoPoint(32.7333, -9.0333),
+    'oujda': GeoPoint(34.6814, -1.9086),
+    'ouzoud': GeoPoint(32.0151, -6.7194),
+    'safi': GeoPoint(32.2994, -9.2372),
+    'sidi ifni': GeoPoint(29.3797, -10.1731),
+    'tafraoute': GeoPoint(29.7167, -8.9667),
+    'taroudant': GeoPoint(30.4703, -8.8770),
+    'tinghir': GeoPoint(31.5147, -5.5328),
+    'tiznit': GeoPoint(29.6974, -9.7316),
+    'zagora': GeoPoint(30.3324, -5.8384),
     'agafay': GeoPoint(31.4481, -8.1814),
     'ait ben haddou': GeoPoint(31.0472, -7.1299),
     'akchour': GeoPoint(35.2444, -5.1740),
@@ -96,12 +118,55 @@ abstract final class MoroccoRouteCoordinates {
     'tetouan': GeoPoint(35.5889, -5.3626),
   };
 
+  static const _accents = {
+    'à': 'a',
+    'â': 'a',
+    'ç': 'c',
+    'è': 'e',
+    'é': 'e',
+    'ê': 'e',
+    'î': 'i',
+    'ï': 'i',
+    'ô': 'o',
+    'û': 'u',
+  };
+
+  static String _normalize(String value) {
+    var text = value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    _accents.forEach((accented, plain) {
+      text = text.replaceAll(accented, plain);
+    });
+    return text;
+  }
+
   static GeoPoint? lookup(String placeName) {
-    final normalized = placeName.trim().toLowerCase().replaceAll(
-      RegExp(r'\s+'),
-      ' ',
-    );
-    return _places[normalized];
+    return _places[_normalize(placeName)];
+  }
+
+  /// Known place names matching [query], starting matches first.
+  static List<String> search(String query, {int limit = 6}) {
+    final normalized = _normalize(query);
+    if (normalized.isEmpty) {
+      return const [];
+    }
+    final matches = _places.keys.where((name) => name.contains(normalized));
+    final ordered = matches.toList()
+      ..sort((left, right) {
+        final leftStarts = left.startsWith(normalized);
+        final rightStarts = right.startsWith(normalized);
+        if (leftStarts != rightStarts) {
+          return leftStarts ? -1 : 1;
+        }
+        return left.compareTo(right);
+      });
+    return ordered.take(limit).map(_displayName).toList(growable: false);
+  }
+
+  static String _displayName(String name) {
+    return name
+        .split(' ')
+        .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
+        .join(' ');
   }
 
   static TripStop resolve(TripStop stop) {

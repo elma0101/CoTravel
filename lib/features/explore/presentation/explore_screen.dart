@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +6,7 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../trips/domain/trip.dart';
 import '../../trips/presentation/trip_formatters.dart';
 import '../../trips/presentation/widgets/trip_card.dart';
@@ -30,6 +30,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   final _originController = TextEditingController();
   final _destinationController = TextEditingController();
+  final _hostBackgroundController = TextEditingController();
   DateTimeRange? _dateRange;
   String? _travelStyle;
   bool _verifiedOnly = false;
@@ -38,6 +39,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void dispose() {
     _originController.dispose();
     _destinationController.dispose();
+    _hostBackgroundController.dispose();
     super.dispose();
   }
 
@@ -53,6 +55,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             endDate: _dateRange?.end,
             travelStyle: _travelStyle,
             verifiedHostsOnly: _verifiedOnly,
+            hostBackgroundQuery: _hostBackgroundController.text,
           ),
         );
   }
@@ -60,6 +63,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void _clearFilters() {
     _originController.clear();
     _destinationController.clear();
+    _hostBackgroundController.clear();
     setState(() {
       _dateRange = null;
       _travelStyle = null;
@@ -142,6 +146,18 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           .toList(),
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      key: const ValueKey('explore-host-background'),
+                      controller: _hostBackgroundController,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        labelText: tr('Host background'),
+                        hintText: tr('Designer, teacher, engineer…'),
+                        helperText: tr('Declared by hosts and not checked.'),
+                        prefixIcon: const Icon(Icons.work_outline_rounded),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       value: nextVerified,
@@ -204,6 +220,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   dateRange: _dateRange,
                   hasAdvancedFilters:
                       _originController.text.trim().isNotEmpty ||
+                      _hostBackgroundController.text.trim().isNotEmpty ||
                       _travelStyle != null ||
                       _verifiedOnly,
                   onPickDates: _pickDates,
@@ -466,15 +483,13 @@ class _SectionHeading extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
-        if (hasFilter)
-          TextButton(onPressed: onClear, child: Text(tr('Clear')))
-        else
-          Text(
-            tr('Soonest first'),
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
-          ),
+        TextButton.icon(
+          key: const ValueKey('open-trip-map'),
+          onPressed: () => context.push(AppRoutes.tripMap),
+          icon: const Icon(Icons.map_outlined, size: 18),
+          label: Text(tr('Map')),
+        ),
+        if (hasFilter) TextButton(onPressed: onClear, child: Text(tr('Clear'))),
       ],
     );
   }

@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,6 +8,7 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../domain/trip.dart';
 import '../domain/trip_route.dart';
 import 'trip_formatters.dart';

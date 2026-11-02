@@ -11,6 +11,7 @@ import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/check_email_screen.dart';
 import '../../features/beta/presentation/beta_feedback_screen.dart';
 import '../../features/explore/presentation/explore_screen.dart';
+import '../../features/explore/presentation/trip_map_screen.dart';
 import '../../features/join_requests/presentation/trip_requests_screen.dart';
 import '../../features/logistics/presentation/trip_logistics_screen.dart';
 import '../../features/messages/presentation/messages_screen.dart';
@@ -36,6 +37,7 @@ abstract final class AppRoutes {
   static const checkEmail = '/check-email';
   static const onboarding = '/onboarding';
   static const explore = '/explore';
+  static const tripMap = '/explore/map';
   static const trips = '/trips';
   static const createTrip = '/trips/new';
   static const messages = '/messages';
@@ -166,6 +168,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (context, state) => const ProfileOnboardingScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.tripMap,
+        builder: (context, state) => const TripMapScreen(),
       ),
       GoRoute(
         path: '/trip/:tripId/route',

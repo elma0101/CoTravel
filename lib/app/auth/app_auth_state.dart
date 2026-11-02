@@ -1,10 +1,10 @@
-import '../../core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/analytics/product_analytics.dart';
+import '../../core/l10n/app_strings.dart';
 import '../../features/legal/domain/legal_documents.dart';
 import '../../features/profile/data/profile_repository.dart';
 import '../../features/profile/domain/user_profile.dart';

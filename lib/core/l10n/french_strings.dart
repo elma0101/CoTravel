@@ -105,7 +105,6 @@ const frenchStrings = <String, String>{
   "{resultCount} matching trips": "{resultCount} voyages correspondants",
   "Open trips": "Voyages ouverts",
   "Clear": "Effacer",
-  "Soonest first": "Les plus proches d’abord",
   "Culture": "Culture",
   "Food": "Gastronomie",
   "Nature": "Nature",
@@ -212,6 +211,25 @@ const frenchStrings = <String, String>{
   "No traveler requests yet": "Aucune demande pour l’instant",
   "New requests will appear here with the traveler’s profile and introduction.":
       "Les nouvelles demandes apparaîtront ici avec le profil et la présentation du voyageur.",
+
+  "I am free for all the dates": "Je suis libre à toutes les dates",
+  "This budget works for me": "Ce budget me convient",
+  "About {amount} each with a full group":
+      "Environ {amount} par personne avec un groupe complet",
+  "I can share driving": "Je peux partager la conduite",
+  "CoTravel does not check driving licences.":
+      "CoTravel ne vérifie pas les permis de conduire.",
+  "Free for all the dates": "Libre à toutes les dates",
+  "Dates to discuss": "Dates à discuter",
+  "Budget works for them": "Le budget lui convient",
+  "Budget to discuss": "Budget à discuter",
+  "Can share driving": "Peut partager la conduite",
+  "Driving licence not checked": "Permis de conduire non vérifié",
+  "Useful context": "Informations utiles",
+  "Declared by the traveler": "Déclaré par le voyageur",
+  "Current group cost": "Coût actuel du groupe",
+  "If {name} joins": "Si {name} rejoint le groupe",
+  "{amount} each": "{amount} par personne",
 
   // Logistics
   "Logistics could not be updated. Please try again.":
@@ -613,6 +631,34 @@ const frenchStrings = <String, String>{
   "1 seat left": "1 place restante",
   "{seats} seats left": "{seats} places restantes",
 
+  "Save trip": "Enregistrer le voyage",
+  "Remove from saved": "Retirer des voyages enregistrés",
+  "Your saved trips could not be updated.":
+      "Vos voyages enregistrés n’ont pas pu être mis à jour.",
+  "Saved": "Enregistrés",
+  "No saved trips": "Aucun voyage enregistré",
+  "Tap the bookmark on a trip to keep it here for later.":
+      "Touchez le signet d’un voyage pour le retrouver ici plus tard.",
+
+  "This place will not appear on the map.":
+      "Ce lieu n’apparaîtra pas sur la carte.",
+  "Host background": "Parcours de l’organisateur",
+  "Designer, teacher, engineer…": "Designer, enseignant, ingénieur…",
+  "Declared by hosts and not checked.":
+      "Déclaré par les organisateurs et non vérifié.",
+  "Search with your trip details": "Rechercher avec les détails du voyage",
+  "Opens the provider with your destination, dates and group size.":
+      "Ouvre le prestataire avec votre destination, vos dates et la taille du groupe.",
+  "Directions on Google Maps": "Itinéraire sur Google Maps",
+
+  "Map": "Carte",
+  "Trips on the map": "Voyages sur la carte",
+  "No trips to show on the map.": "Aucun voyage à afficher sur la carte.",
+  "{n} trip has no map location and is only in the list.":
+      "{n} voyage sans position sur la carte figure seulement dans la liste.",
+  "{n} trips have no map location and are only in the list.":
+      "{n} voyages sans position sur la carte figurent seulement dans la liste.",
+
   // Photos
   "Photo details": "Détails de la photo",
   "Photo by {photographer} · {licenseName}":
@@ -687,8 +733,8 @@ const frenchStrings = <String, String>{
   "You can delete your account from your profile at any time. Hosts must first cancel upcoming trips that have confirmed travelers.":
       "Vous pouvez supprimer votre compte depuis votre profil à tout moment. Les organisateurs doivent d’abord annuler leurs voyages à venir comportant des voyageurs confirmés.",
   "What we collect": "Ce que nous collectons",
-  "Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips and requests you create, your group chat messages, your safety reports and blocks, your notification device token, and basic usage events.":
-      "Votre adresse e-mail, les informations et la photo de votre profil, le fait qu’un compte LinkedIn soit lié ou non, les voyages et demandes que vous créez, vos messages de groupe, vos signalements et blocages, le jeton de notification de votre appareil et des événements d’utilisation de base.",
+  "Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips you create and save, your requests and the details you declare in them, your group chat messages, your safety reports and blocks, your notification device token, and basic usage events.":
+      "Votre adresse e-mail, les informations et la photo de votre profil, le fait qu’un compte LinkedIn soit lié ou non, les voyages que vous créez et enregistrez, vos demandes et les informations que vous y déclarez, vos messages de groupe, vos signalements et blocages, le jeton de notification de votre appareil et des événements d’utilisation de base.",
   "Who can see it": "Qui peut y accéder",
   "Other signed-in members can see your profile and your trips. Group members can see the group chat. Hosts can see the introduction you send with a request. Members you block, and members who block you, cannot see your profile.":
       "Les autres membres connectés peuvent voir votre profil et vos voyages. Les membres d’un groupe peuvent voir sa discussion. Les organisateurs peuvent voir la présentation jointe à votre demande. Les membres que vous bloquez et ceux qui vous bloquent ne peuvent pas voir votre profil.",

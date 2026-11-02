@@ -1,4 +1,3 @@
-import '../../../../core/l10n/app_strings.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -6,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/l10n/app_strings.dart';
 import 'trip_cover_images.dart';
 
 class TripPhotoAttributionButton extends StatelessWidget {

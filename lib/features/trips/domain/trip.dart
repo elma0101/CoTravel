@@ -163,6 +163,7 @@ class Trip {
     required this.hostName,
     required this.hostHomeCity,
     required this.hostVerified,
+    this.hostOccupation,
     required this.title,
     required this.originCity,
     required this.startDate,
@@ -185,6 +186,9 @@ class Trip {
   final String hostId;
   final String hostName;
   final String? hostHomeCity;
+
+  // Declared by the host and unchecked.
+  final String? hostOccupation;
   final bool hostVerified;
   final String title;
   final String originCity;
@@ -234,6 +238,7 @@ class Trip {
       hostId: hostId,
       hostName: hostName,
       hostHomeCity: hostHomeCity,
+      hostOccupation: hostOccupation,
       hostVerified: hostVerified,
       title: title,
       originCity: originCity,
@@ -261,6 +266,7 @@ class TripFilter {
     this.endDate,
     this.travelStyle,
     this.verifiedHostsOnly = false,
+    this.hostBackgroundQuery = '',
   });
 
   final String originQuery;
@@ -269,6 +275,7 @@ class TripFilter {
   final DateTime? endDate;
   final String? travelStyle;
   final bool verifiedHostsOnly;
+  final String hostBackgroundQuery;
 
   bool get isActive =>
       originQuery.trim().isNotEmpty ||
@@ -276,7 +283,8 @@ class TripFilter {
       startDate != null ||
       endDate != null ||
       travelStyle != null ||
-      verifiedHostsOnly;
+      verifiedHostsOnly ||
+      hostBackgroundQuery.trim().isNotEmpty;
 
   bool matches(Trip trip) {
     final normalizedOrigin = originQuery.trim().toLowerCase();
@@ -303,6 +311,11 @@ class TripFilter {
     if (verifiedHostsOnly && !trip.hostVerified) {
       return false;
     }
+    final background = hostBackgroundQuery.trim().toLowerCase();
+    if (background.isNotEmpty &&
+        !(trip.hostOccupation?.toLowerCase().contains(background) ?? false)) {
+      return false;
+    }
     return true;
   }
 
@@ -314,6 +327,7 @@ class TripFilter {
     String? travelStyle,
     bool clearTravelStyle = false,
     bool? verifiedHostsOnly,
+    String? hostBackgroundQuery,
   }) {
     return TripFilter(
       originQuery: originQuery ?? this.originQuery,
@@ -322,6 +336,7 @@ class TripFilter {
       endDate: endDate ?? this.endDate,
       travelStyle: clearTravelStyle ? null : (travelStyle ?? this.travelStyle),
       verifiedHostsOnly: verifiedHostsOnly ?? this.verifiedHostsOnly,
+      hostBackgroundQuery: hostBackgroundQuery ?? this.hostBackgroundQuery,
     );
   }
 

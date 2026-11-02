@@ -20,6 +20,12 @@ abstract interface class TripRepository {
   Future<Trip> updateTrip({required String tripId, required TripDraft draft});
 
   Future<void> cancelTrip(String tripId);
+
+  Future<List<Trip>> fetchSavedTrips(String userId);
+
+  Future<void> saveTrip({required String userId, required String tripId});
+
+  Future<void> unsaveTrip({required String userId, required String tripId});
 }
 
 class SupabaseTripRepository implements TripRepository {
@@ -42,6 +48,7 @@ class SupabaseTripRepository implements TripRepository {
     host:profiles!trips_host_id_fkey(
       display_name,
       home_city,
+      occupation,
       linkedin_verified_at
     )
   ''';
@@ -58,6 +65,47 @@ class SupabaseTripRepository implements TripRepository {
         .gte('start_date', _dateValue(DateTime.now()))
         .order('start_date');
     return rows.map(_fromMap).toList();
+  }
+
+  @override
+  Future<List<Trip>> fetchSavedTrips(String userId) async {
+    final saved = await _client
+        .from('saved_trips')
+        .select('trip_id')
+        .eq('user_id', userId);
+    if (saved.isEmpty) {
+      return const [];
+    }
+    final rows = await _client
+        .from('trips')
+        .select(_tripSelection)
+        .inFilter('id', saved.map((row) => row['trip_id'] as String).toList())
+        .order('start_date');
+    return rows.map(_fromMap).toList();
+  }
+
+  @override
+  Future<void> saveTrip({
+    required String userId,
+    required String tripId,
+  }) async {
+    // Do nothing on a repeat save: members have no update grant on this table.
+    await _client.from('saved_trips').upsert({
+      'user_id': userId,
+      'trip_id': tripId,
+    }, ignoreDuplicates: true);
+  }
+
+  @override
+  Future<void> unsaveTrip({
+    required String userId,
+    required String tripId,
+  }) async {
+    await _client
+        .from('saved_trips')
+        .delete()
+        .eq('user_id', userId)
+        .eq('trip_id', tripId);
   }
 
   @override
@@ -160,6 +208,7 @@ class SupabaseTripRepository implements TripRepository {
       hostId: row['host_id'] as String,
       hostName: host['display_name'] as String? ?? 'CoTravel host',
       hostHomeCity: host['home_city'] as String?,
+      hostOccupation: host['occupation'] as String?,
       hostVerified: host['linkedin_verified_at'] != null,
       title: row['title'] as String,
       originCity: row['origin_city'] as String,
@@ -212,7 +261,29 @@ class PreviewTripRepository implements TripRepository {
 
   final DateTime _today;
   final List<Trip> _trips;
+  final Set<String> _savedTripIds = {};
   int _nextId = 1;
+
+  @override
+  Future<List<Trip>> fetchSavedTrips(String userId) async {
+    return _trips.where((trip) => _savedTripIds.contains(trip.id)).toList();
+  }
+
+  @override
+  Future<void> saveTrip({
+    required String userId,
+    required String tripId,
+  }) async {
+    _savedTripIds.add(tripId);
+  }
+
+  @override
+  Future<void> unsaveTrip({
+    required String userId,
+    required String tripId,
+  }) async {
+    _savedTripIds.remove(tripId);
+  }
 
   Future<Trip> updateCostEstimates({
     required String tripId,
@@ -296,6 +367,7 @@ class PreviewTripRepository implements TripRepository {
       hostId: userId,
       hostName: hostProfile.displayName ?? 'Preview traveler',
       hostHomeCity: hostProfile.homeCity,
+      hostOccupation: hostProfile.occupation,
       hostVerified: hostProfile.isLinkedInVerified,
       title: draft.title,
       originCity: draft.originCity,
@@ -332,6 +404,7 @@ class PreviewTripRepository implements TripRepository {
       hostId: current.hostId,
       hostName: current.hostName,
       hostHomeCity: current.hostHomeCity,
+      hostOccupation: current.hostOccupation,
       hostVerified: current.hostVerified,
       title: draft.title,
       originCity: draft.originCity,
@@ -373,6 +446,7 @@ class PreviewTripRepository implements TripRepository {
         hostId: 'host-amina',
         hostName: 'Amina B.',
         hostHomeCity: 'Casablanca',
+        hostOccupation: 'Product designer',
         hostVerified: true,
         title: 'Atlas villages weekend',
         originCity: 'Casablanca',
@@ -453,6 +527,7 @@ class PreviewTripRepository implements TripRepository {
         hostId: 'host-youssef',
         hostName: 'Youssef E.',
         hostHomeCity: 'Rabat',
+        hostOccupation: 'Teacher',
         hostVerified: true,
         title: 'Coast, food, and surf',
         originCity: 'Rabat',
@@ -488,6 +563,7 @@ class PreviewTripRepository implements TripRepository {
         hostId: 'host-leila',
         hostName: 'Leila M.',
         hostHomeCity: 'Marrakech',
+        hostOccupation: 'Software engineer',
         hostVerified: true,
         title: 'Dades slow road',
         originCity: 'Marrakech',

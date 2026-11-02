@@ -5,9 +5,9 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../trips/domain/trip.dart';
 import '../../trips/presentation/trip_formatters.dart';
 import '../application/join_request_controller.dart';
-import '../../trips/domain/trip.dart';
 import '../domain/trip_join_request.dart';
 
 class TripRequestsScreen extends ConsumerWidget {

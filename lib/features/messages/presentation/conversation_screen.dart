@@ -1,5 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
-import '../../trips/presentation/trip_formatters.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -9,8 +7,10 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/analytics/product_analytics.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../profile/domain/traveler_action_target.dart';
 import '../../profile/presentation/traveler_action_sheet.dart';
+import '../../trips/presentation/trip_formatters.dart';
 import '../application/chat_controller.dart';
 import '../application/conversation_controller.dart';
 import '../domain/trip_conversation.dart';

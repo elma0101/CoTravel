@@ -64,6 +64,39 @@ void main() {
     );
   });
 
+  test('errors the database can show users have French', () {
+    // Internal checks no normal use of the app can reach.
+    const internal = {
+      'A terms version is required',
+      'A valid client message identifier is required',
+      'Both message cursor values are required',
+      'Choose a complete, verified staging host profile',
+      'Controlled beta seed data can only target staging',
+      'Enter a valid Instagram username',
+      'Event properties must be a small JSON object',
+      'Message page size must be between 1 and 100',
+      'Open release blockers cannot be negative',
+      'Snapshot note must contain at most 1000 characters',
+      'Trip builder timing events cannot contain metadata',
+      'Trip publication analytics must reference a hosted trip',
+      'Unsupported product event',
+    };
+    final raised = <String>{};
+    final pattern = RegExp(r"raise exception '([^']+)'");
+    for (final entity in Directory('supabase/migrations').listSync()) {
+      if (entity is File) {
+        raised.addAll(
+          pattern.allMatches(entity.readAsStringSync()).map((m) => m[1]!),
+        );
+      }
+    }
+    final missing = raised
+        .difference(internal)
+        .difference(frenchStrings.keys.toSet());
+    expect(raised, isNotEmpty);
+    expect(missing, isEmpty);
+  });
+
   test('French keeps the same placeholders as English', () {
     frenchStrings.forEach((english, french) {
       if (english.startsWith('Your {n} confirmed traveler ')) return;

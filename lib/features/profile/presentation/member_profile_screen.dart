@@ -8,8 +8,8 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../safety/domain/safety_models.dart';
-import '../../trips/presentation/trip_formatters.dart';
 import '../../safety/presentation/safety_actions.dart';
+import '../../trips/presentation/trip_formatters.dart';
 import '../domain/traveler_action_target.dart';
 import '../domain/user_profile.dart';
 

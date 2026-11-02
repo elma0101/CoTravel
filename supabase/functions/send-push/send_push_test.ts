@@ -8,6 +8,19 @@ import {
   secretsMatch,
 } from "./message.ts";
 
+const messageKinds = {
+  join_request_received: 1,
+  request_approved: 1,
+  request_declined: 1,
+  traveler_confirmed: 1,
+  traveler_declined: 1,
+  traveler_withdrew: 1,
+  traveler_left: 1,
+  traveler_left_late: 1,
+  trip_updated: 1,
+  trip_cancelled: 1,
+};
+
 const record: NotificationRecord = {
   id: "n1",
   user_id: "u1",
@@ -20,7 +33,13 @@ const record: NotificationRecord = {
 function backendWith(responses: Record<string, { status: number; body: string }>) {
   const deleted: string[] = [];
   const backend: PushBackend = {
-    tokensFor: () => Promise.resolve(Object.keys(responses)),
+    tokensFor: () =>
+      Promise.resolve(
+        Object.keys(responses).map((token) => ({
+          token,
+          language: "en" as const,
+        })),
+      ),
     deleteToken: (token) => {
       deleted.push(token);
       return Promise.resolve();
@@ -47,6 +66,36 @@ Deno.test("every kind the database allows has a message", () => {
   assertEquals(kinds.length, 10);
   for (const kind of kinds) {
     assertEquals(typeof messageFor({ ...record, kind }), "string", kind);
+  }
+});
+
+Deno.test("each device gets its own language", async () => {
+  const bodies: Record<string, string> = {};
+  const backend: PushBackend = {
+    tokensFor: () =>
+      Promise.resolve([
+        { token: "fr-phone", language: "fr" as const },
+        { token: "en-phone", language: "en" as const },
+      ]),
+    deleteToken: () => Promise.resolve(),
+    send: (message) => {
+      const { token, notification } = (message as {
+        message: { token: string; notification: { body: string } };
+      }).message;
+      bodies[token] = notification.body;
+      return Promise.resolve({ status: 200, body: "{}" });
+    },
+  };
+
+  await deliver(record, backend);
+
+  assertEquals(bodies["fr-phone"], "Amina a annulé Atlas weekend.");
+  assertEquals(bodies["en-phone"], "Amina cancelled Atlas weekend.");
+});
+
+Deno.test("every kind has French too", () => {
+  for (const kind of Object.keys(messageKinds)) {
+    assertEquals(typeof messageFor({ ...record, kind }, "fr"), "string", kind);
   }
 });
 

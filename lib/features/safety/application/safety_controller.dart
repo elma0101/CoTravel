@@ -1,10 +1,11 @@
-import '../../../core/l10n/app_strings.dart';
-import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
 import '../../../core/analytics/product_analytics.dart';
+import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/server_errors.dart';
+import '../../../core/state/dispose_safe_notifier.dart';
 import '../../trips/application/trip_catalog_controller.dart';
 import '../data/safety_repository.dart';
 import '../domain/safety_models.dart';
@@ -129,16 +130,7 @@ class SafetyController extends ChangeNotifier with DisposeSafeNotifier {
   }
 
   String _readableError(Object error) {
-    final message = error.toString();
-    for (final prefix in [
-      'Bad state: ',
-      'Invalid argument(s): ',
-      'PostgrestException(message: ',
-    ]) {
-      if (message.startsWith(prefix)) {
-        return message.substring(prefix.length).split(', code:').first;
-      }
-    }
-    return tr('The safety action could not be completed. Please try again.');
+    return readableServerError(error) ??
+        tr('The safety action could not be completed. Please try again.');
   }
 }

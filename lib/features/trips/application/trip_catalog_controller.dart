@@ -1,10 +1,10 @@
-import '../../../core/l10n/app_strings.dart';
-import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
 import '../../../core/analytics/product_analytics.dart';
+import '../../../core/l10n/app_strings.dart';
+import '../../../core/state/dispose_safe_notifier.dart';
 import '../../profile/domain/user_profile.dart';
 import '../data/trip_repository.dart';
 import '../domain/trip.dart';

@@ -5,6 +5,7 @@ import 'app/bootstrap/app_bootstrap.dart';
 import 'app/config/app_config.dart';
 import 'app/cotravel_app.dart';
 import 'app/providers/app_providers.dart';
+import 'core/errors/error_reporter.dart';
 import 'core/widgets/app_async_views.dart';
 
 Future<void> main() async {
@@ -14,6 +15,10 @@ Future<void> main() async {
 
   try {
     final bootstrap = await AppBootstrap.initialize(config);
+    final client = bootstrap.supabaseClient;
+    if (client != null) {
+      ErrorReporter.supabase(client).install();
+    }
 
     runApp(
       ProviderScope(

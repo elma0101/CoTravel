@@ -1,3 +1,4 @@
+import '../../../core/state/dispose_safe_notifier.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../trips/application/trip_catalog_controller.dart';
@@ -5,7 +6,7 @@ import '../../trips/domain/trip.dart';
 import '../data/logistics_repository.dart';
 import '../domain/trip_logistics.dart';
 
-class LogisticsController extends ChangeNotifier {
+class LogisticsController extends ChangeNotifier with DisposeSafeNotifier {
   LogisticsController({
     required LogisticsRepository repository,
     required TripCatalogController tripCatalog,

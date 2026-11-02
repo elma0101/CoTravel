@@ -7,6 +7,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../safety/domain/safety_models.dart';
+import '../../trips/presentation/trip_formatters.dart';
 import '../../safety/presentation/safety_actions.dart';
 import '../domain/traveler_action_target.dart';
 import '../domain/user_profile.dart';
@@ -162,6 +163,8 @@ class _MemberProfileBody extends ConsumerWidget {
                       ),
                     ),
                   ],
+                  const SizedBox(height: AppSpacing.md),
+                  _TrustFactsSection(profile: profile),
                   if (tripTitle != null) ...[
                     const SizedBox(height: AppSpacing.md),
                     _ProfileSection(
@@ -242,6 +245,62 @@ class _MemberProfileBody extends ConsumerWidget {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _TrustFactsSection extends ConsumerStatefulWidget {
+  const _TrustFactsSection({required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  ConsumerState<_TrustFactsSection> createState() => _TrustFactsSectionState();
+}
+
+class _TrustFactsSectionState extends ConsumerState<_TrustFactsSection> {
+  late final Future<TrustFacts?> _facts = ref
+      .read(profileRepositoryProvider)
+      .fetchTrustFacts(widget.profile.id);
+
+  String _count(int value, String noun) =>
+      '$value $noun${value == 1 ? '' : 's'}';
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = widget.profile;
+    return FutureBuilder<TrustFacts?>(
+      future: _facts,
+      builder: (context, snapshot) {
+        final facts = snapshot.data;
+        final occupation = profile.occupation;
+        final instagram = profile.instagramHandle;
+        final lines = [
+          if (facts != null) ...[
+            'Member since ${formatMonthYear(facts.memberSince)}',
+            '${_count(facts.tripsHosted, 'trip')} hosted',
+            '${_count(facts.tripsJoined, 'trip')} joined',
+          ],
+          if (occupation != null) 'Occupation: $occupation (self-declared)',
+          if (instagram != null) 'Instagram: @$instagram (not verified)',
+        ];
+        if (lines.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return _ProfileSection(
+          title: 'Track record',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final line in lines)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
+                  child: Text(line),
+                ),
+            ],
+          ),
         );
       },
     );

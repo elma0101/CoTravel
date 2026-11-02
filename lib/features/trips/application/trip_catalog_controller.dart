@@ -1,3 +1,4 @@
+import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -7,7 +8,7 @@ import '../../profile/domain/user_profile.dart';
 import '../data/trip_repository.dart';
 import '../domain/trip.dart';
 
-class TripCatalogController extends ChangeNotifier {
+class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
   TripCatalogController({
     required TripRepository repository,
     required String userId,

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/analytics/product_analytics.dart';
+import '../../features/legal/domain/legal_documents.dart';
 import '../../features/profile/data/profile_repository.dart';
 import '../../features/profile/domain/user_profile.dart';
 
@@ -122,6 +123,7 @@ class AppAuthState extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await profileRepository.acceptTerms(currentTermsVersion);
       _profile = await profileRepository.completeProfile(
         userId: userId,
         draft: draft,
@@ -178,6 +180,20 @@ class AppAuthState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteAccount() async {
+    final userId = _supabaseClient?.auth.currentUser?.id ?? 'preview-user';
+    await profileRepository.deleteAccount(userId);
+    if (_supabaseClient != null) {
+      // The session's user no longer exists, so only local sign-out can succeed.
+      await _supabaseClient.auth.signOut(scope: SignOutScope.local);
+      return;
+    }
+
+    _profile = null;
+    _status = AppSessionStatus.signedOut;
+    notifyListeners();
+  }
+
   Future<void> _synchronizeSession(Session? session) async {
     final generation = ++_synchronizationGeneration;
 
@@ -207,7 +223,9 @@ class AppAuthState extends ChangeNotifier {
       }
 
       _profile = nextProfile;
-      _status = nextProfile?.isOnboardingComplete == true
+      _status =
+          nextProfile?.isOnboardingComplete == true &&
+              nextProfile?.hasAcceptedCurrentTerms == true
           ? AppSessionStatus.authenticated
           : AppSessionStatus.onboardingRequired;
       notifyListeners();

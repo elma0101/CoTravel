@@ -38,6 +38,10 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
 
+      # Exercises the Firebase Gradle setup. The real config is not in the repository.
+      - name: Use placeholder Firebase config
+        run: cp android/app/google-services.example.json android/app/google-services.json
+
       - name: Build Android debug APK
         run: flutter build apk --debug
 
@@ -74,6 +78,26 @@ jobs:
 
       - name: Run database tests
         run: supabase test db
+
+  push-function:
+    name: Push function tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Check function
+        run: deno check supabase/functions/send-push/index.ts
+
+      - name: Run function tests
+        run: deno test --allow-read supabase/functions/send-push/send_push_test.ts
 
   ios:
     name: iOS debug build

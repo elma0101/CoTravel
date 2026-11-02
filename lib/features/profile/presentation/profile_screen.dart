@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/auth/app_auth_state.dart';
 import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
@@ -54,14 +56,78 @@ class ProfileScreen extends ConsumerWidget {
                 onTap: () => context.push(AppRoutes.betaFeedback),
               ),
               _ProfileTile(
+                key: const ValueKey('open-terms'),
+                icon: Icons.description_outlined,
+                title: 'Terms of use',
+                onTap: () => context.push(AppRoutes.terms),
+              ),
+              _ProfileTile(
+                key: const ValueKey('open-privacy'),
+                icon: Icons.privacy_tip_outlined,
+                title: 'Privacy policy',
+                onTap: () => context.push(AppRoutes.privacy),
+              ),
+              _ProfileTile(
                 icon: Icons.logout_rounded,
                 title: 'Sign out',
                 onTap: authState.signOut,
+              ),
+              _ProfileTile(
+                key: const ValueKey('delete-account'),
+                icon: Icons.delete_outline_rounded,
+                title: 'Delete account',
+                onTap: () => _confirmDeleteAccount(context, authState),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+Future<void> _confirmDeleteAccount(
+  BuildContext context,
+  AppAuthState authState,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Delete your account?'),
+        content: const Text(
+          'This removes your profile, photo, requests, and the trips you '
+          'created, and it cannot be undone. Messages you sent stay visible to '
+          'their group as "Former member", and safety reports are kept.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep account'),
+          ),
+          TextButton(
+            key: const ValueKey('confirm-delete-account'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete account'),
+          ),
+        ],
+      );
+    },
+  );
+  if (confirmed != true || !context.mounted) {
+    return;
+  }
+
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    await authState.deleteAccount();
+  } on PostgrestException catch (error) {
+    messenger.showSnackBar(SnackBar(content: Text(error.message)));
+  } on Object {
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Your account could not be deleted. Please try again.'),
+      ),
     );
   }
 }

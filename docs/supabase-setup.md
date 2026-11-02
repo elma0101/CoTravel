@@ -107,6 +107,37 @@ Run the staging app with:
 flutter run --dart-define-from-file=config/staging.json
 ```
 
+## Android push notifications
+
+Push reuses the in-app notifications. Each new row in `public.notifications` calls
+the `send-push` edge function through a database webhook, and the function sends
+it to the recipient's devices with Firebase Cloud Messaging. iOS is not set up: it
+needs an APNs key from a paid Apple Developer account.
+
+1. Copy the Firebase Android config to `android/app/google-services.json`. It is
+   ignored by git. Builds without it still work, but without push.
+2. In Firebase, go to **Project settings > Service accounts** and generate a key.
+   Treat the file as a secret and never add it to the repository.
+3. Set the function secrets, choosing a long random value for the webhook:
+
+   ```bash
+   supabase secrets set FIREBASE_SERVICE_ACCOUNT="$(cat path/to/service-account.json)"
+   supabase secrets set PUSH_WEBHOOK_SECRET="$(openssl rand -hex 32)"
+   ```
+
+4. Deploy the function:
+
+   ```bash
+   supabase functions deploy send-push
+   ```
+
+5. In the Supabase dashboard, open **Database > Webhooks** and create a webhook on
+   `public.notifications` for **Insert** events. Choose the `send-push` edge
+   function, and add the header `Authorization: Bearer <PUSH_WEBHOOK_SECRET>`.
+
+Alert text is in English and mirrors `AppNotification.message`. It needs
+translating with the rest of the app.
+
 ## 4. Verify the integration
 
 1. Request a sign-in link from a physical device or simulator.

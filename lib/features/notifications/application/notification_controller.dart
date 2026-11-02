@@ -1,3 +1,4 @@
+import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -5,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../data/notification_repository.dart';
 import '../domain/app_notification.dart';
 
-class NotificationController extends ChangeNotifier {
+class NotificationController extends ChangeNotifier with DisposeSafeNotifier {
   NotificationController({required NotificationRepository repository})
     : this._(repository);
 
@@ -54,6 +55,16 @@ class NotificationController extends ChangeNotifier {
       _notifications = previous;
       notifyListeners();
     }
+  }
+
+  // A tapped push can arrive before the inbox has loaded this notification.
+  Future<void> markReadById(String notificationId) async {
+    try {
+      await _repository.markRead(notificationId);
+    } on Object {
+      return;
+    }
+    await load();
   }
 
   Future<void> markAllRead() async {

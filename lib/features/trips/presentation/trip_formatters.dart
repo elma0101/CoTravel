@@ -35,3 +35,21 @@ String formatTripMoney(double value, String currency) {
   }
   return '${buffer.toString()} $currency';
 }
+
+String formatMonthYear(DateTime date) {
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return '${months[date.month - 1]} ${date.year}';
+}

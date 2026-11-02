@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,7 +17,9 @@ import '../../features/logistics/data/logistics_repository.dart';
 import '../../features/messages/application/chat_controller.dart';
 import '../../features/messages/data/chat_repository.dart';
 import '../../features/notifications/application/notification_controller.dart';
+import '../../features/notifications/application/push_controller.dart';
 import '../../features/notifications/data/notification_repository.dart';
+import '../../features/notifications/data/push_messaging.dart';
 import '../../features/safety/application/safety_controller.dart';
 import '../../features/safety/data/safety_repository.dart';
 import '../../features/trips/application/trip_catalog_controller.dart';
@@ -59,6 +62,7 @@ final betaFeedbackRepositoryProvider = Provider<BetaFeedbackRepository>((ref) {
 });
 
 final betaFeedbackControllerProvider = Provider<BetaFeedbackController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final controller = BetaFeedbackController(
     ref.watch(betaFeedbackRepositoryProvider),
   );
@@ -81,7 +85,25 @@ final appAuthStateProvider = Provider<AppAuthState>((ref) {
   return controller;
 });
 
+class _SessionUserId extends Notifier<String?> {
+  @override
+  String? build() {
+    final authState = ref.watch(appAuthStateProvider);
+    void update() => state = authState.profile?.id;
+    authState.addListener(update);
+    ref.onDispose(() => authState.removeListener(update));
+    return authState.profile?.id;
+  }
+}
+
+/// Everything holding one user's data watches this, so it is rebuilt when another
+/// account signs in rather than keeping the previous user's id and rows.
+final sessionUserIdProvider = NotifierProvider<_SessionUserId, String?>(
+  _SessionUserId.new,
+);
+
 final tripCatalogProvider = Provider<TripCatalogController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final authState = ref.watch(appAuthStateProvider);
   final profile = authState.profile ?? const UserProfile.preview();
   final controller = TripCatalogController(
@@ -104,6 +126,7 @@ final safetyRepositoryProvider = Provider<SafetyRepository>((ref) {
 });
 
 final safetyControllerProvider = Provider<SafetyController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final controller = SafetyController(
     repository: ref.watch(safetyRepositoryProvider),
     tripCatalog: ref.watch(tripCatalogProvider),
@@ -129,6 +152,7 @@ final logisticsRepositoryProvider = Provider<LogisticsRepository>((ref) {
 });
 
 final logisticsControllerProvider = Provider<LogisticsController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final controller = LogisticsController(
     repository: ref.watch(logisticsRepositoryProvider),
     tripCatalog: ref.watch(tripCatalogProvider),
@@ -148,6 +172,7 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 });
 
 final chatControllerProvider = Provider<ChatController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final profile = ref.watch(appAuthStateProvider).profile;
   final controller = ChatController(
     repository: ref.watch(chatRepositoryProvider),
@@ -166,6 +191,7 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
 });
 
 final notificationControllerProvider = Provider<NotificationController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final controller = NotificationController(
     repository: ref.watch(notificationRepositoryProvider),
   );
@@ -189,6 +215,7 @@ final joinRequestRepositoryProvider = Provider<JoinRequestRepository>((ref) {
 });
 
 final joinRequestControllerProvider = Provider<JoinRequestController>((ref) {
+  ref.watch(sessionUserIdProvider);
   final authState = ref.watch(appAuthStateProvider);
   final profile = authState.profile ?? const UserProfile.preview();
   final controller = JoinRequestController(
@@ -201,6 +228,32 @@ final joinRequestControllerProvider = Provider<JoinRequestController>((ref) {
   );
 
   unawaited(controller.load());
+  ref.onDispose(controller.dispose);
+  return controller;
+});
+
+// Push is Android only for now. iOS needs an APNs key from a paid Apple account.
+final pushMessagingProvider = Provider<PushMessaging>((ref) {
+  final hasBackend = ref.watch(supabaseClientProvider) != null;
+  return hasBackend && defaultTargetPlatform == TargetPlatform.android
+      ? FirebasePushMessaging()
+      : const NoopPushMessaging();
+});
+
+final pushTokenRepositoryProvider = Provider<PushTokenRepository>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return client == null
+      ? const NoopPushTokenRepository()
+      : SupabasePushTokenRepository(client);
+});
+
+final pushControllerProvider = Provider<PushController>((ref) {
+  final controller = PushController(
+    authState: ref.watch(appAuthStateProvider),
+    messaging: ref.watch(pushMessagingProvider),
+    tokens: ref.watch(pushTokenRepositoryProvider),
+  );
+  unawaited(controller.start());
   ref.onDispose(controller.dispose);
   return controller;
 });

@@ -76,7 +76,7 @@ class SupabaseSafetyRepository implements SafetyRepository {
   SafetyReport _reportFromMap(Map<String, dynamic> row) {
     return SafetyReport(
       id: row['report_id'] as String,
-      subjectUserId: row['subject_user_id'] as String,
+      subjectUserId: row['subject_user_id'] as String? ?? '',
       subjectName: row['subject_name'] as String? ?? 'CoTravel member',
       tripId: row['trip_id'] as String?,
       tripTitle: row['trip_title'] as String?,

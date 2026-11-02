@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers/app_providers.dart';
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 
@@ -176,6 +177,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           label: const Text('Preview the app'),
                         ),
                       ],
+                      const SizedBox(height: AppSpacing.xs),
+                      const _LegalLinks(),
                     ],
                   ),
                 ),
@@ -213,6 +216,27 @@ class _BrandMark extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         Text('CoTravel', style: Theme.of(context).textTheme.titleLarge),
+      ],
+    );
+  }
+}
+
+class _LegalLinks extends StatelessWidget {
+  const _LegalLinks();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      children: [
+        TextButton(
+          onPressed: () => context.push(AppRoutes.terms),
+          child: const Text('Terms of use'),
+        ),
+        TextButton(
+          onPressed: () => context.push(AppRoutes.privacy),
+          child: const Text('Privacy policy'),
+        ),
       ],
     );
   }

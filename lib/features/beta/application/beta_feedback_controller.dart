@@ -1,9 +1,10 @@
+import '../../../core/state/dispose_safe_notifier.dart';
 import 'package:flutter/foundation.dart';
 
 import '../data/beta_feedback_repository.dart';
 import '../domain/beta_feedback.dart';
 
-class BetaFeedbackController extends ChangeNotifier {
+class BetaFeedbackController extends ChangeNotifier with DisposeSafeNotifier {
   BetaFeedbackController(this._repository);
 
   final BetaFeedbackRepository _repository;

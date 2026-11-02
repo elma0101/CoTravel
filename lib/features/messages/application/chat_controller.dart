@@ -1,3 +1,4 @@
+import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -5,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../data/chat_repository.dart';
 import '../domain/trip_conversation.dart';
 
-class ChatController extends ChangeNotifier {
+class ChatController extends ChangeNotifier with DisposeSafeNotifier {
   ChatController({required ChatRepository repository, required String userId})
     : this._(repository, userId);
 

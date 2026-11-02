@@ -15,15 +15,10 @@ class NotificationsScreen extends ConsumerWidget {
 
   void _open(BuildContext context, WidgetRef ref, AppNotification item) {
     ref.read(notificationControllerProvider).markRead(item);
-    final tripId = item.tripId;
-    if (tripId == null) {
-      return;
+    final target = AppRoutes.notificationTarget(item.kind, item.tripId);
+    if (target != null) {
+      context.push(target);
     }
-    context.push(
-      item.kind == NotificationKind.joinRequestReceived
-          ? AppRoutes.tripRequests(tripId)
-          : AppRoutes.tripDetails(tripId),
-    );
   }
 
   @override

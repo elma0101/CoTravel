@@ -1,3 +1,4 @@
+import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -7,7 +8,7 @@ import '../../trips/application/trip_catalog_controller.dart';
 import '../data/safety_repository.dart';
 import '../domain/safety_models.dart';
 
-class SafetyController extends ChangeNotifier {
+class SafetyController extends ChangeNotifier with DisposeSafeNotifier {
   SafetyController({
     required SafetyRepository repository,
     required TripCatalogController tripCatalog,

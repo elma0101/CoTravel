@@ -142,8 +142,10 @@ class SupabaseTripRepository implements TripRepository {
     required TripDraft draft,
   }) async {
     final result = await _client.rpc('create_trip', params: _tripParams(draft));
+    final tripId = result as String;
+    await _saveOriginPoint(tripId, draft);
 
-    final trip = await fetchTrip(result as String);
+    final trip = await fetchTrip(tripId);
     if (trip == null) {
       throw StateError('Trip was not available after publishing.');
     }
@@ -159,12 +161,34 @@ class SupabaseTripRepository implements TripRepository {
       'update_trip',
       params: {'p_trip_id': tripId, ..._tripParams(draft)},
     );
+    await _saveOriginPoint(tripId, draft);
 
     final trip = await fetchTrip(tripId);
     if (trip == null) {
       throw StateError('Trip was not available after saving.');
     }
     return trip;
+  }
+
+  // The database drops the old point when the departure is renamed, so a
+  // draft without a picked place only needs saving when it has one.
+  Future<void> _saveOriginPoint(String tripId, TripDraft draft) async {
+    final point = draft.originCoordinate;
+    if (point == null) {
+      return;
+    }
+    try {
+      await _client.rpc(
+        'set_trip_origin_point',
+        params: {
+          'p_trip_id': tripId,
+          'p_latitude': point.latitude,
+          'p_longitude': point.longitude,
+        },
+      );
+    } on PostgrestException {
+      // The trip is saved; its map then starts from the departure town.
+    }
   }
 
   @override
@@ -286,6 +310,7 @@ class SupabaseTripRepository implements TripRepository {
       hostVerified: host['linkedin_verified_at'] != null,
       title: row['title'] as String,
       originCity: row['origin_city'] as String,
+      originCoordinate: _point(row['origin_latitude'], row['origin_longitude']),
       startDate: DateTime.parse(row['start_date'] as String),
       endDate: DateTime.parse(row['end_date'] as String),
       stops: rawStops
@@ -328,6 +353,12 @@ class SupabaseTripRepository implements TripRepository {
           ),
       ],
     );
+  }
+
+  GeoPoint? _point(Object? latitude, Object? longitude) {
+    return latitude is num && longitude is num
+        ? GeoPoint(latitude.toDouble(), longitude.toDouble())
+        : null;
   }
 
   String _dateValue(DateTime value) {
@@ -454,6 +485,7 @@ class PreviewTripRepository implements TripRepository {
       hostVerified: hostProfile.isLinkedInVerified,
       title: draft.title,
       originCity: draft.originCity,
+      originCoordinate: draft.originCoordinate,
       startDate: draft.startDate,
       endDate: draft.endDate,
       stops: draft.stops.map(MoroccoRouteCoordinates.resolve).toList(),
@@ -491,6 +523,12 @@ class PreviewTripRepository implements TripRepository {
       hostVerified: current.hostVerified,
       title: draft.title,
       originCity: draft.originCity,
+      // Matches the database: a renamed departure drops the old point.
+      originCoordinate:
+          draft.originCoordinate ??
+          (draft.originCity == current.originCity
+              ? current.originCoordinate
+              : null),
       startDate: draft.startDate,
       endDate: draft.endDate,
       stops: draft.stops.map(MoroccoRouteCoordinates.resolve).toList(),

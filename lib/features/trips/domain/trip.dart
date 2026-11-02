@@ -143,10 +143,14 @@ class TripDraft {
     required this.currency,
     required this.travelStyle,
     required this.summary,
+    this.originCoordinate,
   });
 
   final String title;
   final String originCity;
+
+  /// The exact departure point, when the host picked a suggested place.
+  final GeoPoint? originCoordinate;
   final DateTime startDate;
   final DateTime endDate;
   final List<TripStop> stops;
@@ -201,6 +205,7 @@ class Trip {
     required this.summary,
     this.status = TripStatus.published,
     this.photos = const [],
+    this.originCoordinate,
   });
 
   // Travelers can leave freely until this many days before departure.
@@ -216,6 +221,9 @@ class Trip {
   final bool hostVerified;
   final String title;
   final String originCity;
+
+  /// The exact departure point, when the host picked a suggested place.
+  final GeoPoint? originCoordinate;
   final DateTime startDate;
   final DateTime endDate;
   final List<TripStop> stops;
@@ -268,6 +276,7 @@ class Trip {
       hostVerified: hostVerified,
       title: title,
       originCity: originCity,
+      originCoordinate: originCoordinate,
       startDate: startDate,
       endDate: endDate,
       stops: stops,

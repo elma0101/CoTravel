@@ -46,6 +46,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _originController = TextEditingController();
+  PlaceSuggestion? _pickedOrigin;
   final _lodgingController = TextEditingController();
   final _transportController = TextEditingController();
   final _summaryController = TextEditingController();
@@ -269,6 +270,9 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     final draft = TripDraft(
       title: _titleController.text.trim(),
       originCity: _originController.text.trim(),
+      originCoordinate: _pickedOrigin?.label == _originController.text.trim()
+          ? _pickedOrigin!.coordinate
+          : null,
       startDate: _dateRange.start,
       endDate: _dateRange.end,
       stops: _stops.map((stop) => stop.toStop(_optional)).toList(),
@@ -341,6 +345,10 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
         controller: _originController,
         label: tr('Leaving from'),
         icon: Icons.trip_origin_rounded,
+        mappedLabel: _editedTrip?.originCoordinate == null
+            ? null
+            : _editedTrip!.originCity,
+        onPicked: (place) => _pickedOrigin = place,
         validator: (value) =>
             (value?.trim().length ?? 0) < 2 ? tr('Add a departure city') : null,
       ),

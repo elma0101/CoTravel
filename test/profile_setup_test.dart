@@ -171,7 +171,7 @@ void main() {
 
     await tester.tap(find.text('Not now'));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('trip-title')), findsNothing);
+    expect(find.text('Where are you going?'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('plan-trip')));
     await tester.pumpAndSettle();
@@ -182,7 +182,7 @@ void main() {
     expect(find.text('You are verified!'), findsOneWidget);
     await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    expect(find.byKey(const ValueKey('trip-title')), findsOneWidget);
+    expect(find.text('Where are you going?'), findsOneWidget);
   });
 
   testWidgets('a verified member joins without being asked again', (

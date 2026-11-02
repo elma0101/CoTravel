@@ -23,7 +23,8 @@ import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/profile_setup_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/safety/presentation/safety_center_screen.dart';
-import '../../features/trips/presentation/create_trip_screen.dart';
+import '../../features/trips/presentation/edit_trip_screen.dart';
+import '../../features/trips/presentation/plan_trip_screen.dart';
 import '../../features/trips/presentation/route_explorer_screen.dart';
 import '../../features/trips/presentation/trip_detail_screen.dart';
 import '../../features/trips/presentation/trips_screen.dart';
@@ -201,7 +202,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/trip/:tripId/edit',
         builder: (context, state) {
-          return CreateTripScreen(tripId: state.pathParameters['tripId']);
+          return EditTripScreen(tripId: state.pathParameters['tripId']!);
         },
       ),
       GoRoute(
@@ -222,7 +223,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.createTrip,
-        builder: (context, state) => CreateTripScreen(),
+        builder: (context, state) => const PlanTripScreen(),
       ),
       GoRoute(
         path: AppRoutes.safety,

@@ -8,10 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../app/providers/app_providers.dart';
-import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
-import '../../../core/analytics/product_analytics.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../application/trip_catalog_controller.dart';
@@ -21,17 +19,18 @@ import 'trip_formatters.dart';
 import 'widgets/place_field.dart';
 import 'widgets/trip_photos_editor.dart';
 
-class CreateTripScreen extends ConsumerStatefulWidget {
-  const CreateTripScreen({this.tripId, super.key});
+/// Every detail of a hosted trip on one screen, including the stop details
+/// that planning leaves out. New trips go through the step-by-step planner.
+class EditTripScreen extends ConsumerStatefulWidget {
+  const EditTripScreen({required this.tripId, super.key});
 
-  // Edits this hosted trip when set; otherwise creates a new one.
-  final String? tripId;
+  final String tripId;
 
   @override
-  ConsumerState<CreateTripScreen> createState() => _CreateTripScreenState();
+  ConsumerState<EditTripScreen> createState() => _EditTripScreenState();
 }
 
-class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
+class _EditTripScreenState extends ConsumerState<EditTripScreen> {
   static const _travelStyles = [
     'Culture',
     'Food',
@@ -42,7 +41,6 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   ];
   static const _currencies = ['MAD', 'EUR', 'USD'];
 
-  int _step = 0;
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _originController = TextEditingController();
@@ -62,35 +60,13 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   final _keptPhotos = <TripPhoto>[];
   final _addedPhotos = <NewTripPhoto>[];
 
-  bool get _isEditing => widget.tripId != null;
-
   @override
   void initState() {
     super.initState();
-    if (_isEditing) {
-      final trip = ref.read(tripCatalogProvider).tripById(widget.tripId!);
-      if (trip != null) {
-        _loadTrip(trip);
-        return;
-      }
-    } else {
-      unawaited(
-        ref
-            .read(productAnalyticsProvider)
-            .track(ProductEvent.tripBuilderOpened),
-      );
+    final trip = ref.read(tripCatalogProvider).tripById(widget.tripId);
+    if (trip != null) {
+      _loadTrip(trip);
     }
-    final today = DateTime.now();
-    final start = DateTime(
-      today.year,
-      today.month,
-      today.day,
-    ).add(const Duration(days: 14));
-    _dateRange = DateTimeRange(
-      start: start,
-      end: start.add(const Duration(days: 3)),
-    );
-    _stops.add(_StopFields(arrivalDate: _dateRange.end));
   }
 
   void _loadTrip(Trip trip) {
@@ -284,18 +260,10 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
       summary: _summaryController.text.trim(),
     );
     try {
-      if (_isEditing) {
-        final trip = await catalog.updateTrip(widget.tripId!, draft);
-        await _savePhotos(catalog, trip);
-        if (mounted) {
-          context.pop();
-        }
-      } else {
-        final trip = await catalog.createTrip(draft);
-        await _savePhotos(catalog, trip);
-        if (mounted) {
-          context.go(AppRoutes.trips);
-        }
+      final trip = await catalog.updateTrip(widget.tripId, draft);
+      await _savePhotos(catalog, trip);
+      if (mounted) {
+        context.pop();
       }
     } on Object {
       if (mounted) {
@@ -534,49 +502,12 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(Icons.public_rounded),
-      label: Text(
-        catalog.isPublishing
-            ? tr('Saving…')
-            : _isEditing
-            ? tr('Save changes')
-            : tr('Publish trip'),
-      ),
+      label: Text(catalog.isPublishing ? tr('Saving…') : tr('Save changes')),
     );
   }
 
-  static List<(String, String)> get _stepTitles => [
-    (
-      tr('Start with the route.'),
-      tr('You can adjust costs and traveler preferences later.'),
-    ),
-    (
-      tr('Estimate the budget.'),
-      tr('Totals are split equally across the full group.'),
-    ),
-    (
-      tr('Set the expectations.'),
-      tr('Help the right travelers recognize this trip.'),
-    ),
-  ];
-
-  void _continue() {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _step++);
-    }
-  }
-
-  void _back() => setState(() => _step--);
-
   Widget _bottomAction(TripCatalogController catalog) {
-    final Widget action = _isEditing || _step == 2
-        ? _publishButton(catalog)
-        : FilledButton(
-            key: const ValueKey('trip-continue'),
-            onPressed: _continue,
-            child: Text(
-              _step == 0 ? tr('Continue to budget') : tr('Continue to details'),
-            ),
-          );
+    final action = _publishButton(catalog);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -594,7 +525,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   Widget build(BuildContext context) {
     final catalog = ref.watch(tripCatalogProvider);
 
-    if (_isEditing && _editedTrip == null) {
+    if (_editedTrip == null) {
       return Scaffold(
         appBar: AppBar(title: Text(tr('Edit trip'))),
         body: EmptyState(
@@ -608,82 +539,25 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     return ListenableBuilder(
       listenable: catalog,
       builder: (context, child) {
-        return PopScope(
-          canPop: _isEditing || _step == 0,
-          onPopInvokedWithResult: (didPop, result) {
-            if (!didPop) {
-              _back();
-            }
-          },
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(_isEditing ? tr('Edit trip') : tr('Create a trip')),
-              centerTitle: true,
-              leading: !_isEditing && _step > 0
-                  ? BackButton(onPressed: _back)
-                  : null,
-              actions: [
-                if (!_isEditing)
-                  Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.md),
-                    child: Center(
-                      child: Text(tr('{step} of 3', {'step': _step + 1})),
-                    ),
-                  ),
-              ],
-              bottom: _isEditing
-                  ? null
-                  : PreferredSize(
-                      preferredSize: const Size.fromHeight(4),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.lg,
-                        ),
-                        child: LinearProgressIndicator(
-                          value: (_step + 1) / 3,
-                          backgroundColor: AppColors.border,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-            ),
-            bottomNavigationBar: _bottomAction(catalog),
-            body: Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                ),
-                children: _isEditing
-                    ? [
-                        ..._routeFields(),
-                        const SizedBox(height: AppSpacing.lg),
-                        ..._budgetFields(),
-                        const SizedBox(height: AppSpacing.lg),
-                        ..._detailFields(),
-                      ]
-                    : [
-                        Text(
-                          _stepTitles[_step].$1,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          _stepTitles[_step].$2,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppColors.muted),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        ...switch (_step) {
-                          0 => _routeFields(),
-                          1 => _budgetFields(),
-                          _ => _detailFields(),
-                        },
-                      ],
+        return Scaffold(
+          appBar: AppBar(title: Text(tr('Edit trip')), centerTitle: true),
+          bottomNavigationBar: _bottomAction(catalog),
+          body: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.lg,
               ),
+              children: [
+                ..._routeFields(),
+                const SizedBox(height: AppSpacing.lg),
+                ..._budgetFields(),
+                const SizedBox(height: AppSpacing.lg),
+                ..._detailFields(),
+              ],
             ),
           ),
         );

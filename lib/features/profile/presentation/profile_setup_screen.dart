@@ -12,6 +12,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/l10n/server_errors.dart';
+import '../../../core/widgets/step_flow.dart';
 import '../../trips/presentation/widgets/place_field.dart';
 import '../domain/user_profile.dart';
 
@@ -257,7 +258,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   icon: const Icon(Icons.arrow_back_rounded),
                 ),
           automaticallyImplyLeading: false,
-          title: _ProgressBar(step: _step, count: _stepCount),
+          title: FlowProgressBar(step: _step, count: _stepCount),
           actions: [
             if (_step == 0)
               TextButton(
@@ -331,7 +332,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   Widget _nameStep() {
     final profile = ref.read(appAuthStateProvider).profile;
-    return _StepLayout(
+    return FlowStep(
       title: tr('Hi! What should we call you?'),
       subtitle: tr('This is how travelers will see you.'),
       children: [
@@ -363,7 +364,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Widget _cityStep() {
-    return _StepLayout(
+    return FlowStep(
       title: tr('Where are you based?'),
       subtitle: tr('Travelers nearby can meet you before the trip.'),
       children: [
@@ -372,7 +373,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           runSpacing: AppSpacing.xs,
           children: [
             for (final city in ProfileSetupScreen.homeCities)
-              _BigChip(
+              ChoicePill(
                 label: city,
                 selected: !_choosingOtherCity && _homeCity == city,
                 onTap: () {
@@ -383,7 +384,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   });
                 },
               ),
-            _BigChip(
+            ChoicePill(
               key: const ValueKey('setup-other-city'),
               label: tr('Somewhere else'),
               icon: Icons.search_rounded,
@@ -411,7 +412,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Widget _stylesStep() {
-    return _StepLayout(
+    return FlowStep(
       title: tr('How do you like to travel?'),
       subtitle: tr('Pick a few. We use them to suggest trips.'),
       children: [
@@ -437,7 +438,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Widget _languagesStep() {
-    return _StepLayout(
+    return FlowStep(
       title: tr('Which languages do you speak?'),
       subtitle: tr('So your group can plan together easily.'),
       children: [
@@ -449,7 +450,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               ...ProfileSetupScreen.languages,
               ..._extraLanguages,
             ])
-              _BigChip(
+              ChoicePill(
                 label: tr(language),
                 selected: _languages.contains(language),
                 onTap: () => _toggle(_languages, language, _maxLanguages),
@@ -479,7 +480,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   Widget _readyStep() {
     final profile = ref.read(appAuthStateProvider).profile;
-    return _StepLayout(
+    return FlowStep(
       title: tr("You're in, {name}!", {'name': _name.split(' ').first}),
       subtitle: tr('Find a trip that fits you, or plan your own.'),
       children: [
@@ -551,139 +552,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _ProgressBar extends StatelessWidget {
-  const _ProgressBar({required this.step, required this.count});
-
-  final int step;
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: tr('Step {number} of {count}', {
-        'number': step + 1,
-        'count': count,
-      }),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(end: (step + 1) / count),
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeOutCubic,
-        builder: (context, value, child) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: value,
-              minHeight: 8,
-              color: AppColors.green,
-              backgroundColor: AppColors.greenSoft,
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _StepLayout extends StatelessWidget {
-  const _StepLayout({
-    required this.title,
-    required this.subtitle,
-    required this.children,
-  });
-
-  final String title;
-  final String subtitle;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.md,
-      ),
-      children: [
-        Text(title, style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          subtitle,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        ...children,
-      ],
-    );
-  }
-}
-
-class _BigChip extends StatelessWidget {
-  const _BigChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.icon,
-    super.key,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      selected: selected,
-      button: true,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.green : AppColors.surface,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(
-            color: selected ? AppColors.green : AppColors.border,
-          ),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(28),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null || selected) ...[
-                  Icon(
-                    selected ? Icons.check_rounded : icon,
-                    size: 18,
-                    color: selected ? Colors.white : AppColors.ink,
-                  ),
-                  const SizedBox(width: AppSpacing.xxs),
-                ],
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? Colors.white : AppColors.ink,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

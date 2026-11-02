@@ -941,4 +941,47 @@ const frenchStrings = <String, String>{
   "Spanish": "Espagnol",
   "German": "Allemand",
   "Italian": "Italien",
+  "Weekend in {place}": "Week-end à {place}",
+  "Long weekend in {place}": "Week-end prolongé à {place}",
+  "{n} day in {place}": "{n} jour à {place}",
+  "{n} days in {place}": "{n} jours à {place}",
+  "A {n}-day trip from {origin} to {destination}, with a taste for {style}. Looking for travelers to share the road, the costs and good moments.":
+      "Un voyage de {n} jours de {origin} à {destination}, avec un goût pour : {style}. À la recherche de voyageurs pour partager la route, les frais et de bons moments.",
+  "A day trip from {origin} to {destination}, with a taste for {style}. Looking for travelers to share the road, the costs and good moments.":
+      "Une journée de {origin} à {destination}, avec un goût pour : {style}. À la recherche de voyageurs pour partager la route, les frais et de bons moments.",
+  "Where are you going?": "Où allez-vous ?",
+  "Pick a place or search for one.": "Choisissez un lieu ou recherchez-en un.",
+  "Going to": "Destination",
+  "Stop on the way": "Étape en chemin",
+  "Add a stop on the way": "Ajouter une étape en chemin",
+  "Next weekend": "Ce week-end",
+  "The weekend after": "Le week-end suivant",
+  "Long weekend": "Week-end prolongé",
+  "When?": "Quand ?",
+  "Pick a weekend or choose your own dates.":
+      "Choisissez un week-end ou vos propres dates.",
+  "Choose dates": "Choisir les dates",
+  "How many people in total?": "Combien de personnes au total ?",
+  "Including you. Costs are shared across the whole group.":
+      "Vous compris. Les frais sont partagés par tout le groupe.",
+  "Fewer people": "Moins de personnes",
+  "More people": "Plus de personnes",
+  "You + {n} traveler": "Vous + {n} voyageur",
+  "You + {n} travelers": "Vous + {n} voyageurs",
+  "What will it cost each person?": "Combien cela coûtera-t-il par personne ?",
+  "A rough estimate is fine. You can change it later.":
+      "Une estimation suffit. Vous pourrez la modifier plus tard.",
+  "per person, group total {total}": "par personne, total du groupe {total}",
+  "Lodging": "Hébergement",
+  "Looking good!": "C’est parfait !",
+  "This is how travelers will see your trip.":
+      "Voici comment les voyageurs verront votre voyage.",
+  "Vibe": "Ambiance",
+  "Add stop plans, transport and timings later from Edit trip.":
+      "Ajoutez plus tard le programme des étapes, les transports et les horaires depuis Modifier le voyage.",
+  "Your trip is live!": "Votre voyage est en ligne !",
+  "Travelers can now find it and ask to join. We will let you know when someone does.":
+      "Les voyageurs peuvent maintenant le trouver et demander à le rejoindre. Nous vous préviendrons.",
+  "See my trip": "Voir mon voyage",
+  "Back to my trips": "Retour à mes voyages",
 };

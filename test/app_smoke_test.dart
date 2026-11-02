@@ -539,33 +539,26 @@ void main() {
     expect(analytics.events.single.event, ProductEvent.tripBuilderOpened);
 
     await tester.enterText(
-      find.byKey(const ValueKey('trip-title')),
-      'Desert night skies',
+      find.byKey(const ValueKey('trip-destination')),
+      'Erg Chigaga',
     );
     await tester.enterText(
       find.byKey(const ValueKey('trip-origin')),
       'Ouarzazate',
     );
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('trip-stop-city-0')),
-      260,
-      scrollable: find.byType(Scrollable).first,
-    );
+    for (var step = 0; step < 4; step++) {
+      await tester.tap(find.byKey(const ValueKey('plan-next')));
+      await tester.pumpAndSettle();
+    }
     await tester.enterText(
-      find.byKey(const ValueKey('trip-stop-city-0')),
-      'Erg Chigaga',
+      find.byKey(const ValueKey('trip-title')),
+      'Desert night skies',
     );
-    await tester.tap(find.byKey(const ValueKey('trip-continue')));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const ValueKey('trip-lodging')), '3200');
-    await tester.enterText(find.byKey(const ValueKey('trip-transport')), '800');
-    await tester.tap(find.byKey(const ValueKey('trip-continue')));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('trip-summary')),
-      'Two quiet nights focused on desert landscapes and clear skies.',
-    );
+    await tester.pump();
     await tester.tap(find.byKey(const ValueKey('publish-trip')));
+    await tester.pumpAndSettle();
+    expect(find.text('Your trip is live!'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('published-done')));
     await tester.pumpAndSettle();
 
     expect(find.text('My trips'), findsWidgets);

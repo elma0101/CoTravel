@@ -234,10 +234,21 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('trip-origin')), 'chefch');
     await tester.pumpAndSettle();
     expect(find.text('This place will not appear on the map.'), findsOneWidget);
-    await tester.tap(find.text('Chefchaouen'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ListTile),
+        matching: find.text('Chefchaouen'),
+      ),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Chefchaouen'), findsOneWidget);
+    final origin = tester.widget<TextField>(
+      find.descendant(
+        of: find.byKey(const ValueKey('trip-origin')),
+        matching: find.byType(TextField),
+      ),
+    );
+    expect(origin.controller!.text, 'Chefchaouen');
     expect(find.text('This place will not appear on the map.'), findsNothing);
   });
 

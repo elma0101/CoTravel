@@ -31,6 +31,12 @@ final _screens = <String, String>{
 Future<void> _open(WidgetTester tester, String location) async {
   final authState = AppAuthState.preview(initiallyAuthenticated: true);
   addTearDown(authState.dispose);
+  await _pump(tester, authState);
+  GoRouter.of(tester.element(find.byType(Scaffold).first)).go(location);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pump(WidgetTester tester, AppAuthState authState) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -49,12 +55,29 @@ Future<void> _open(WidgetTester tester, String location) async {
     ),
   );
   await tester.pumpAndSettle();
-  GoRouter.of(tester.element(find.byType(Scaffold).first)).go(location);
-  await tester.pumpAndSettle();
 }
 
 void main() {
   for (final language in ['en', 'fr']) {
+    testWidgets('$language: Welcome fits a small phone with large text', (
+      tester,
+    ) async {
+      tester.platformDispatcher.localesTestValue = [Locale(language)];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      addTearDown(() => appLanguageCode = 'en');
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final authState = AppAuthState.preview();
+      addTearDown(authState.dispose);
+
+      await _pump(tester, authState);
+
+      expect(tester.takeException(), isNull);
+    });
+
     for (final entry in _screens.entries) {
       testWidgets(
         '$language: ${entry.key} fits a small phone with large text',

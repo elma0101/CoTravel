@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -89,12 +90,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       Text(
-                        'Travel better,\ntogether.',
+                        tr('Travel better,\ntogether.'),
                         style: Theme.of(context).textTheme.displaySmall,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        'Create thoughtful trips, meet compatible travelers, and keep every plan in one place.',
+                        tr(
+                          'Create thoughtful trips, meet compatible travelers, and keep every plan in one place.',
+                        ),
                         style: Theme.of(
                           context,
                         ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
@@ -109,8 +112,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             textInputAction: TextInputAction.done,
                             autofillHints: const [AutofillHints.email],
                             autocorrect: false,
-                            decoration: const InputDecoration(
-                              labelText: 'Email address',
+                            decoration: InputDecoration(
+                              labelText: tr('Email address'),
                               hintText: 'you@example.com',
                               prefixIcon: Icon(Icons.mail_outline_rounded),
                             ),
@@ -119,7 +122,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               if (!RegExp(
                                 r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
                               ).hasMatch(email)) {
-                                return 'Enter a valid email address';
+                                return tr('Enter a valid email address');
                               }
                               return null;
                             },
@@ -140,13 +143,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               : const Icon(Icons.arrow_forward_rounded),
                           label: Text(
                             _isSubmitting
-                                ? 'Sending link…'
-                                : 'Continue by email',
+                                ? tr('Sending link…')
+                                : tr('Continue by email'),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
-                          'We will email you a secure sign-in link. No password needed.',
+                          tr(
+                            'We will email you a secure sign-in link. No password needed.',
+                          ),
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: AppColors.muted),
@@ -174,7 +179,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         OutlinedButton.icon(
                           onPressed: authState.signInForPreview,
                           icon: const Icon(Icons.visibility_outlined),
-                          label: const Text('Preview the app'),
+                          label: Text(tr('Preview the app')),
                         ),
                       ],
                       const SizedBox(height: AppSpacing.xs),
@@ -194,7 +199,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final message = error.toString();
     return message.startsWith('AuthException: ')
         ? message.substring('AuthException: '.length)
-        : 'We could not send the link. Please try again.';
+        : tr('We could not send the link. Please try again.');
   }
 }
 
@@ -231,11 +236,11 @@ class _LegalLinks extends StatelessWidget {
       children: [
         TextButton(
           onPressed: () => context.push(AppRoutes.terms),
-          child: const Text('Terms of use'),
+          child: Text(tr('Terms of use')),
         ),
         TextButton(
           onPressed: () => context.push(AppRoutes.privacy),
-          child: const Text('Privacy policy'),
+          child: Text(tr('Privacy policy')),
         ),
       ],
     );

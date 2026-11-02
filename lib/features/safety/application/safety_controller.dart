@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
@@ -64,7 +65,7 @@ class SafetyController extends ChangeNotifier with DisposeSafeNotifier {
   }) async {
     final trimmed = details.trim();
     if (trimmed.length < 10 || trimmed.length > 1000) {
-      throw ArgumentError('Add between 10 and 1000 characters.');
+      throw ArgumentError(tr('Add between 10 and 1000 characters.'));
     }
     return _runSubmission(() async {
       final report = await _repository.submitReport(
@@ -138,6 +139,6 @@ class SafetyController extends ChangeNotifier with DisposeSafeNotifier {
         return message.substring(prefix.length).split(', code:').first;
       }
     }
-    return 'The safety action could not be completed. Please try again.';
+    return tr('The safety action could not be completed. Please try again.');
   }
 }

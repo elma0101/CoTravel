@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -45,7 +46,7 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Traveler profile')),
+      appBar: AppBar(title: Text(tr('Traveler profile'))),
       body: FutureBuilder<UserProfile?>(
         future: _profile,
         builder: (context, snapshot) {
@@ -121,7 +122,7 @@ class _MemberProfileBody extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xl),
                   if (profile.bio != null && profile.bio!.trim().isNotEmpty)
                     _ProfileSection(
-                      title: 'About',
+                      title: tr('About'),
                       child: Text(
                         profile.bio!,
                         style: Theme.of(
@@ -132,12 +133,12 @@ class _MemberProfileBody extends ConsumerWidget {
                   if (profile.travelStyles.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.md),
                     _ProfileSection(
-                      title: 'Travel style',
+                      title: tr('Travel style'),
                       child: Wrap(
                         spacing: AppSpacing.xs,
                         runSpacing: AppSpacing.xs,
                         children: profile.travelStyles
-                            .map((style) => Chip(label: Text(style)))
+                            .map((style) => Chip(label: Text(tr(style))))
                             .toList(),
                       ),
                     ),
@@ -145,7 +146,7 @@ class _MemberProfileBody extends ConsumerWidget {
                   if (profile.languages.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.md),
                     _ProfileSection(
-                      title: 'Languages',
+                      title: tr('Languages'),
                       child: Wrap(
                         spacing: AppSpacing.xs,
                         runSpacing: AppSpacing.xs,
@@ -168,7 +169,7 @@ class _MemberProfileBody extends ConsumerWidget {
                   if (tripTitle != null) ...[
                     const SizedBox(height: AppSpacing.md),
                     _ProfileSection(
-                      title: 'Shared trip',
+                      title: tr('Shared trip'),
                       child: Row(
                         children: [
                           const Icon(
@@ -185,7 +186,7 @@ class _MemberProfileBody extends ConsumerWidget {
                   SafetyOptionsButton(
                     target: SafetyTarget(
                       userId: profile.id,
-                      userName: profile.displayName ?? 'CoTravel member',
+                      userName: profile.displayName ?? tr('CoTravel member'),
                       tripId: tripId,
                       tripTitle: tripTitle,
                     ),
@@ -234,12 +235,12 @@ class _MemberProfileBody extends ConsumerWidget {
                   ),
                   label: Text(
                     isBlocked
-                        ? 'Messaging unavailable while blocked'
+                        ? tr('Messaging unavailable while blocked')
                         : resolvedConversationId == null
-                        ? 'Messaging opens after trip confirmation'
+                        ? tr('Messaging opens after trip confirmation')
                         : openedFromConversation
-                        ? 'Back to trip chat'
-                        : 'Message in trip chat',
+                        ? tr('Back to trip chat')
+                        : tr('Message in trip chat'),
                   ),
                 ),
               ),
@@ -265,9 +266,6 @@ class _TrustFactsSectionState extends ConsumerState<_TrustFactsSection> {
       .read(profileRepositoryProvider)
       .fetchTrustFacts(widget.profile.id);
 
-  String _count(int value, String noun) =>
-      '$value $noun${value == 1 ? '' : 's'}';
-
   @override
   Widget build(BuildContext context) {
     final profile = widget.profile;
@@ -279,18 +277,26 @@ class _TrustFactsSectionState extends ConsumerState<_TrustFactsSection> {
         final instagram = profile.instagramHandle;
         final lines = [
           if (facts != null) ...[
-            'Member since ${formatMonthYear(facts.memberSince)}',
-            '${_count(facts.tripsHosted, 'trip')} hosted',
-            '${_count(facts.tripsJoined, 'trip')} joined',
+            tr('Member since {value}', {
+              'value': formatMonthYear(facts.memberSince),
+            }),
+            trPlural(facts.tripsHosted, '{n} trip hosted', '{n} trips hosted'),
+            trPlural(facts.tripsJoined, '{n} trip joined', '{n} trips joined'),
           ],
-          if (occupation != null) 'Occupation: $occupation (self-declared)',
-          if (instagram != null) 'Instagram: @$instagram (not verified)',
+          if (occupation != null)
+            tr('Occupation: {occupation} (self-declared)', {
+              'occupation': occupation,
+            }),
+          if (instagram != null)
+            tr('Instagram: @{instagram} (not verified)', {
+              'instagram': instagram,
+            }),
         ];
         if (lines.isEmpty) {
           return const SizedBox.shrink();
         }
         return _ProfileSection(
-          title: 'Track record',
+          title: tr('Track record'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -334,13 +340,13 @@ class _ProfileHero extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         Text(
-          profile.displayName ?? 'CoTravel member',
+          profile.displayName ?? tr('CoTravel member'),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          profile.homeCity ?? 'Home city not added',
+          profile.homeCity ?? tr('Home city not added'),
           style: Theme.of(
             context,
           ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
@@ -372,8 +378,8 @@ class _ProfileHero extends StatelessWidget {
               const SizedBox(width: AppSpacing.xs),
               Text(
                 profile.isLinkedInVerified
-                    ? 'Identity verified'
-                    : 'Verification pending',
+                    ? tr('Identity verified')
+                    : tr('Verification pending'),
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ],
@@ -431,16 +437,18 @@ class _UnavailableProfile extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Profile unavailable',
+              tr('Profile unavailable'),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text(
-              'This profile may be incomplete, unavailable, or hidden by your safety settings.',
+            Text(
+              tr(
+                'This profile may be incomplete, unavailable, or hidden by your safety settings.',
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
-            TextButton(onPressed: onRetry, child: const Text('Try again')),
+            TextButton(onPressed: onRetry, child: Text(tr('Try again'))),
           ],
         ),
       ),

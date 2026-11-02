@@ -1,3 +1,4 @@
+import '../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
@@ -5,9 +6,9 @@ import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_theme.dart';
 
 class AppLoadingView extends StatelessWidget {
-  const AppLoadingView({this.message = 'Loading…', super.key});
+  const AppLoadingView({this.message, super.key});
 
-  final String message;
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +21,7 @@ class AppLoadingView extends StatelessWidget {
             const CircularProgressIndicator(),
             const SizedBox(height: AppSpacing.md),
             Text(
-              message,
+              message ?? tr('Loading…'),
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -76,10 +77,7 @@ class AppErrorView extends StatelessWidget {
               ),
               if (onRetry != null) ...[
                 const SizedBox(height: AppSpacing.lg),
-                FilledButton(
-                  onPressed: onRetry,
-                  child: const Text('Try again'),
-                ),
+                FilledButton(onPressed: onRetry, child: Text(tr('Try again'))),
               ],
             ],
           ),
@@ -103,7 +101,7 @@ class BootstrapFailureApp extends StatelessWidget {
       home: Scaffold(
         body: SafeArea(
           child: AppErrorView(
-            title: 'CoTravel could not start',
+            title: tr('CoTravel could not start'),
             message: message,
           ),
         ),

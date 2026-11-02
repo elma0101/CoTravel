@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
@@ -90,7 +91,9 @@ class ChatController extends ChangeNotifier with DisposeSafeNotifier {
       _conversations = await _repository.fetchConversations();
     } on Object {
       if (_conversations.isEmpty) {
-        _errorMessage = 'Conversations could not be loaded. Please try again.';
+        _errorMessage = tr(
+          'Conversations could not be loaded. Please try again.',
+        );
       }
     } finally {
       _isRefreshing = false;

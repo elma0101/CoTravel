@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
@@ -104,7 +105,7 @@ class JoinRequestController extends ChangeNotifier with DisposeSafeNotifier {
   }) async {
     final trimmed = message.trim();
     if (trimmed.length < 20 || trimmed.length > 300) {
-      throw ArgumentError('Write between 20 and 300 characters.');
+      throw ArgumentError(tr('Write between 20 and 300 characters.'));
     }
 
     _isSubmitting = true;
@@ -230,6 +231,6 @@ class JoinRequestController extends ChangeNotifier with DisposeSafeNotifier {
         return message.substring(prefix.length).split(', code:').first;
       }
     }
-    return 'The request could not be updated. Please try again.';
+    return tr('The request could not be updated. Please try again.');
   }
 }

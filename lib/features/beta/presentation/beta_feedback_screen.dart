@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -30,7 +31,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
   Widget build(BuildContext context) {
     final controller = ref.watch(betaFeedbackControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Beta feedback')),
+      appBar: AppBar(title: Text(tr('Beta feedback'))),
       body: ListenableBuilder(
         listenable: controller,
         builder: (context, child) {
@@ -56,7 +57,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
               const _BetaIntroduction(),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                'What were you doing?',
+                tr('What were you doing?'),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -84,12 +85,14 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                'Did CoTravel help you feel safe and informed?',
+                tr('Did CoTravel help you feel safe and informed?'),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Choose one response. This is the main measure for our beta.',
+                tr(
+                  'Choose one response. This is the main measure for our beta.',
+                ),
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -101,9 +104,9 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                 onChanged: (value) => setState(() => _score = value),
               ),
               const SizedBox(height: AppSpacing.xs),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [Text('Not at all'), Text('Very much')],
+                children: [Text(tr('Not at all')), Text(tr('Very much'))],
               ),
               const SizedBox(height: AppSpacing.xl),
               TextField(
@@ -114,10 +117,12 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                 minLines: 4,
                 maxLines: 7,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'What should we improve? (optional)',
+                decoration: InputDecoration(
+                  labelText: tr('What should we improve? (optional)'),
                   alignLabelWithHint: true,
-                  hintText: 'Tell us what felt clear, confusing, or missing.',
+                  hintText: tr(
+                    'Tell us what felt clear, confusing, or missing.',
+                  ),
                 ),
               ),
               if (controller.errorMessage != null) ...[
@@ -140,11 +145,13 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Send feedback'),
+                    : Text(tr('Send feedback')),
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                'Your response is linked to your beta account so repeated responses do not multiply your weight. It is visible only to the beta team.',
+                tr(
+                  'Your response is linked to your beta account so repeated responses do not multiply your weight. It is visible only to the beta team.',
+                ),
                 textAlign: TextAlign.center,
                 style: Theme.of(
                   context,
@@ -193,12 +200,14 @@ class _BetaIntroduction extends StatelessWidget {
           const Icon(Icons.forum_outlined, color: AppColors.green, size: 30),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Help shape a calmer way to travel together.',
+            tr('Help shape a calmer way to travel together.'),
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'A focused response after a real task is more useful than a long survey. This takes about a minute.',
+            tr(
+              'A focused response after a real task is more useful than a long survey. This takes about a minute.',
+            ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
         ],
@@ -226,7 +235,7 @@ class _ScorePicker extends StatelessWidget {
           if (score > 1) const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Semantics(
-              label: '$score out of 5',
+              label: tr('{score} out of 5', {'score': score}),
               selected: value == score,
               button: true,
               child: InkWell(
@@ -290,12 +299,12 @@ class _ThankYou extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Thank you',
+                tr('Thank you'),
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Your response is part of the controlled-beta readout.',
+                tr('Your response is part of the controlled-beta readout.'),
                 textAlign: TextAlign.center,
                 style: Theme.of(
                   context,
@@ -305,7 +314,7 @@ class _ThankYou extends StatelessWidget {
               OutlinedButton(
                 key: const ValueKey('another-beta-response'),
                 onPressed: onAnotherResponse,
-                child: const Text('Share another experience'),
+                child: Text(tr('Share another experience')),
               ),
             ],
           ),

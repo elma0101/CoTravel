@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,7 +22,7 @@ class CheckEmailScreen extends StatelessWidget {
               IconButton(
                 onPressed: () => context.go('/welcome'),
                 icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: 'Back',
+                tooltip: tr('Back'),
               ),
               const Spacer(),
               Container(
@@ -39,26 +40,30 @@ class CheckEmailScreen extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Check your email',
+                tr('Check your email'),
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 email.isEmpty
-                    ? 'Use the secure link we sent to finish signing in.'
-                    : 'We sent a secure sign-in link to $email.',
+                    ? tr('Use the secure link we sent to finish signing in.')
+                    : tr('We sent a secure sign-in link to {email}.', {
+                        'email': email,
+                      }),
                 style: Theme.of(
                   context,
                 ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text(
-                'You can close this screen after opening the link. CoTravel will return here automatically.',
+              Text(
+                tr(
+                  'You can close this screen after opening the link. CoTravel will return here automatically.',
+                ),
               ),
               const Spacer(),
               OutlinedButton(
                 onPressed: () => context.go('/welcome'),
-                child: const Text('Use another email'),
+                child: Text(tr('Use another email')),
               ),
             ],
           ),

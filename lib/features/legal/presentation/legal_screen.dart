@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
@@ -13,7 +14,7 @@ class LegalScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: Text(document.title)),
+      appBar: AppBar(title: Text(tr(document.title))),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -22,17 +23,17 @@ class LegalScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                 child: Text(
-                  'Draft for the private beta, pending legal review.',
+                  tr('Draft for the private beta, pending legal review.'),
                   style: textTheme.bodyMedium?.copyWith(
                     color: AppColors.terracotta,
                   ),
                 ),
               ),
             for (final section in document.sections) ...[
-              Text(section.heading, style: textTheme.titleMedium),
+              Text(tr(section.heading), style: textTheme.titleMedium),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                section.body,
+                tr(section.body),
                 style: textTheme.bodyLarge?.copyWith(height: 1.5),
               ),
               const SizedBox(height: AppSpacing.lg),

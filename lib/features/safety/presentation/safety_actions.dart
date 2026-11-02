@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,7 +25,7 @@ class SafetyOptionsButton extends ConsumerWidget {
         key: ValueKey('safety-options-${target.userId}'),
         onPressed: () => _open(context, ref),
         icon: const Icon(Icons.shield_outlined),
-        label: const Text('Report or block'),
+        label: Text(tr('Report or block')),
       ),
     );
   }
@@ -90,7 +91,7 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Safety options',
+                      tr('Safety options'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -105,8 +106,10 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
                         color: AppColors.greenSoft,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Text(
-                        'If anyone is in immediate danger, contact local emergency services. CoTravel reports are reviewed manually and are not an emergency channel.',
+                      child: Text(
+                        tr(
+                          'If anyone is in immediate danger, contact local emergency services. CoTravel reports are reviewed manually and are not an emergency channel.',
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -115,16 +118,22 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
                         key: const ValueKey('block-user'),
                         onPressed: controller.isSubmitting ? null : _block,
                         icon: const Icon(Icons.block_rounded),
-                        label: Text('Block ${widget.target.userName}'),
+                        label: Text(
+                          tr('Block {userName}', {
+                            'userName': widget.target.userName,
+                          }),
+                        ),
                       )
                     else
-                      const Row(
+                      Row(
                         children: [
                           Icon(Icons.block_rounded, color: AppColors.muted),
                           SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
-                              'This person is already blocked. You can unblock them from the Safety Center.',
+                              tr(
+                                'This person is already blocked. You can unblock them from the Safety Center.',
+                              ),
                             ),
                           ),
                         ],
@@ -134,19 +143,19 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
                       child: Divider(),
                     ),
                     Text(
-                      'Send a report',
+                      tr('Send a report'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     DropdownButtonFormField<SafetyReportReason>(
                       key: const ValueKey('safety-report-reason'),
                       initialValue: _reason,
-                      decoration: const InputDecoration(labelText: 'Reason'),
+                      decoration: InputDecoration(labelText: tr('Reason')),
                       items: SafetyReportReason.values
                           .map(
                             (reason) => DropdownMenuItem(
                               value: reason,
-                              child: Text(reason.label),
+                              child: Text(tr(reason.label)),
                             ),
                           )
                           .toList(),
@@ -164,16 +173,17 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
                       maxLines: 6,
                       maxLength: 1000,
                       textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        labelText: 'What happened?',
-                        hintText:
-                            'Share the specific behavior or trip detail the moderator should review.',
+                      decoration: InputDecoration(
+                        labelText: tr('What happened?'),
+                        hintText: tr(
+                          'Share the specific behavior or trip detail the moderator should review.',
+                        ),
                         alignLabelWithHint: true,
                       ),
                       validator: (value) {
                         final length = value?.trim().length ?? 0;
                         return length < 10
-                            ? 'Add at least 10 characters'
+                            ? tr('Add at least 10 characters')
                             : null;
                       },
                     ),
@@ -182,9 +192,11 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
                         value: _alsoBlock,
                         contentPadding: EdgeInsets.zero,
                         controlAffinity: ListTileControlAffinity.leading,
-                        title: const Text('Also block this person'),
-                        subtitle: const Text(
-                          'Their trips disappear from discovery immediately.',
+                        title: Text(tr('Also block this person')),
+                        subtitle: Text(
+                          tr(
+                            'Their trips disappear from discovery immediately.',
+                          ),
                         ),
                         onChanged: controller.isSubmitting
                             ? null
@@ -205,8 +217,8 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
                       onPressed: controller.isSubmitting ? null : _submit,
                       child: Text(
                         controller.isSubmitting
-                            ? 'Submitting…'
-                            : 'Submit report',
+                            ? tr('Submitting…')
+                            : tr('Submit report'),
                       ),
                     ),
                   ],
@@ -223,19 +235,23 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Block ${widget.target.userName}?'),
-        content: const Text(
-          'Their trips will be hidden and neither of you can create new join requests with the other.',
+        title: Text(
+          tr('Block {userName}?', {'userName': widget.target.userName}),
+        ),
+        content: Text(
+          tr(
+            'Their trips will be hidden and neither of you can create new join requests with the other.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(tr('Cancel')),
           ),
           FilledButton(
             key: const ValueKey('confirm-block-user'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Block'),
+            child: Text(tr('Block')),
           ),
         ],
       ),
@@ -248,7 +264,9 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
       if (mounted) {
         Navigator.of(context).pop(
           _SafetyActionResult(
-            message: '${widget.target.userName} was blocked.',
+            message: tr('{userName} was blocked.', {
+              'userName': widget.target.userName,
+            }),
             blocked: true,
           ),
         );
@@ -278,7 +296,7 @@ class _SafetyActionSheetState extends ConsumerState<_SafetyActionSheet> {
       if (mounted) {
         Navigator.of(context).pop(
           _SafetyActionResult(
-            message: 'Report submitted for manual review.',
+            message: tr('Report submitted for manual review.'),
             blocked: blocked,
           ),
         );

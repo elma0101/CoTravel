@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/state/dispose_safe_notifier.dart';
 import 'package:flutter/foundation.dart';
 
@@ -78,6 +79,6 @@ class LogisticsController extends ChangeNotifier with DisposeSafeNotifier {
         return message.substring(prefix.length).split(', code:').first;
       }
     }
-    return 'Logistics could not be updated. Please try again.';
+    return tr('Logistics could not be updated. Please try again.');
   }
 }

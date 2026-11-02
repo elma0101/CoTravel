@@ -94,6 +94,17 @@ abstract final class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
+          // Without these the button is pale with green text, not a primary action.
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? AppColors.border
+                : AppColors.green;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            return states.contains(WidgetState.disabled)
+                ? AppColors.muted
+                : Colors.white;
+          }),
           minimumSize: const WidgetStatePropertyAll(Size.fromHeight(54)),
           elevation: const WidgetStatePropertyAll(0),
           shape: WidgetStatePropertyAll(

@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -104,7 +105,7 @@ class ConversationController extends ChangeNotifier {
   Future<void> send(String body) async {
     final trimmed = body.trim();
     if (trimmed.isEmpty || trimmed.runes.length > 1000) {
-      throw ArgumentError('Messages must contain 1 to 1000 characters.');
+      throw ArgumentError(tr('Messages must contain 1 to 1000 characters.'));
     }
 
     final clientId = _newClientId();
@@ -155,8 +156,9 @@ class ConversationController extends ChangeNotifier {
       _mergeMessages(page.messages);
       _scheduleMarkRead();
     } on Object {
-      _loadErrorMessage =
-          'Messages could not be loaded. Check your connection.';
+      _loadErrorMessage = tr(
+        'Messages could not be loaded. Check your connection.',
+      );
     } finally {
       _isLoading = false;
       _notifyIfMounted();

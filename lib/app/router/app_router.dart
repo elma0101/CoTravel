@@ -217,7 +217,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.createTrip,
-        builder: (context, state) => const CreateTripScreen(),
+        builder: (context, state) => CreateTripScreen(),
       ),
       GoRoute(
         path: AppRoutes.safety,

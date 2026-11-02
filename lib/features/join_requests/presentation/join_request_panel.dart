@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,21 +21,27 @@ class JoinRequestPanel extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel this trip?'),
+        title: Text(tr('Cancel this trip?')),
         content: Text(
           trip.confirmedTravelerCount == 0
-              ? 'The trip leaves Explore and pending requests are declined. This cannot be undone.'
-              : 'Your ${trip.confirmedTravelerCount} confirmed ${trip.confirmedTravelerCount == 1 ? 'traveler' : 'travelers'} will be notified and pending requests declined. This cannot be undone.',
+              ? tr(
+                  'The trip leaves Explore and pending requests are declined. This cannot be undone.',
+                )
+              : trPlural(
+                  trip.confirmedTravelerCount,
+                  'Your {n} confirmed traveler will be notified and pending requests declined. This cannot be undone.',
+                  'Your {n} confirmed travelers will be notified and pending requests declined. This cannot be undone.',
+                ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep trip'),
+            child: Text(tr('Keep trip')),
           ),
           FilledButton(
             key: const ValueKey('confirm-cancel-trip'),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Cancel trip'),
+            child: Text(tr('Cancel trip')),
           ),
         ],
       ),
@@ -45,7 +52,7 @@ class JoinRequestPanel extends ConsumerWidget {
     await _runAction(context, () async {
       await ref.read(tripCatalogProvider).cancelTrip(trip);
       await ref.read(joinRequestControllerProvider).load();
-    }, successMessage: 'Trip cancelled.');
+    }, successMessage: tr('Trip cancelled.'));
   }
 
   Future<void> _confirmLeave(
@@ -57,21 +64,27 @@ class JoinRequestPanel extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Leave this trip?'),
+        title: Text(tr('Leave this trip?')),
         content: Text(
           trip.isLateToLeave(DateTime.now())
-              ? 'The free cancellation window ended on $deadline. You can still leave, but ${trip.hostName} will be told this was a late departure and remaining costs will rise for the group.'
-              : 'You can leave freely until $deadline. Your seat is released and you leave the group chat.',
+              ? tr(
+                  'The free cancellation window ended on {deadline}. You can still leave, but {hostName} will be told this was a late departure and remaining costs will rise for the group.',
+                  {'hostName': trip.hostName, 'deadline': deadline},
+                )
+              : tr(
+                  'You can leave freely until {deadline}. Your seat is released and you leave the group chat.',
+                  {'deadline': deadline},
+                ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Stay'),
+            child: Text(tr('Stay')),
           ),
           FilledButton(
             key: const ValueKey('confirm-leave-trip'),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Leave trip'),
+            child: Text(tr('Leave trip')),
           ),
         ],
       ),
@@ -80,7 +93,7 @@ class JoinRequestPanel extends ConsumerWidget {
       await _runAction(
         context,
         () => controller.leaveTrip(request),
-        successMessage: 'You left the trip.',
+        successMessage: tr('You left the trip.'),
       );
     }
   }
@@ -122,8 +135,12 @@ class JoinRequestPanel extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         pending == 0
-                            ? 'No requests need review'
-                            : '$pending ${pending == 1 ? 'traveler' : 'travelers'} waiting',
+                            ? tr('No requests need review')
+                            : trPlural(
+                                pending,
+                                '{n} traveler waiting',
+                                '{n} travelers waiting',
+                              ),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
@@ -131,7 +148,9 @@ class JoinRequestPanel extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'Review profiles carefully. A seat is only locked after both sides confirm.',
+                  tr(
+                    'Review profiles carefully. A seat is only locked after both sides confirm.',
+                  ),
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -142,7 +161,9 @@ class JoinRequestPanel extends ConsumerWidget {
                     onPressed: () =>
                         context.push(AppRoutes.tripRequests(trip.id)),
                     child: Text(
-                      pending == 0 ? 'View requests' : 'Review requests',
+                      pending == 0
+                          ? tr('View requests')
+                          : tr('Review requests'),
                     ),
                   ),
                 ],
@@ -151,14 +172,14 @@ class JoinRequestPanel extends ConsumerWidget {
                   OutlinedButton(
                     key: const ValueKey('edit-trip'),
                     onPressed: () => context.push(AppRoutes.editTrip(trip.id)),
-                    child: const Text('Edit trip'),
+                    child: Text(tr('Edit trip')),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.xs),
                 TextButton(
                   key: const ValueKey('cancel-trip'),
                   onPressed: () => _confirmCancelTrip(context, ref),
-                  child: const Text('Cancel trip'),
+                  child: Text(tr('Cancel trip')),
                 ),
               ],
             ),
@@ -166,35 +187,9 @@ class JoinRequestPanel extends ConsumerWidget {
         }
 
         final request = controller.requestForTrip(trip.id);
+        // A visitor's only action lives in JoinRequestBar.
         if (request == null) {
-          return _PanelShell(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Interested in this trip?',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Introduce yourself to ${trip.hostName}. Your profile and note will be reviewed before anything is confirmed.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                FilledButton(
-                  key: const ValueKey('request-to-join'),
-                  onPressed: trip.openSeats == 0
-                      ? null
-                      : () => _composeRequest(context, ref),
-                  child: Text(
-                    trip.openSeats == 0 ? 'Trip is full' : 'Request to join',
-                  ),
-                ),
-              ],
-            ),
-          );
+          return const SizedBox.shrink();
         }
 
         return _RequestStatusCard(
@@ -205,41 +200,21 @@ class JoinRequestPanel extends ConsumerWidget {
           onWithdraw: () => _runAction(
             context,
             () => controller.withdraw(request),
-            successMessage: 'Request withdrawn.',
+            successMessage: tr('Request withdrawn.'),
           ),
           onConfirm: () => _runAction(
             context,
             () => controller.confirmAsTraveler(request, confirm: true),
-            successMessage: 'Your place is confirmed.',
+            successMessage: tr('Your place is confirmed.'),
           ),
           onDecline: () => _runAction(
             context,
             () => controller.confirmAsTraveler(request, confirm: false),
-            successMessage: 'The invitation was declined.',
+            successMessage: tr('The invitation was declined.'),
           ),
         );
       },
     );
-  }
-
-  Future<void> _composeRequest(BuildContext context, WidgetRef ref) async {
-    final requestController = ref.read(joinRequestControllerProvider);
-
-    final submitted = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => _JoinRequestComposer(
-        trip: trip,
-        requestController: requestController,
-      ),
-    );
-
-    if (submitted == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Request sent to the host.')),
-      );
-    }
   }
 
   Future<void> _runAction(
@@ -262,12 +237,114 @@ class JoinRequestPanel extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              controller.errorMessage ?? 'The request could not be updated.',
+              controller.errorMessage ??
+                  tr('The request could not be updated.'),
             ),
           ),
         );
       }
     }
+  }
+}
+
+/// The mockup's fixed footer: group size for everyone, and the join action for
+/// a visitor who has not asked yet.
+class JoinRequestBar extends ConsumerWidget {
+  const JoinRequestBar({required this.trip, super.key});
+
+  final Trip trip;
+
+  Future<void> _composeRequest(BuildContext context, WidgetRef ref) async {
+    final requestController = ref.read(joinRequestControllerProvider);
+
+    final submitted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => _JoinRequestComposer(
+        trip: trip,
+        requestController: requestController,
+      ),
+    );
+
+    if (submitted == true && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr('Request sent to the host.'))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(joinRequestControllerProvider);
+    final userId = ref.watch(appAuthStateProvider).profile?.id;
+
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, child) {
+        final canRequest =
+            !controller.isLoading &&
+            !trip.isCancelled &&
+            trip.hostId != userId &&
+            controller.requestForTrip(trip.id) == null;
+        return DecoratedBox(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            border: Border(top: BorderSide(color: AppColors.border)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.sm,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          tr('Group'),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.muted),
+                        ),
+                      ),
+                      Text(
+                        tr('{participantCount} of {capacity} confirmed', {
+                          'participantCount': trip.participantCount,
+                          'capacity': trip.capacity,
+                        }),
+                        key: const ValueKey('trip-group-count'),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  if (canRequest) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    ElevatedButton(
+                      key: const ValueKey('request-to-join'),
+                      onPressed: trip.openSeats == 0
+                          ? null
+                          : () => _composeRequest(context, ref),
+                      child: Text(
+                        trip.openSeats == 0
+                            ? tr('Trip is full')
+                            : tr('Request to join'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -314,7 +391,7 @@ class _JoinRequestComposerState extends State<_JoinRequestComposer> {
           SnackBar(
             content: Text(
               widget.requestController.errorMessage ??
-                  'Request could not be sent.',
+                  tr('Request could not be sent.'),
             ),
           ),
         );
@@ -343,12 +420,15 @@ class _JoinRequestComposerState extends State<_JoinRequestComposer> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Introduce yourself',
+                tr('Introduce yourself'),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Tell ${widget.trip.hostName} why this route and group feel like a good fit.',
+                tr(
+                  'Tell {hostName} why this route and group feel like a good fit.',
+                  {'hostName': widget.trip.hostName},
+                ),
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -363,13 +443,16 @@ class _JoinRequestComposerState extends State<_JoinRequestComposer> {
                 maxLength: 300,
                 textCapitalization: TextCapitalization.sentences,
                 onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  hintText:
-                      'Mention your travel pace, relevant experience, or what you hope to share with the group.',
+                decoration: InputDecoration(
+                  hintText: tr(
+                    'Mention your travel pace, relevant experience, or what you hope to share with the group.',
+                  ),
                 ),
                 validator: (value) {
                   final length = value?.trim().length ?? 0;
-                  return length < 20 ? 'Write at least 20 characters' : null;
+                  return length < 20
+                      ? tr('Write at least 20 characters')
+                      : null;
                 },
               ),
               const SizedBox(height: AppSpacing.md),
@@ -379,7 +462,7 @@ class _JoinRequestComposerState extends State<_JoinRequestComposer> {
                     _isSending || _messageController.text.trim().length < 20
                     ? null
                     : _submit,
-                child: Text(_isSending ? 'Sending…' : 'Send request'),
+                child: Text(_isSending ? tr('Sending…') : tr('Send request')),
               ),
             ],
           ),
@@ -424,12 +507,14 @@ class _CancelledTripNotice extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'This trip was cancelled',
+                  tr('This trip was cancelled'),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'It is no longer open for requests. The group chat stays available for anyone already in it.',
+                  tr(
+                    'It is no longer open for requests. The group chat stays available for anyone already in it.',
+                  ),
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -468,40 +553,50 @@ class _RequestStatusCard extends StatelessWidget {
       JoinRequestStatus.pendingHost => (
         Icons.schedule_rounded,
         AppColors.terracotta,
-        'Waiting for ${trip.hostName}',
-        'Your request is sent. You can withdraw it while the host is reviewing your profile.',
+        tr('Waiting for {hostName}', {'hostName': trip.hostName}),
+        tr(
+          'Your request is sent. You can withdraw it while the host is reviewing your profile.',
+        ),
       ),
       JoinRequestStatus.pendingTraveler => (
         Icons.handshake_outlined,
         AppColors.green,
-        '${trip.hostName} approved your request',
-        'Review the itinerary once more, then confirm to lock your place in the group.',
+        tr('{hostName} approved your request', {'hostName': trip.hostName}),
+        tr(
+          'Review the itinerary once more, then confirm to lock your place in the group.',
+        ),
       ),
       JoinRequestStatus.confirmed => (
         Icons.check_circle_rounded,
         AppColors.green,
-        'Your place is confirmed',
+        tr('Your place is confirmed'),
         trip.isLateToLeave(DateTime.now())
-            ? 'Both you and the host agreed. The free cancellation window ended on ${formatTripDate(trip.freeCancellationUntil)}.'
-            : 'Both you and the host agreed. You can leave freely until ${formatTripDate(trip.freeCancellationUntil)}.',
+            ? tr(
+                'Both you and the host agreed. The free cancellation window ended on {date}.',
+                {'date': formatTripDate(trip.freeCancellationUntil)},
+              )
+            : tr(
+                'Both you and the host agreed. You can leave freely until {date}.',
+                {'date': formatTripDate(trip.freeCancellationUntil)},
+              ),
       ),
       JoinRequestStatus.declined => (
         Icons.cancel_outlined,
         AppColors.muted,
-        'The host did not accept this request',
-        'No place was reserved and the group size was not changed.',
+        tr('The host did not accept this request'),
+        tr('No place was reserved and the group size was not changed.'),
       ),
       JoinRequestStatus.withdrawn => (
         Icons.undo_rounded,
         AppColors.muted,
-        'Request withdrawn',
-        'No place was reserved and the group size was not changed.',
+        tr('Request withdrawn'),
+        tr('No place was reserved and the group size was not changed.'),
       ),
       JoinRequestStatus.left => (
         Icons.logout_rounded,
         AppColors.muted,
-        'You left this trip',
-        'Your seat was released.',
+        tr('You left this trip'),
+        tr('Your seat was released.'),
       ),
     };
 
@@ -535,7 +630,7 @@ class _RequestStatusCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             TextButton(
               onPressed: isUpdating ? null : onWithdraw,
-              child: const Text('Withdraw request'),
+              child: Text(tr('Withdraw request')),
             ),
           ],
           if (request.status == JoinRequestStatus.confirmed &&
@@ -544,7 +639,7 @@ class _RequestStatusCard extends StatelessWidget {
             TextButton(
               key: const ValueKey('leave-trip'),
               onPressed: isUpdating ? null : onLeave,
-              child: const Text('Leave trip'),
+              child: Text(tr('Leave trip')),
             ),
           ],
           if (request.status == JoinRequestStatus.pendingTraveler) ...[
@@ -554,7 +649,7 @@ class _RequestStatusCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: isUpdating ? null : onDecline,
-                    child: const Text('Decline'),
+                    child: Text(tr('Decline')),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -562,7 +657,7 @@ class _RequestStatusCard extends StatelessWidget {
                   child: FilledButton(
                     key: const ValueKey('confirm-trip-place'),
                     onPressed: isUpdating ? null : onConfirm,
-                    child: const Text('Confirm place'),
+                    child: Text(tr('Confirm place')),
                   ),
                 ),
               ],

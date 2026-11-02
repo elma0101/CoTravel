@@ -136,7 +136,6 @@ void main() {
       find.byKey(const ValueKey('trip-title')),
       'Rif loop revised',
     );
-    await _scrollTo(tester, const ValueKey('publish-trip'));
     await tester.tap(find.byKey(const ValueKey('publish-trip')));
     await tester.pumpAndSettle();
 

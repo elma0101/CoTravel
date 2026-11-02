@@ -1,3 +1,5 @@
+import '../../../core/l10n/app_strings.dart';
+import '../../trips/presentation/trip_formatters.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -40,7 +42,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen>
       repository: ref.read(chatRepositoryProvider),
       conversationId: widget.conversationId,
       userId: profile?.id ?? _chatController.userId,
-      userName: profile?.displayName ?? 'CoTravel member',
+      userName: profile?.displayName ?? tr('CoTravel member'),
       onInboxChanged: () => unawaited(_chatController.refresh()),
       onConversationRead: () =>
           _chatController.markReadLocally(widget.conversationId),
@@ -126,7 +128,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen>
           appBar: AppBar(
             titleSpacing: 0,
             title: conversation == null
-                ? const Text('Trip conversation')
+                ? Text(tr('Trip conversation'))
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -137,7 +139,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen>
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       Text(
-                        '${conversation.memberCount} members · ${conversation.routeLabel}',
+                        tr('{memberCount} members · {routeLabel}', {
+                          'memberCount': conversation.memberCount,
+                          'routeLabel': conversation.routeLabel,
+                        }),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -164,7 +169,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen>
                     context,
                     target: TravelerActionTarget(
                       userId: message.senderId!,
-                      displayName: message.senderName ?? 'Trip member',
+                      displayName: message.senderName ?? tr('Trip member'),
                       tripId: conversation?.tripId,
                       tripTitle: conversation?.tripTitle,
                       conversationId: widget.conversationId,
@@ -277,14 +282,14 @@ class _PrivacyNotice extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       color: AppColors.greenSoft,
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.lock_outline_rounded, size: 15, color: AppColors.green),
           SizedBox(width: AppSpacing.xs),
           Flexible(
             child: Text(
-              'Only confirmed trip members can read this conversation.',
+              tr('Only confirmed trip members can read this conversation.'),
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.green, fontSize: 12),
             ),
@@ -305,8 +310,8 @@ class _ConnectionNotice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       color: AppColors.terracottaSoft,
-      child: const Text(
-        'Reconnecting… New messages may be delayed.',
+      child: Text(
+        tr('Reconnecting… New messages may be delayed.'),
         textAlign: TextAlign.center,
         style: TextStyle(color: AppColors.ink, fontSize: 12),
       ),
@@ -401,22 +406,22 @@ class _MessageBubble extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppColors.border),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.visibility_off_outlined, size: 16),
               SizedBox(width: AppSpacing.xs),
-              Text('Message hidden from a blocked member'),
+              Text(tr('Message hidden from a blocked member')),
             ],
           ),
         ),
       );
     }
 
-    final senderName = message.senderName ?? 'Trip member';
+    final senderName = message.senderName ?? tr('Trip member');
     return Semantics(
       label:
-          '${isMine ? 'You' : senderName}, ${message.body}, ${_formatMessageTime(message.sentAt)}',
+          '${isMine ? tr('You') : senderName}, ${message.body}, ${_formatMessageTime(message.sentAt)}',
       child: Padding(
         padding: EdgeInsets.only(
           top: startsGroup ? AppSpacing.xs : 2,
@@ -434,7 +439,9 @@ class _MessageBubble extends StatelessWidget {
                 child: startsGroup
                     ? Semantics(
                         button: true,
-                        label: 'Open $senderName actions',
+                        label: tr('Open {senderName} actions', {
+                          'senderName': senderName,
+                        }),
                         child: InkResponse(
                           key: ValueKey(
                             'chat-user-${message.senderId}-${message.id}',
@@ -526,7 +533,7 @@ class _MessageBubble extends StatelessWidget {
               IconButton(
                 key: ValueKey('retry-chat-message-${message.stableId}'),
                 onPressed: onRetry,
-                tooltip: 'Message failed. Tap to retry.',
+                tooltip: tr('Message failed. Tap to retry.'),
                 visualDensity: VisualDensity.compact,
                 color: AppColors.error,
                 icon: const Icon(Icons.refresh_rounded, size: 20),
@@ -638,7 +645,7 @@ class _MessageComposer extends StatelessWidget {
                 keyboardType: TextInputType.multiline,
                 onChanged: (_) => onChanged(),
                 decoration: InputDecoration(
-                  hintText: 'Message the group',
+                  hintText: tr('Message the group'),
                   counterText: length >= 900 ? '$length / 1000' : '',
                   filled: true,
                   fillColor: AppColors.canvas,
@@ -648,11 +655,11 @@ class _MessageComposer extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Semantics(
               button: true,
-              label: 'Send message',
+              label: tr('Send message'),
               child: IconButton.filled(
                 key: const ValueKey('send-chat-message'),
                 onPressed: canSend ? onSend : null,
-                tooltip: 'Send message',
+                tooltip: tr('Send message'),
                 icon: const Icon(Icons.arrow_upward_rounded),
               ),
             ),
@@ -679,7 +686,7 @@ class _HistoryLoader extends StatelessWidget {
                 dimension: 22,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : TextButton(onPressed: onLoad, child: const Text('Load earlier')),
+            : TextButton(onPressed: onLoad, child: Text(tr('Load earlier'))),
       ),
     );
   }
@@ -705,7 +712,7 @@ class _ConversationError extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             FilledButton.tonal(
               onPressed: onRetry,
-              child: const Text('Try again'),
+              child: Text(tr('Try again')),
             ),
           ],
         ),
@@ -739,12 +746,14 @@ class _EmptyConversation extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Start planning together',
+              tr('Start planning together'),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Share an arrival time, transport idea, or the first place you want to visit.',
+              tr(
+                'Share an arrival time, transport idea, or the first place you want to visit.',
+              ),
               textAlign: TextAlign.center,
               style: Theme.of(
                 context,
@@ -781,26 +790,12 @@ String _formatMessageDate(DateTime value) {
   final date = DateTime(value.year, value.month, value.day);
   final difference = today.difference(date).inDays;
   if (difference == 0) {
-    return 'Today';
+    return tr('Today');
   }
   if (difference == 1) {
-    return 'Yesterday';
+    return tr('Yesterday');
   }
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[value.month - 1]} ${value.day}, ${value.year}';
+  return '${formatTripDate(value)} ${value.year}';
 }
 
 String _formatMessageTime(DateTime value) {

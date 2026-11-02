@@ -1,3 +1,4 @@
+import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -52,7 +53,7 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Shared logistics')),
+      appBar: AppBar(title: Text(tr('Shared logistics'))),
       body: FutureBuilder<_LogisticsScreenData?>(
         future: _data,
         builder: (context, snapshot) {
@@ -62,7 +63,7 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
           final data = snapshot.data;
           if (data == null) {
             return _Unavailable(
-              message: 'This trip is no longer available.',
+              message: tr('This trip is no longer available.'),
               onRetry: _retry,
             );
           }
@@ -71,7 +72,7 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
           }
           if (snapshot.hasError || data.plan == null) {
             return _Unavailable(
-              message: 'Logistics could not be loaded.',
+              message: tr('Logistics could not be loaded.'),
               onRetry: _retry,
             );
           }
@@ -122,7 +123,10 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '${trip.originCity} to ${trip.destinationCity}',
+                    tr('{originCity} to {destinationCity}', {
+                      'originCity': trip.originCity,
+                      'destinationCity': trip.destinationCity,
+                    }),
                     style: Theme.of(
                       context,
                     ).textTheme.bodyLarge?.copyWith(color: AppColors.muted),
@@ -133,7 +137,7 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
             if (isHost)
               IconButton.filledTonal(
                 key: const ValueKey('edit-logistics'),
-                tooltip: 'Edit logistics',
+                tooltip: tr('Edit logistics'),
                 onPressed: () => _editLogistics(trip, plan),
                 icon: const Icon(Icons.edit_outlined),
               ),
@@ -142,10 +146,15 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
         const SizedBox(height: AppSpacing.xl),
         _ActualGroupCard(trip: trip),
         const SizedBox(height: AppSpacing.xl),
-        Text('Try a group size', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          tr('Try a group size'),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'See how the shared total changes from one person to the trip capacity.',
+          tr(
+            'See how the shared total changes from one person to the trip capacity.',
+          ),
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -160,10 +169,13 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
           },
         ),
         const SizedBox(height: AppSpacing.xl),
-        Text('Booking links', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          tr('Booking links'),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Open the host’s shortlist in the provider app or website.',
+          tr('Open the host’s shortlist in the provider app or website.'),
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -176,8 +188,8 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
             _BookingLinkCard(
               key: const ValueKey('accommodation-booking-link'),
               icon: Icons.bed_outlined,
-              category: 'Accommodation',
-              name: plan.accommodationName ?? 'Open accommodation option',
+              category: tr('Accommodation'),
+              name: plan.accommodationName ?? tr('Open accommodation option'),
               uri: plan.accommodationUrl!,
               onOpen: _openExternal,
             ),
@@ -187,8 +199,8 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
             _BookingLinkCard(
               key: const ValueKey('transport-booking-link'),
               icon: Icons.directions_car_outlined,
-              category: 'Transport',
-              name: plan.transportName ?? 'Open transport option',
+              category: tr('Transport'),
+              name: plan.transportName ?? tr('Open transport option'),
               uri: plan.transportUrl!,
               onOpen: _openExternal,
             ),
@@ -211,11 +223,11 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
     try {
       final opened = await ref.read(externalLinkLauncherProvider).open(uri);
       if (!opened && mounted) {
-        _showMessage('This booking link could not be opened.');
+        _showMessage(tr('This booking link could not be opened.'));
       }
     } on Object {
       if (mounted) {
-        _showMessage('This booking link could not be opened.');
+        _showMessage(tr('This booking link could not be opened.'));
       }
     }
   }
@@ -229,7 +241,7 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
     );
     if (saved == true && mounted) {
       _scenarioTravelers = null;
-      _showMessage('Shared logistics updated.');
+      _showMessage(tr('Shared logistics updated.'));
     }
   }
 
@@ -279,13 +291,15 @@ class _ActualGroupCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${trip.participantCount} confirmed in the group',
+                  tr('{participantCount} confirmed in the group', {
+                    'participantCount': trip.participantCount,
+                  }),
                   style: Theme.of(
                     context,
                   ).textTheme.titleMedium?.copyWith(color: Colors.white),
                 ),
                 Text(
-                  '${formatTripMoney(estimate.totalPerPerson, trip.currency)} each today · ${trip.openSeats} open ${trip.openSeats == 1 ? 'seat' : 'seats'}',
+                  '${tr('{amount} each today', {'amount': formatTripMoney(estimate.totalPerPerson, trip.currency)})} · ${trPlural(trip.openSeats, '{n} open seat', '{n} open seats')}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.82),
                   ),
@@ -326,7 +340,7 @@ class _ScenarioCalculator extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Group size',
+                tr('Group size'),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const Spacer(),
@@ -340,7 +354,7 @@ class _ScenarioCalculator extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  '$travelerCount ${travelerCount == 1 ? 'person' : 'people'}',
+                  trPlural(travelerCount, '{n} person', '{n} people'),
                   key: const ValueKey('scenario-group-size'),
                   style: const TextStyle(
                     color: AppColors.green,
@@ -363,7 +377,7 @@ class _ScenarioCalculator extends StatelessWidget {
             children: [
               const Text('1'),
               const Spacer(),
-              Text('${trip.capacity} max'),
+              Text(tr('{capacity} max', {'capacity': trip.capacity})),
             ],
           ),
           const Padding(
@@ -371,17 +385,17 @@ class _ScenarioCalculator extends StatelessWidget {
             child: Divider(),
           ),
           _EstimateLine(
-            label: 'Lodging per person',
+            label: tr('Lodging per person'),
             value: formatTripMoney(estimate.lodgingPerPerson, trip.currency),
           ),
           const SizedBox(height: AppSpacing.sm),
           _EstimateLine(
-            label: 'Transport per person',
+            label: tr('Transport per person'),
             value: formatTripMoney(estimate.transportPerPerson, trip.currency),
           ),
           const SizedBox(height: AppSpacing.md),
           _EstimateLine(
-            label: 'Estimated total each',
+            label: tr('Estimated total each'),
             value: formatTripMoney(estimate.totalPerPerson, trip.currency),
             emphasized: true,
           ),
@@ -472,7 +486,7 @@ class _BookingLinkCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Open externally',
+            tooltip: tr('Open externally'),
             onPressed: () => onOpen(uri),
             icon: const Icon(Icons.open_in_new_rounded),
           ),
@@ -494,11 +508,11 @@ class _NoBookingLinks extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.link_off_rounded, color: AppColors.muted),
           SizedBox(width: AppSpacing.sm),
-          Expanded(child: Text('The host has not shared a shortlist yet.')),
+          Expanded(child: Text(tr('The host has not shared a shortlist yet.'))),
         ],
       ),
     );
@@ -536,7 +550,9 @@ class _ExternalBookingNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'CoTravel coordinates the group and estimates shared costs. Booking and payment happen directly with the third-party provider.',
+      tr(
+        'CoTravel coordinates the group and estimates shared costs. Booking and payment happen directly with the third-party provider.',
+      ),
       textAlign: TextAlign.center,
       style: Theme.of(
         context,
@@ -618,12 +634,14 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Update shared logistics',
+                      tr('Update shared logistics'),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Use total group costs. The app calculates each person’s share.',
+                      tr(
+                        'Use total group costs. The app calculates each person’s share.',
+                      ),
                       style: Theme.of(
                         context,
                       ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
@@ -639,7 +657,7 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                               decimal: true,
                             ),
                             decoration: InputDecoration(
-                              labelText: 'Lodging total',
+                              labelText: tr('Lodging total'),
                               suffixText: widget.trip.currency,
                             ),
                             validator: _costValidator,
@@ -654,7 +672,7 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                               decimal: true,
                             ),
                             decoration: InputDecoration(
-                              labelText: 'Transport total',
+                              labelText: tr('Transport total'),
                               suffixText: widget.trip.currency,
                             ),
                             validator: _costValidator,
@@ -666,9 +684,9 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                     TextFormField(
                       controller: _accommodationName,
                       maxLength: 100,
-                      decoration: const InputDecoration(
-                        labelText: 'Accommodation label',
-                        hintText: 'Guesthouse shortlist',
+                      decoration: InputDecoration(
+                        labelText: tr('Accommodation label'),
+                        hintText: tr('Guesthouse shortlist'),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -677,8 +695,8 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                       controller: _accommodationUrl,
                       keyboardType: TextInputType.url,
                       autocorrect: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Accommodation link',
+                      decoration: InputDecoration(
+                        labelText: tr('Accommodation link'),
                         hintText: 'https://…',
                       ),
                       validator: _urlValidator,
@@ -687,9 +705,9 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                     TextFormField(
                       controller: _transportName,
                       maxLength: 100,
-                      decoration: const InputDecoration(
-                        labelText: 'Transport label',
-                        hintText: 'Transfer option',
+                      decoration: InputDecoration(
+                        labelText: tr('Transport label'),
+                        hintText: tr('Transfer option'),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -698,8 +716,8 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                       controller: _transportUrl,
                       keyboardType: TextInputType.url,
                       autocorrect: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Transport link',
+                      decoration: InputDecoration(
+                        labelText: tr('Transport link'),
                         hintText: 'https://…',
                       ),
                       validator: _urlValidator,
@@ -710,8 +728,8 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                       maxLength: 600,
                       minLines: 2,
                       maxLines: 4,
-                      decoration: const InputDecoration(
-                        labelText: 'Planning note',
+                      decoration: InputDecoration(
+                        labelText: tr('Planning note'),
                         alignLabelWithHint: true,
                       ),
                     ),
@@ -726,7 +744,9 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
                     FilledButton(
                       key: const ValueKey('save-logistics'),
                       onPressed: saving ? null : _save,
-                      child: Text(saving ? 'Saving…' : 'Save logistics'),
+                      child: Text(
+                        saving ? tr('Saving…') : tr('Save logistics'),
+                      ),
                     ),
                   ],
                 ),
@@ -741,7 +761,7 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
   String? _costValidator(String? value) {
     final amount = double.tryParse((value ?? '').trim().replaceAll(',', '.'));
     if (amount == null || amount < 0) {
-      return 'Enter a valid amount';
+      return tr('Enter a valid amount');
     }
     return null;
   }
@@ -755,10 +775,10 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
     if (uri == null ||
         !uri.hasAuthority ||
         (uri.scheme != 'http' && uri.scheme != 'https')) {
-      return 'Use a full http or https link';
+      return tr('Use a full http or https link');
     }
     if (raw.length > 500) {
-      return 'Keep the link under 500 characters';
+      return tr('Keep the link under 500 characters');
     }
     return null;
   }
@@ -771,7 +791,7 @@ class _LogisticsEditorState extends ConsumerState<_LogisticsEditor> {
     final transport = _parseAmount(_transport.text);
     if (lodging + transport <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add a lodging or transport estimate.')),
+        SnackBar(content: Text(tr('Add a lodging or transport estimate.'))),
       );
       return;
     }
@@ -825,11 +845,12 @@ class _AccessDenied extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _CenteredMessage(
+    return _CenteredMessage(
       icon: Icons.lock_outline_rounded,
-      title: 'Available after confirmation',
-      message:
-          'Booking links and group logistics are private to the host and confirmed travelers.',
+      title: tr('Available after confirmation'),
+      message: tr(
+        'Booking links and group logistics are private to the host and confirmed travelers.',
+      ),
     );
   }
 }
@@ -844,9 +865,9 @@ class _Unavailable extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CenteredMessage(
       icon: Icons.route_outlined,
-      title: 'Logistics unavailable',
+      title: tr('Logistics unavailable'),
       message: message,
-      action: TextButton(onPressed: onRetry, child: const Text('Try again')),
+      action: TextButton(onPressed: onRetry, child: Text(tr('Try again'))),
     );
   }
 }

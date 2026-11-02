@@ -14,6 +14,9 @@ abstract interface class JoinRequestRepository {
     required Trip trip,
     required UserProfile traveler,
     required String message,
+    bool availableAllDates = false,
+    bool budgetFits = false,
+    bool canShareDriving = false,
   });
 
   Future<TripJoinRequest> reviewAsHost({
@@ -47,7 +50,9 @@ class SupabaseJoinRequestRepository implements JoinRequestRepository {
       display_name,
       bio,
       home_city,
-      linkedin_verified_at
+      linkedin_verified_at,
+      occupation,
+      languages
     )
   ''';
 
@@ -78,10 +83,19 @@ class SupabaseJoinRequestRepository implements JoinRequestRepository {
     required Trip trip,
     required UserProfile traveler,
     required String message,
+    bool availableAllDates = false,
+    bool budgetFits = false,
+    bool canShareDriving = false,
   }) async {
     final requestId = await _client.rpc(
       'create_join_request',
-      params: {'p_trip_id': trip.id, 'p_message': message},
+      params: {
+        'p_trip_id': trip.id,
+        'p_message': message,
+        'p_available_all_dates': availableAllDates,
+        'p_budget_fits': budgetFits,
+        'p_can_share_driving': canShareDriving,
+      },
     );
     return _fetchRequest(requestId as String);
   }
@@ -153,6 +167,12 @@ class SupabaseJoinRequestRepository implements JoinRequestRepository {
       message: row['message'] as String,
       status: _statusFromDatabase(row['status'] as String),
       createdAt: DateTime.parse(row['created_at'] as String),
+      travelerOccupation: traveler['occupation'] as String?,
+      travelerLanguages: (traveler['languages'] as List<dynamic>? ?? const [])
+          .cast<String>(),
+      availableAllDates: row['available_all_dates'] as bool?,
+      budgetFits: row['budget_fits'] as bool?,
+      canShareDriving: row['can_share_driving'] as bool?,
     );
   }
 
@@ -209,6 +229,9 @@ class PreviewJoinRequestRepository implements JoinRequestRepository {
     required Trip trip,
     required UserProfile traveler,
     required String message,
+    bool availableAllDates = false,
+    bool budgetFits = false,
+    bool canShareDriving = false,
   }) async {
     if (trip.hostId == traveler.id) {
       throw StateError('You cannot request to join your own trip.');
@@ -241,6 +264,11 @@ class PreviewJoinRequestRepository implements JoinRequestRepository {
       message: message,
       status: JoinRequestStatus.pendingHost,
       createdAt: DateTime.now(),
+      travelerOccupation: traveler.occupation,
+      travelerLanguages: traveler.languages,
+      availableAllDates: availableAllDates,
+      budgetFits: budgetFits,
+      canShareDriving: canShareDriving,
     );
     _requests.add(request);
     return request;
@@ -401,6 +429,11 @@ class PreviewJoinRequestRepository implements JoinRequestRepository {
         travelerVerified: true,
         message:
             'I like the mix of towns and trails. I hike regularly and prefer the same calm pace you described.',
+        travelerOccupation: 'Software engineer',
+        travelerLanguages: const ['Arabic', 'French', 'English'],
+        availableAllDates: true,
+        budgetFits: true,
+        canShareDriving: true,
         status: JoinRequestStatus.pendingHost,
         createdAt: today.subtract(const Duration(hours: 3)),
       ),

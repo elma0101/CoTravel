@@ -213,6 +213,25 @@ const frenchStrings = <String, String>{
   "New requests will appear here with the traveler’s profile and introduction.":
       "Les nouvelles demandes apparaîtront ici avec le profil et la présentation du voyageur.",
 
+  "I am free for all the dates": "Je suis libre à toutes les dates",
+  "This budget works for me": "Ce budget me convient",
+  "About {amount} each with a full group":
+      "Environ {amount} par personne avec un groupe complet",
+  "I can share driving": "Je peux partager la conduite",
+  "CoTravel does not check driving licences.":
+      "CoTravel ne vérifie pas les permis de conduire.",
+  "Free for all the dates": "Libre à toutes les dates",
+  "Dates to discuss": "Dates à discuter",
+  "Budget works for them": "Le budget lui convient",
+  "Budget to discuss": "Budget à discuter",
+  "Can share driving": "Peut partager la conduite",
+  "Driving licence not checked": "Permis de conduire non vérifié",
+  "Useful context": "Informations utiles",
+  "Declared by the traveler": "Déclaré par le voyageur",
+  "Current group cost": "Coût actuel du groupe",
+  "If {name} joins": "Si {name} rejoint le groupe",
+  "{amount} each": "{amount} par personne",
+
   // Logistics
   "Logistics could not be updated. Please try again.":
       "La logistique n’a pas pu être mise à jour. Veuillez réessayer.",

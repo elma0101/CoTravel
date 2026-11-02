@@ -44,6 +44,11 @@ class TripJoinRequest {
     required this.message,
     required this.status,
     required this.createdAt,
+    this.travelerOccupation,
+    this.travelerLanguages = const [],
+    this.availableAllDates,
+    this.budgetFits,
+    this.canShareDriving,
   });
 
   final String id;
@@ -61,6 +66,14 @@ class TripJoinRequest {
   final String message;
   final JoinRequestStatus status;
   final DateTime createdAt;
+  final String? travelerOccupation;
+  final List<String> travelerLanguages;
+
+  // Declared by the traveler and unchecked. Null on requests sent before the
+  // questions existed.
+  final bool? availableAllDates;
+  final bool? budgetFits;
+  final bool? canShareDriving;
 
   String get routeLabel => '$originCity to $destinationCity';
 
@@ -81,6 +94,11 @@ class TripJoinRequest {
       message: message,
       status: status ?? this.status,
       createdAt: createdAt,
+      travelerOccupation: travelerOccupation,
+      travelerLanguages: travelerLanguages,
+      availableAllDates: availableAllDates,
+      budgetFits: budgetFits,
+      canShareDriving: canShareDriving,
     );
   }
 }

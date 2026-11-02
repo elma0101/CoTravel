@@ -7,6 +7,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../trips/presentation/trip_formatters.dart';
 import '../application/join_request_controller.dart';
+import '../../trips/domain/trip.dart';
 import '../domain/trip_join_request.dart';
 
 class TripRequestsScreen extends ConsumerWidget {
@@ -48,6 +49,7 @@ class TripRequestsScreen extends ConsumerWidget {
                 final request = requests[index - 1];
                 return _CandidateCard(
                   request: request,
+                  trip: ref.watch(tripCatalogProvider).tripById(request.tripId),
                   isUpdating: controller.isUpdating(request.id),
                   onAccept: () =>
                       _review(context, controller, request, accept: true),
@@ -161,15 +163,159 @@ class _RequestsIntro extends StatelessWidget {
   }
 }
 
+/// The mockup's "Useful context". Declared answers are labelled as such, and
+/// cost shares assume an equal split.
+class _UsefulContext extends StatelessWidget {
+  const _UsefulContext({required this.request, required this.trip});
+
+  final TripJoinRequest request;
+  final Trip? trip;
+
+  @override
+  Widget build(BuildContext context) {
+    final trip = this.trip;
+    final languages = request.travelerLanguages;
+    final canCompareCost =
+        trip != null &&
+        request.status == JoinRequestStatus.pendingHost &&
+        trip.openSeats > 0;
+    final rows = <Widget>[
+      if (request.availableAllDates != null)
+        _ContextRow(
+          icon: Icons.event_available_outlined,
+          title: request.availableAllDates!
+              ? tr('Free for all the dates')
+              : tr('Dates to discuss'),
+        ),
+      if (request.budgetFits != null)
+        _ContextRow(
+          icon: Icons.savings_outlined,
+          title: request.budgetFits!
+              ? tr('Budget works for them')
+              : tr('Budget to discuss'),
+        ),
+      if (languages.isNotEmpty)
+        _ContextRow(icon: Icons.translate, title: languages.join(', ')),
+      if (request.canShareDriving == true)
+        _ContextRow(
+          icon: Icons.directions_car_outlined,
+          title: tr('Can share driving'),
+          subtitle: tr('Driving licence not checked'),
+        ),
+    ];
+    if (rows.isEmpty && !canCompareCost) {
+      return const SizedBox.shrink();
+    }
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(tr('Useful context'), style: textTheme.titleSmall),
+              ),
+              Text(
+                tr('Declared by the traveler'),
+                style: textTheme.bodySmall?.copyWith(color: AppColors.muted),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          ...rows,
+          if (canCompareCost) ...[
+            const SizedBox(height: AppSpacing.xs),
+            _CostLine(
+              label: tr('Current group cost'),
+              value: formatTripMoney(trip.currentGroupShare, trip.currency),
+            ),
+            const Divider(height: AppSpacing.md),
+            _CostLine(
+              key: const ValueKey('cost-if-joins'),
+              label: tr('If {name} joins', {'name': request.travelerName}),
+              value: formatTripMoney(
+                trip.totalCost / (trip.participantCount + 1),
+                trip.currency,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ContextRow extends StatelessWidget {
+  const _ContextRow({required this.icon, required this.title, this.subtitle});
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: AppColors.muted),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: textTheme.bodyMedium),
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppColors.muted,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CostLine extends StatelessWidget {
+  const _CostLine({required this.label, required this.value, super.key});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Text(label)),
+        Text(
+          tr('{amount} each', {'amount': value}),
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
 class _CandidateCard extends StatelessWidget {
   const _CandidateCard({
     required this.request,
+    required this.trip,
     required this.isUpdating,
     required this.onAccept,
     required this.onDecline,
   });
 
   final TripJoinRequest request;
+  final Trip? trip;
   final bool isUpdating;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
@@ -249,6 +395,7 @@ class _CandidateCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
+          _UsefulContext(request: request, trip: trip),
           if (request.status == JoinRequestStatus.pendingHost) ...[
             const SizedBox(height: AppSpacing.md),
             Row(

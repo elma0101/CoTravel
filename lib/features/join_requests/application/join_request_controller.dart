@@ -102,6 +102,9 @@ class JoinRequestController extends ChangeNotifier with DisposeSafeNotifier {
   Future<TripJoinRequest> submitRequest({
     required Trip trip,
     required String message,
+    bool availableAllDates = false,
+    bool budgetFits = false,
+    bool canShareDriving = false,
   }) async {
     final trimmed = message.trim();
     if (trimmed.length < 20 || trimmed.length > 300) {
@@ -116,6 +119,9 @@ class JoinRequestController extends ChangeNotifier with DisposeSafeNotifier {
         trip: trip,
         traveler: _profile,
         message: trimmed,
+        availableAllDates: availableAllDates,
+        budgetFits: budgetFits,
+        canShareDriving: canShareDriving,
       );
       _travelerRequests = [request, ..._travelerRequests];
       unawaited(

@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +6,7 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../safety/domain/safety_models.dart';
 import '../../trips/presentation/trip_formatters.dart';
 import '../../safety/presentation/safety_actions.dart';

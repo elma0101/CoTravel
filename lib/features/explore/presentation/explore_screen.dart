@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +6,7 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../trips/domain/trip.dart';
 import '../../trips/presentation/trip_formatters.dart';
 import '../../trips/presentation/widgets/trip_card.dart';
@@ -483,15 +483,13 @@ class _SectionHeading extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
-        if (hasFilter)
-          TextButton(onPressed: onClear, child: Text(tr('Clear')))
-        else
-          Text(
-            tr('Soonest first'),
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
-          ),
+        TextButton.icon(
+          key: const ValueKey('open-trip-map'),
+          onPressed: () => context.push(AppRoutes.tripMap),
+          icon: const Icon(Icons.map_outlined, size: 18),
+          label: Text(tr('Map')),
+        ),
+        if (hasFilter) TextButton(onPressed: onClear, child: Text(tr('Clear'))),
       ],
     );
   }

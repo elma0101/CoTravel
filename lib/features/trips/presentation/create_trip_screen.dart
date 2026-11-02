@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -12,6 +11,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/analytics/product_analytics.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../application/trip_catalog_controller.dart';
 import '../domain/trip.dart';

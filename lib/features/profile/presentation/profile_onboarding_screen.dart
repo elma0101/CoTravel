@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -11,6 +10,7 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../domain/user_profile.dart';
 
 class ProfileOnboardingScreen extends ConsumerStatefulWidget {

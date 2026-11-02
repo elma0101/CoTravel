@@ -53,7 +53,7 @@ const privacyPolicy = LegalDocument(
   sections: [
     LegalSection(
       'What we collect',
-      'Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips and requests you create, your group chat messages, your safety reports and blocks, your notification device token, and basic usage events.',
+      'Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips you create and save, your requests and the details you declare in them, your group chat messages, your safety reports and blocks, your notification device token, and basic usage events.',
     ),
     LegalSection(
       'Who can see it',

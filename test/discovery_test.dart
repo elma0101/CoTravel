@@ -1,9 +1,16 @@
+import 'package:cotravel_app/features/explore/domain/trip_map_pins.dart';
+import 'package:cotravel_app/features/explore/presentation/trip_map_screen.dart';
 import 'package:cotravel_app/features/logistics/domain/booking_search_links.dart';
 import 'package:cotravel_app/features/trips/domain/trip.dart';
 import 'package:cotravel_app/features/trips/domain/trip_route.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Trip _trip({String? occupation, int days = 6}) {
+Trip _trip({
+  String? occupation,
+  int days = 6,
+  String destination = 'Sidi Ifni',
+}) {
   final start = DateTime(2026, 10, 2);
   return Trip(
     id: 'trip',
@@ -16,7 +23,7 @@ Trip _trip({String? occupation, int days = 6}) {
     originCity: 'Ait Ben Haddou',
     startDate: start,
     endDate: start.add(Duration(days: days)),
-    stops: [TripStop(city: 'Sidi Ifni', arrivalDate: start)],
+    stops: [TripStop(city: destination, arrivalDate: start)],
     capacity: 4,
     confirmedTravelerCount: 1,
     lodgingTotal: 100,
@@ -67,6 +74,45 @@ void main() {
     test('offers nothing for an empty search or an unknown place', () {
       expect(MoroccoRouteCoordinates.search(' '), isEmpty);
       expect(MoroccoRouteCoordinates.search('atlantis'), isEmpty);
+    });
+  });
+
+  group('trip map', () {
+    test('groups trips by destination and counts the unmappable', () {
+      final result = TripMapPins.fromTrips([
+        _trip(),
+        _trip(destination: 'sidi ifni'),
+        _trip(destination: 'Agadir'),
+        _trip(destination: 'Atlantis'),
+      ]);
+
+      expect(result.pins.map((pin) => pin.place), ['Agadir', 'Sidi Ifni']);
+      expect(result.pins.last.trips, hasLength(2));
+      expect(result.unmappedCount, 1);
+    });
+
+    testWidgets('every pin can be reached without touching the map', (
+      tester,
+    ) async {
+      TripMapPin? selected;
+      final result = TripMapPins.fromTrips([
+        _trip(),
+        _trip(destination: 'Atlantis'),
+      ]);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TripPinsBar(
+              result: result,
+              onSelected: (pin) => selected = pin,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Sidi Ifni (1)'));
+      expect(selected?.place, 'Sidi Ifni');
+      expect(find.textContaining('no map location'), findsOneWidget);
     });
   });
 

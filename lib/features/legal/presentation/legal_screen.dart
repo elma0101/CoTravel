@@ -1,8 +1,8 @@
-import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../domain/legal_documents.dart';
 
 class LegalScreen extends StatelessWidget {

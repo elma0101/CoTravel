@@ -1,10 +1,10 @@
-import '../../../core/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/l10n/app_strings.dart';
 import '../../join_requests/domain/trip_join_request.dart';
 import '../../trips/domain/trip.dart';
 import '../../trips/presentation/trip_formatters.dart';

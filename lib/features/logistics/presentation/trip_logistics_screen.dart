@@ -8,6 +8,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../join_requests/domain/trip_join_request.dart';
 import '../../trips/domain/trip.dart';
 import '../../trips/presentation/trip_formatters.dart';
+import '../domain/booking_search_links.dart';
 import '../domain/trip_logistics.dart';
 
 class TripLogisticsScreen extends ConsumerStatefulWidget {
@@ -101,6 +102,8 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
     final estimate = SharedCostEstimate.forTrip(trip, scenarioTravelers);
     final userId = ref.watch(appAuthStateProvider).profile?.id;
     final isHost = trip.hostId == userId;
+
+    final searchLinks = BookingSearchLinks.forTrip(trip);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -205,6 +208,45 @@ class _TripLogisticsScreenState extends ConsumerState<TripLogisticsScreen> {
               onOpen: _openExternal,
             ),
         ],
+        const SizedBox(height: AppSpacing.xl),
+        Text(
+          tr('Search with your trip details'),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          tr('Opens the provider with your destination, dates and group size.'),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _BookingLinkCard(
+          key: const ValueKey('search-airbnb'),
+          icon: Icons.bed_outlined,
+          category: tr('Accommodation'),
+          name: 'Airbnb',
+          uri: searchLinks.airbnb,
+          onOpen: _openExternal,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _BookingLinkCard(
+          key: const ValueKey('search-booking'),
+          icon: Icons.hotel_outlined,
+          category: tr('Accommodation'),
+          name: 'Booking.com',
+          uri: searchLinks.booking,
+          onOpen: _openExternal,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _BookingLinkCard(
+          key: const ValueKey('search-directions'),
+          icon: Icons.directions_outlined,
+          category: tr('Transport'),
+          name: tr('Directions on Google Maps'),
+          uri: searchLinks.directions,
+          onOpen: _openExternal,
+        ),
         if (plan.notes != null) ...[
           const SizedBox(height: AppSpacing.md),
           _PlanningNote(note: plan.notes!),

@@ -48,6 +48,7 @@ class SupabaseTripRepository implements TripRepository {
     host:profiles!trips_host_id_fkey(
       display_name,
       home_city,
+      occupation,
       linkedin_verified_at
     )
   ''';
@@ -207,6 +208,7 @@ class SupabaseTripRepository implements TripRepository {
       hostId: row['host_id'] as String,
       hostName: host['display_name'] as String? ?? 'CoTravel host',
       hostHomeCity: host['home_city'] as String?,
+      hostOccupation: host['occupation'] as String?,
       hostVerified: host['linkedin_verified_at'] != null,
       title: row['title'] as String,
       originCity: row['origin_city'] as String,
@@ -365,6 +367,7 @@ class PreviewTripRepository implements TripRepository {
       hostId: userId,
       hostName: hostProfile.displayName ?? 'Preview traveler',
       hostHomeCity: hostProfile.homeCity,
+      hostOccupation: hostProfile.occupation,
       hostVerified: hostProfile.isLinkedInVerified,
       title: draft.title,
       originCity: draft.originCity,
@@ -401,6 +404,7 @@ class PreviewTripRepository implements TripRepository {
       hostId: current.hostId,
       hostName: current.hostName,
       hostHomeCity: current.hostHomeCity,
+      hostOccupation: current.hostOccupation,
       hostVerified: current.hostVerified,
       title: draft.title,
       originCity: draft.originCity,
@@ -442,6 +446,7 @@ class PreviewTripRepository implements TripRepository {
         hostId: 'host-amina',
         hostName: 'Amina B.',
         hostHomeCity: 'Casablanca',
+        hostOccupation: 'Product designer',
         hostVerified: true,
         title: 'Atlas villages weekend',
         originCity: 'Casablanca',
@@ -522,6 +527,7 @@ class PreviewTripRepository implements TripRepository {
         hostId: 'host-youssef',
         hostName: 'Youssef E.',
         hostHomeCity: 'Rabat',
+        hostOccupation: 'Teacher',
         hostVerified: true,
         title: 'Coast, food, and surf',
         originCity: 'Rabat',
@@ -557,6 +563,7 @@ class PreviewTripRepository implements TripRepository {
         hostId: 'host-leila',
         hostName: 'Leila M.',
         hostHomeCity: 'Marrakech',
+        hostOccupation: 'Software engineer',
         hostVerified: true,
         title: 'Dades slow road',
         originCity: 'Marrakech',

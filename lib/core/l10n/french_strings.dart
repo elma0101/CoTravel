@@ -641,6 +641,17 @@ const frenchStrings = <String, String>{
   "Tap the bookmark on a trip to keep it here for later.":
       "Touchez le signet d’un voyage pour le retrouver ici plus tard.",
 
+  "This place will not appear on the map.":
+      "Ce lieu n’apparaîtra pas sur la carte.",
+  "Host background": "Parcours de l’organisateur",
+  "Designer, teacher, engineer…": "Designer, enseignant, ingénieur…",
+  "Declared by hosts and not checked.":
+      "Déclaré par les organisateurs et non vérifié.",
+  "Search with your trip details": "Rechercher avec les détails du voyage",
+  "Opens the provider with your destination, dates and group size.":
+      "Ouvre le prestataire avec votre destination, vos dates et la taille du groupe.",
+  "Directions on Google Maps": "Itinéraire sur Google Maps",
+
   // Photos
   "Photo details": "Détails de la photo",
   "Photo by {photographer} · {licenseName}":

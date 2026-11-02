@@ -30,6 +30,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   final _originController = TextEditingController();
   final _destinationController = TextEditingController();
+  final _hostBackgroundController = TextEditingController();
   DateTimeRange? _dateRange;
   String? _travelStyle;
   bool _verifiedOnly = false;
@@ -38,6 +39,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void dispose() {
     _originController.dispose();
     _destinationController.dispose();
+    _hostBackgroundController.dispose();
     super.dispose();
   }
 
@@ -53,6 +55,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             endDate: _dateRange?.end,
             travelStyle: _travelStyle,
             verifiedHostsOnly: _verifiedOnly,
+            hostBackgroundQuery: _hostBackgroundController.text,
           ),
         );
   }
@@ -60,6 +63,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void _clearFilters() {
     _originController.clear();
     _destinationController.clear();
+    _hostBackgroundController.clear();
     setState(() {
       _dateRange = null;
       _travelStyle = null;
@@ -142,6 +146,18 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           .toList(),
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      key: const ValueKey('explore-host-background'),
+                      controller: _hostBackgroundController,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        labelText: tr('Host background'),
+                        hintText: tr('Designer, teacher, engineer…'),
+                        helperText: tr('Declared by hosts and not checked.'),
+                        prefixIcon: const Icon(Icons.work_outline_rounded),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       value: nextVerified,
@@ -204,6 +220,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   dateRange: _dateRange,
                   hasAdvancedFilters:
                       _originController.text.trim().isNotEmpty ||
+                      _hostBackgroundController.text.trim().isNotEmpty ||
                       _travelStyle != null ||
                       _verifiedOnly,
                   onPickDates: _pickDates,

@@ -82,6 +82,10 @@ class _TripDetailScreenState extends ConsumerState<TripDetailScreen> {
   }
 }
 
+extension on String {
+  String ifEmpty(String fallback) => isEmpty ? fallback : this;
+}
+
 class _SaveTripButton extends ConsumerWidget {
   const _SaveTripButton({required this.trip});
 
@@ -361,7 +365,10 @@ class _HostRow extends ConsumerWidget {
                         style: textTheme.titleMedium,
                       ),
                       Text(
-                        trip.hostHomeCity ?? tr('CoTravel member'),
+                        [
+                          ?trip.hostOccupation,
+                          ?trip.hostHomeCity,
+                        ].join(' · ').ifEmpty(tr('CoTravel member')),
                         style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.muted,
                         ),

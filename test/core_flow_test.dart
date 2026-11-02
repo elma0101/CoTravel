@@ -214,6 +214,33 @@ void main() {
     expect(find.byKey(const ValueKey('cost-if-joins')), findsOneWidget);
   });
 
+  testWidgets('logistics offers searches with the trip filled in', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+    _go(tester, AppRoutes.tripLogistics('dades-slow-road'));
+    await tester.pumpAndSettle();
+
+    await _scrollTo(tester, const ValueKey('search-directions'));
+    expect(find.byKey(const ValueKey('search-directions')), findsOneWidget);
+    expect(find.text('Directions on Google Maps'), findsOneWidget);
+  });
+
+  testWidgets('trip creation suggests places the map knows', (tester) async {
+    await _pumpApp(tester);
+    _go(tester, AppRoutes.createTrip);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const ValueKey('trip-origin')), 'chefch');
+    await tester.pumpAndSettle();
+    expect(find.text('This place will not appear on the map.'), findsOneWidget);
+    await tester.tap(find.text('Chefchaouen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chefchaouen'), findsOneWidget);
+    expect(find.text('This place will not appear on the map.'), findsNothing);
+  });
+
   testWidgets('a traveler edits their profile and stays in the app', (
     tester,
   ) async {

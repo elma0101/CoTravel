@@ -847,8 +847,8 @@ const frenchStrings = <String, String>{
   "Other signed-in members can see your profile and your trips. Group members can see the group chat. Hosts can see the introduction you send with a request. Members you block, and members who block you, cannot see your profile.":
       "Les autres membres connectés peuvent voir votre profil et vos voyages. Les membres d’un groupe peuvent voir sa discussion. Les organisateurs peuvent voir la présentation jointe à votre demande. Les membres que vous bloquez et ceux qui vous bloquent ne peuvent pas voir votre profil.",
   "Services we use": "Services que nous utilisons",
-  "Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us.":
-      "Les données sont hébergées chez Supabase. Les notifications push sont envoyées via Firebase Cloud Messaging. Lier LinkedIn nous transmet des informations d’identité de base provenant de LinkedIn.",
+  "Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us. Place suggestions send what you type in a place field, without your account, to Photon, a service run by komoot that uses OpenStreetMap data.":
+      "Les données sont hébergées chez Supabase. Les notifications push sont envoyées via Firebase Cloud Messaging. Lier LinkedIn nous transmet des informations d’identité de base provenant de LinkedIn. Les suggestions de lieux envoient ce que vous tapez dans un champ de lieu, sans votre compte, à Photon, un service géré par komoot qui utilise les données d’OpenStreetMap.",
   "Deleting your account": "Suppression de votre compte",
   "Deleting your account removes your profile, photo, requests, blocks, and the trips you created with their photos. Messages you sent remain visible to their group under the name \"Former member\". Safety reports are kept without your account linked, so that complaints cannot be erased.":
       "La suppression de votre compte efface votre profil, votre photo, vos demandes, vos blocages et les voyages que vous avez créés avec leurs photos. Vos messages restent visibles par leur groupe sous le nom « Ancien membre ». Les signalements sont conservés sans lien avec votre compte, afin que les plaintes ne puissent pas être effacées.",
@@ -871,4 +871,5 @@ const frenchStrings = <String, String>{
   "A trip can have up to 5 photos": "Un voyage peut avoir 5 photos au maximum",
   "Each photo must be stored with this trip":
       "Chaque photo doit être enregistrée avec ce voyage",
+  "Places © OpenStreetMap contributors": "Lieux © contributeurs OpenStreetMap",
 };

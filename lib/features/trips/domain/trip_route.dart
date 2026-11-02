@@ -139,8 +139,14 @@ abstract final class MoroccoRouteCoordinates {
     return text;
   }
 
+  /// The place itself, or else the town a label such as
+  /// "Casa Voyageurs, Casablanca" names after its comma.
   static GeoPoint? lookup(String placeName) {
-    return _places[_normalize(placeName)];
+    final exact = _places[_normalize(placeName)];
+    if (exact != null || !placeName.contains(',')) {
+      return exact;
+    }
+    return _places[_normalize(placeName.split(',').last)];
   }
 
   /// Known place names matching [query], starting matches first.

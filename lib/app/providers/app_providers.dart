@@ -23,6 +23,7 @@ import '../../features/profile/domain/user_profile.dart';
 import '../../features/safety/application/safety_controller.dart';
 import '../../features/safety/data/safety_repository.dart';
 import '../../features/trips/application/trip_catalog_controller.dart';
+import '../../features/trips/data/place_search.dart';
 import '../../features/trips/data/trip_repository.dart';
 import '../auth/app_auth_state.dart';
 import '../config/app_config.dart';
@@ -52,6 +53,12 @@ final tripRepositoryProvider = Provider<TripRepository>((ref) {
   return client == null
       ? PreviewTripRepository()
       : SupabaseTripRepository(client);
+});
+
+// Previews and tests stay offline with the built-in places.
+final placeSearchProvider = Provider<PlaceSearch>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return client == null ? const BuiltInPlaceSearch() : PhotonPlaceSearch();
 });
 
 final betaFeedbackRepositoryProvider = Provider<BetaFeedbackRepository>((ref) {

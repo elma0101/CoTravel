@@ -15,6 +15,7 @@ import '../../../core/analytics/product_analytics.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../application/trip_catalog_controller.dart';
+import '../data/place_search.dart';
 import '../domain/trip.dart';
 import 'trip_formatters.dart';
 import 'widgets/place_field.dart';
@@ -703,13 +704,27 @@ class _StopFields {
   DateTime arrivalDate;
   TripStop? _source;
 
+  /// The suggestion picked for this stop, which carries its coordinates.
+  PlaceSuggestion? picked;
+
+  /// The saved place name that already has coordinates.
+  String? get mappedLabel => _source?.coordinate == null ? null : _source!.city;
+
   TripStop toStop(String? Function(String) optional) {
     final city = cityController.text.trim();
     final notes = optional(notesController.text);
     final source = _source;
+    // Typing over a picked place drops its coordinates.
+    final coordinate = picked?.label == city ? picked!.coordinate : null;
     // Route details the form does not show survive unless the place changes.
     return source == null || source.city != city
-        ? TripStop(city: city, arrivalDate: arrivalDate, notes: notes)
+        ? TripStop(
+            city: city,
+            arrivalDate: arrivalDate,
+            notes: notes,
+            latitude: coordinate?.latitude,
+            longitude: coordinate?.longitude,
+          )
         : TripStop(
             city: city,
             arrivalDate: arrivalDate,
@@ -780,6 +795,8 @@ class _StopEditor extends StatelessWidget {
             controller: fields.cityController,
             label: tr('City or place'),
             icon: Icons.location_on_outlined,
+            mappedLabel: fields.mappedLabel,
+            onPicked: (place) => fields.picked = place,
             validator: (value) => (value?.trim().length ?? 0) < 2
                 ? tr('Add a destination')
                 : null,

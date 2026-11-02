@@ -61,7 +61,7 @@ const privacyPolicy = LegalDocument(
     ),
     LegalSection(
       'Services we use',
-      'Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us.',
+      'Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us. Place suggestions send what you type in a place field, without your account, to Photon, a service run by komoot that uses OpenStreetMap data.',
     ),
     LegalSection(
       'Deleting your account',

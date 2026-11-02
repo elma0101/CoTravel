@@ -19,6 +19,7 @@ import 'trip_formatters.dart';
 import 'widgets/mountain_illustration.dart';
 import 'widgets/trip_cover_images.dart';
 import 'widgets/trip_photo_attribution.dart';
+import 'widgets/trip_photo_image.dart';
 
 class TripDetailScreen extends ConsumerStatefulWidget {
   const TripDetailScreen({required this.tripId, super.key});
@@ -202,6 +203,9 @@ class _TripHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (trip.photos.isNotEmpty) {
+      return _HostPhotoGallery(trip: trip);
+    }
     final photo = TripCoverImages.forTrip(trip);
     return SizedBox(
       height: 190,
@@ -228,6 +232,77 @@ class _TripHero extends StatelessWidget {
               child: TripPhotoAttributionButton(photo: photo),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HostPhotoGallery extends StatefulWidget {
+  const _HostPhotoGallery({required this.trip});
+
+  final Trip trip;
+
+  @override
+  State<_HostPhotoGallery> createState() => _HostPhotoGalleryState();
+}
+
+class _HostPhotoGalleryState extends State<_HostPhotoGallery> {
+  int _page = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final photos = widget.trip.photos;
+    return SizedBox(
+      height: 220,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          PageView.builder(
+            key: const ValueKey('trip-photo-gallery'),
+            itemCount: photos.length,
+            onPageChanged: (page) => setState(() => _page = page),
+            itemBuilder: (context, index) => Semantics(
+              image: true,
+              label: tr('Photo {number} of {count} from the host', {
+                'number': index + 1,
+                'count': photos.length,
+              }),
+              child: Image(
+                image: tripPhotoProvider(photos[index]),
+                fit: BoxFit.cover,
+                excludeFromSemantics: true,
+                errorBuilder: (context, error, stackTrace) =>
+                    const MountainIllustration(),
+              ),
+            ),
+          ),
+          if (photos.length > 1)
+            Positioned(
+              right: AppSpacing.sm,
+              bottom: AppSpacing.sm,
+              child: ExcludeSemantics(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                      vertical: AppSpacing.xxs,
+                    ),
+                    child: Text(
+                      '${_page + 1}/${photos.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

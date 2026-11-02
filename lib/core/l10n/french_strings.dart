@@ -841,8 +841,8 @@ const frenchStrings = <String, String>{
   "You can delete your account from your profile at any time. Hosts must first cancel upcoming trips that have confirmed travelers.":
       "Vous pouvez supprimer votre compte depuis votre profil à tout moment. Les organisateurs doivent d’abord annuler leurs voyages à venir comportant des voyageurs confirmés.",
   "What we collect": "Ce que nous collectons",
-  "Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips you create and save, your requests and the details you declare in them, your group chat messages, your safety reports and blocks, your notification device token, basic usage events, and crash reports that are not linked to your account.":
-      "Votre adresse e-mail, les informations et la photo de votre profil, le fait qu’un compte LinkedIn soit lié ou non, les voyages que vous créez et enregistrez, vos demandes et les informations que vous y déclarez, vos messages de groupe, vos signalements et blocages, le jeton de notification de votre appareil, des événements d’utilisation de base et des rapports de plantage non liés à votre compte.",
+  "Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips you create and save and the photos you add to them, your requests and the details you declare in them, your group chat messages, your safety reports and blocks, your notification device token, basic usage events, and crash reports that are not linked to your account.":
+      "Votre adresse e-mail, les informations et la photo de votre profil, le fait qu’un compte LinkedIn soit lié ou non, les voyages que vous créez et enregistrez et les photos que vous y ajoutez, vos demandes et les informations que vous y déclarez, vos messages de groupe, vos signalements et blocages, le jeton de notification de votre appareil, des événements d’utilisation de base et des rapports de plantage non liés à votre compte.",
   "Who can see it": "Qui peut y accéder",
   "Other signed-in members can see your profile and your trips. Group members can see the group chat. Hosts can see the introduction you send with a request. Members you block, and members who block you, cannot see your profile.":
       "Les autres membres connectés peuvent voir votre profil et vos voyages. Les membres d’un groupe peuvent voir sa discussion. Les organisateurs peuvent voir la présentation jointe à votre demande. Les membres que vous bloquez et ceux qui vous bloquent ne peuvent pas voir votre profil.",
@@ -850,6 +850,25 @@ const frenchStrings = <String, String>{
   "Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us.":
       "Les données sont hébergées chez Supabase. Les notifications push sont envoyées via Firebase Cloud Messaging. Lier LinkedIn nous transmet des informations d’identité de base provenant de LinkedIn.",
   "Deleting your account": "Suppression de votre compte",
-  "Deleting your account removes your profile, photo, requests, blocks, and the trips you created. Messages you sent remain visible to their group under the name \"Former member\". Safety reports are kept without your account linked, so that complaints cannot be erased.":
-      "La suppression de votre compte efface votre profil, votre photo, vos demandes, vos blocages et les voyages que vous avez créés. Vos messages restent visibles par leur groupe sous le nom « Ancien membre ». Les signalements sont conservés sans lien avec votre compte, afin que les plaintes ne puissent pas être effacées.",
+  "Deleting your account removes your profile, photo, requests, blocks, and the trips you created with their photos. Messages you sent remain visible to their group under the name \"Former member\". Safety reports are kept without your account linked, so that complaints cannot be erased.":
+      "La suppression de votre compte efface votre profil, votre photo, vos demandes, vos blocages et les voyages que vous avez créés avec leurs photos. Vos messages restent visibles par leur groupe sous le nom « Ancien membre ». Les signalements sont conservés sans lien avec votre compte, afin que les plaintes ne puissent pas être effacées.",
+  // Trip photos
+  "Photo {number} of {count} from the host":
+      "Photo {number} sur {count} de l’hôte",
+  "Photo of {place}": "Photo de {place}",
+  "Photos (optional)": "Photos (facultatif)",
+  "Show the places on this route. The first photo is the cover, and everyone who can see the trip can see them.":
+      "Montrez les lieux de cet itinéraire. La première photo sert de couverture, et toute personne qui voit le voyage peut les voir.",
+  "Add": "Ajouter",
+  "Cover photo": "Photo de couverture",
+  "Trip photo": "Photo du voyage",
+  "Cover": "Couverture",
+  "Remove photo": "Retirer la photo",
+  "The trip was saved, but its photos could not be uploaded. Try again from Edit trip.":
+      "Le voyage est enregistré, mais ses photos n’ont pas pu être envoyées. Réessayez depuis Modifier le voyage.",
+  "Only this trip host can change its photos":
+      "Seul l’hôte de ce voyage peut modifier ses photos",
+  "A trip can have up to 5 photos": "Un voyage peut avoir 5 photos au maximum",
+  "Each photo must be stored with this trip":
+      "Chaque photo doit être enregistrée avec ce voyage",
 };

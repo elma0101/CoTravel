@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../app/providers/app_providers.dart';
 import '../../../app/router/app_router.dart';
@@ -17,6 +18,7 @@ import '../application/trip_catalog_controller.dart';
 import '../domain/trip.dart';
 import 'trip_formatters.dart';
 import 'widgets/place_field.dart';
+import 'widgets/trip_photos_editor.dart';
 
 class CreateTripScreen extends ConsumerStatefulWidget {
   const CreateTripScreen({this.tripId, super.key});
@@ -54,6 +56,9 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
   int _capacity = 4;
   int _minimumCapacity = 2;
   Trip? _editedTrip;
+  final _imagePicker = ImagePicker();
+  final _keptPhotos = <TripPhoto>[];
+  final _addedPhotos = <NewTripPhoto>[];
 
   bool get _isEditing => widget.tripId != null;
 
@@ -98,6 +103,7 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     _currency = trip.currency;
     _capacity = trip.capacity;
     _minimumCapacity = max(2, trip.participantCount);
+    _keptPhotos.addAll(trip.photos);
     for (final stop in trip.stops) {
       _stops.add(_StopFields.fromStop(stop));
     }
@@ -114,6 +120,79 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
       stop.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _pickPhotos() async {
+    final remaining = Trip.maxPhotos - _keptPhotos.length - _addedPhotos.length;
+    if (remaining <= 0) {
+      return;
+    }
+    const maxSide = 1600.0;
+    const quality = 82;
+    // The multi-picker refuses a limit below 2.
+    final picked = remaining == 1
+        ? [
+            ?await _imagePicker.pickImage(
+              source: ImageSource.gallery,
+              maxWidth: maxSide,
+              maxHeight: maxSide,
+              imageQuality: quality,
+              requestFullMetadata: false,
+            ),
+          ]
+        : await _imagePicker.pickMultiImage(
+            maxWidth: maxSide,
+            maxHeight: maxSide,
+            imageQuality: quality,
+            limit: remaining,
+            requestFullMetadata: false,
+          );
+    final photos = <NewTripPhoto>[];
+    for (final image in picked.take(remaining)) {
+      photos.add(
+        NewTripPhoto(
+          bytes: await image.readAsBytes(),
+          extension: image.name.split('.').last.toLowerCase(),
+        ),
+      );
+    }
+    if (mounted && photos.isNotEmpty) {
+      setState(() => _addedPhotos.addAll(photos));
+    }
+  }
+
+  bool _photosChanged(Trip trip) {
+    if (_addedPhotos.isNotEmpty || _keptPhotos.length != trip.photos.length) {
+      return true;
+    }
+    for (var index = 0; index < _keptPhotos.length; index++) {
+      if (_keptPhotos[index].path != trip.photos[index].path) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Saved after the trip itself, so a failed upload never loses the trip.
+  Future<void> _savePhotos(TripCatalogController catalog, Trip trip) async {
+    if (!_photosChanged(trip)) {
+      return;
+    }
+    try {
+      await catalog.saveTripPhotos(
+        trip,
+        kept: List.of(_keptPhotos),
+        added: List.of(_addedPhotos),
+      );
+    } on Object {
+      if (mounted) {
+        _showMessage(
+          tr(
+            'The trip was saved, but its photos could not be uploaded. Try again from Edit trip.',
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _chooseTripDates() async {
@@ -201,12 +280,14 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
     );
     try {
       if (_isEditing) {
-        await catalog.updateTrip(widget.tripId!, draft);
+        final trip = await catalog.updateTrip(widget.tripId!, draft);
+        await _savePhotos(catalog, trip);
         if (mounted) {
           context.pop();
         }
       } else {
-        await catalog.createTrip(draft);
+        final trip = await catalog.createTrip(draft);
+        await _savePhotos(catalog, trip);
         if (mounted) {
           context.go(AppRoutes.trips);
         }
@@ -422,6 +503,14 @@ class _CreateTripScreenState extends ConsumerState<CreateTripScreen> {
         validator: (value) => (value?.trim().length ?? 0) < 20
             ? tr('Write at least 20 characters')
             : null,
+      ),
+      SizedBox(height: AppSpacing.lg),
+      TripPhotosEditor(
+        kept: _keptPhotos,
+        added: _addedPhotos,
+        onAdd: _pickPhotos,
+        onRemoveKept: (index) => setState(() => _keptPhotos.removeAt(index)),
+        onRemoveAdded: (index) => setState(() => _addedPhotos.removeAt(index)),
       ),
     ];
   }

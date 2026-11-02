@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../core/l10n/app_strings.dart';
 
 enum TripStopType { waypoint, activity, overnight, breakStop }
@@ -156,7 +158,28 @@ class TripDraft {
   final String summary;
 }
 
+/// A photo the host added to a trip. Preview photos keep their bytes because
+/// they are never uploaded.
+class TripPhoto {
+  const TripPhoto({required this.path, required this.url, this.bytes});
+
+  final String path;
+  final String url;
+  final Uint8List? bytes;
+}
+
+/// A photo picked on the device and not uploaded yet.
+class NewTripPhoto {
+  const NewTripPhoto({required this.bytes, required this.extension});
+
+  final Uint8List bytes;
+  final String extension;
+}
+
 class Trip {
+  /// The most photos a host can add to one trip.
+  static const maxPhotos = 5;
+
   const Trip({
     required this.id,
     required this.hostId,
@@ -177,6 +200,7 @@ class Trip {
     required this.travelStyle,
     required this.summary,
     this.status = TripStatus.published,
+    this.photos = const [],
   });
 
   // Travelers can leave freely until this many days before departure.
@@ -203,6 +227,7 @@ class Trip {
   final String travelStyle;
   final String summary;
   final TripStatus status;
+  final List<TripPhoto> photos;
 
   String get routeSummary {
     final places = [originCity, for (final stop in stops) stop.city];
@@ -232,6 +257,7 @@ class Trip {
     double? lodgingTotal,
     double? transportTotal,
     TripStatus? status,
+    List<TripPhoto>? photos,
   }) {
     return Trip(
       id: id,
@@ -254,6 +280,7 @@ class Trip {
       travelStyle: travelStyle,
       summary: summary,
       status: status ?? this.status,
+      photos: photos ?? this.photos,
     );
   }
 }

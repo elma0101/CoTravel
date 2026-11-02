@@ -126,6 +126,22 @@ class SupabaseProfileRepository implements ProfileRepository {
     if (files.isNotEmpty) {
       await bucket.remove([for (final file in files) '$userId/${file.name}']);
     }
+    // Deletion also removes the trips this user hosts, and their photos with
+    // them. Listing each folder catches files no trip points at any more.
+    final tripPhotos = _client.storage.from('trip-photos');
+    final hosted = await _client
+        .from('trips')
+        .select('id')
+        .eq('host_id', userId);
+    for (final row in hosted) {
+      final tripId = row['id'] as String;
+      final photos = await tripPhotos.list(path: tripId);
+      if (photos.isNotEmpty) {
+        await tripPhotos.remove([
+          for (final photo in photos) '$tripId/${photo.name}',
+        ]);
+      }
+    }
     await _client.rpc('delete_my_account');
   }
 

@@ -173,6 +173,25 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
     }
   }
 
+  /// Saves the host's photo choices. Separate from publishing, so a trip
+  /// still exists when only its photos fail.
+  Future<Trip> saveTripPhotos(
+    Trip trip, {
+    required List<TripPhoto> kept,
+    required List<NewTripPhoto> added,
+  }) async {
+    final updated = await _repository.saveTripPhotos(
+      trip: trip,
+      kept: kept,
+      added: added,
+    );
+    _hostedTrips = _replaced(_hostedTrips, updated);
+    _discoverableTrips = _replaced(_discoverableTrips, updated);
+    _savedTrips = _replaced(_savedTrips, updated);
+    notifyListeners();
+    return updated;
+  }
+
   Future<void> cancelTrip(Trip trip) async {
     await _repository.cancelTrip(trip.id);
     _hostedTrips = _replaced(

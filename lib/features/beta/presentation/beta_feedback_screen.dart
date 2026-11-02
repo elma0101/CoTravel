@@ -63,6 +63,7 @@ class _BetaFeedbackScreenState extends ConsumerState<BetaFeedbackScreen> {
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<BetaExperienceArea>(
                 key: const ValueKey('beta-experience-area'),
+                isExpanded: true,
                 initialValue: _area,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.route_outlined),

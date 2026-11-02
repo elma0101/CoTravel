@@ -1,7 +1,8 @@
-import '../../../core/l10n/app_strings.dart';
-import '../../../core/state/dispose_safe_notifier.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/server_errors.dart';
+import '../../../core/state/dispose_safe_notifier.dart';
 import '../../trips/application/trip_catalog_controller.dart';
 import '../../trips/domain/trip.dart';
 import '../data/logistics_repository.dart';
@@ -73,12 +74,7 @@ class LogisticsController extends ChangeNotifier with DisposeSafeNotifier {
   }
 
   String _readableError(Object error) {
-    final message = error.toString();
-    for (final prefix in ['Bad state: ', 'PostgrestException(message: ']) {
-      if (message.startsWith(prefix)) {
-        return message.substring(prefix.length).split(', code:').first;
-      }
-    }
-    return tr('Logistics could not be updated. Please try again.');
+    return readableServerError(error) ??
+        tr('Logistics could not be updated. Please try again.');
   }
 }

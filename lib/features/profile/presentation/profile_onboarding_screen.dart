@@ -11,6 +11,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/server_errors.dart';
 import '../domain/user_profile.dart';
 
 class ProfileOnboardingScreen extends ConsumerStatefulWidget {
@@ -425,17 +426,8 @@ class _ProfileOnboardingScreenState
   }
 
   String _messageFor(Object error) {
-    final value = error.toString();
-    for (final prefix in [
-      'AuthException: ',
-      'PostgrestException: ',
-      'StorageException: ',
-    ]) {
-      if (value.startsWith(prefix)) {
-        return value.substring(prefix.length);
-      }
-    }
-    return tr('Something went wrong. Please try again.');
+    return readableServerError(error) ??
+        tr('Something went wrong. Please try again.');
   }
 }
 

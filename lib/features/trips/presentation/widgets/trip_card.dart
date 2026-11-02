@@ -8,6 +8,7 @@ import '../trip_formatters.dart';
 import 'mountain_illustration.dart';
 import 'trip_cover_images.dart';
 import 'trip_photo_attribution.dart';
+import 'trip_photo_image.dart';
 
 class TripCard extends StatelessWidget {
   const TripCard({required this.trip, required this.onTap, super.key});
@@ -72,8 +73,10 @@ class _TripCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photo = TripCoverImages.forTrip(trip);
-    if (photo == null) {
+    // The host's own photo comes first; built-in photos fill in otherwise.
+    final hostPhoto = trip.photos.isEmpty ? null : trip.photos.first;
+    final photo = hostPhoto == null ? TripCoverImages.forTrip(trip) : null;
+    if (hostPhoto == null && photo == null) {
       return Stack(
         children: [
           const MountainIllustration(),
@@ -88,22 +91,33 @@ class _TripCover extends StatelessWidget {
 
     return Semantics(
       image: true,
-      label: tr(photo.semanticLabel),
+      label: photo == null
+          ? tr('Photo of {place}', {'place': trip.destinationCity})
+          : tr(photo.semanticLabel),
       child: SizedBox(
         height: 148,
         width: double.infinity,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              photo.assetPath,
-              alignment: photo.alignment,
-              fit: BoxFit.cover,
-              cacheWidth: 1280,
-              excludeFromSemantics: true,
-              errorBuilder: (context, error, stackTrace) =>
-                  const MountainIllustration(),
-            ),
+            if (photo == null)
+              Image(
+                image: tripPhotoProvider(hostPhoto!),
+                fit: BoxFit.cover,
+                excludeFromSemantics: true,
+                errorBuilder: (context, error, stackTrace) =>
+                    const MountainIllustration(),
+              )
+            else
+              Image.asset(
+                photo.assetPath,
+                alignment: photo.alignment,
+                fit: BoxFit.cover,
+                cacheWidth: 1280,
+                excludeFromSemantics: true,
+                errorBuilder: (context, error, stackTrace) =>
+                    const MountainIllustration(),
+              ),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -119,11 +133,12 @@ class _TripCover extends StatelessWidget {
               left: AppSpacing.sm,
               child: _SeatsLabel(trip: trip),
             ),
-            Positioned(
-              top: AppSpacing.xs,
-              right: AppSpacing.xs,
-              child: TripPhotoAttributionButton(photo: photo),
-            ),
+            if (photo != null)
+              Positioned(
+                top: AppSpacing.xs,
+                right: AppSpacing.xs,
+                child: TripPhotoAttributionButton(photo: photo),
+              ),
             Positioned(
               left: AppSpacing.md,
               right: AppSpacing.md,
@@ -138,7 +153,9 @@ class _TripCover extends StatelessWidget {
                   const SizedBox(width: AppSpacing.xxs),
                   Expanded(
                     child: Text(
-                      tr(photo.placeLabel),
+                      photo == null
+                          ? trip.destinationCity
+                          : tr(photo.placeLabel),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

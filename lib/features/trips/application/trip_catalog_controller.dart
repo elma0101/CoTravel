@@ -1,10 +1,10 @@
-import '../../../core/l10n/app_strings.dart';
-import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
 import '../../../core/analytics/product_analytics.dart';
+import '../../../core/l10n/app_strings.dart';
+import '../../../core/state/dispose_safe_notifier.dart';
 import '../../profile/domain/user_profile.dart';
 import '../data/trip_repository.dart';
 import '../domain/trip.dart';
@@ -171,6 +171,25 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
       _isPublishing = false;
       notifyListeners();
     }
+  }
+
+  /// Saves the host's photo choices. Separate from publishing, so a trip
+  /// still exists when only its photos fail.
+  Future<Trip> saveTripPhotos(
+    Trip trip, {
+    required List<TripPhoto> kept,
+    required List<NewTripPhoto> added,
+  }) async {
+    final updated = await _repository.saveTripPhotos(
+      trip: trip,
+      kept: kept,
+      added: added,
+    );
+    _hostedTrips = _replaced(_hostedTrips, updated);
+    _discoverableTrips = _replaced(_discoverableTrips, updated);
+    _savedTrips = _replaced(_savedTrips, updated);
+    notifyListeners();
+    return updated;
   }
 
   Future<void> cancelTrip(Trip trip) async {

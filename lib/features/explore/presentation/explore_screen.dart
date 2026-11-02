@@ -294,8 +294,14 @@ class _BrandHeader extends ConsumerWidget {
           child: const Icon(Icons.route_rounded, color: Colors.white, size: 22),
         ),
         const SizedBox(width: AppSpacing.sm),
-        Text('CoTravel', style: Theme.of(context).textTheme.titleLarge),
-        const Spacer(),
+        Expanded(
+          child: Text(
+            'CoTravel',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
         ListenableBuilder(
           listenable: notifications,
           builder: (context, child) {

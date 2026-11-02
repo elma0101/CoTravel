@@ -14,6 +14,8 @@ Row Level Security and security-definer RPC validation are authoritative.
 | Logistics | Trip host and confirmed travelers only; a host/traveler block removes traveler access | Host through `save_trip_logistics` | Membership helper and RLS |
 | Blocks | Returned only to the blocking user through `my_blocked_users` | Blocking user through block/unblock RPCs | No direct authenticated table grants |
 | Safety reports | Reporter sees a redacted status view; moderator notes are never returned | Reporter creates through RPC; service role reviews | No direct authenticated table grants; service-only queue |
+| Saved trips | Owner only; a trip hidden by the trips policy drops out of the list | Owner, and only for trips they can see | RLS and `saved_trips.test.sql` |
+| Crash reports | Service role only; no account is stored, and the client sends no error message text | Signed-in members through `report_client_error`, with size limits | No authenticated table grants |
 | Analytics | No client read access | Authenticated actor through a whitelisted, size-limited RPC | No authenticated table grants |
 | Avatars | Public image objects for the PoC; profile paths are disclosed only by profile access rules | Owner folder only | Storage policies and file limits |
 

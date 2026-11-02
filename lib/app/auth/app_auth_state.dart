@@ -59,6 +59,7 @@ class AppAuthState extends ChangeNotifier {
        previewAuthEnabled = true,
        authRedirectUrl = 'com.cotravel.app://login-callback',
        _analytics = const NoopProductAnalytics(),
+       _userId = initiallyAuthenticated ? 'preview-user' : null,
        _status = !initiallyAuthenticated
            ? AppSessionStatus.signedOut
            : onboardingComplete
@@ -77,6 +78,7 @@ class AppAuthState extends ChangeNotifier {
   final ProductAnalytics _analytics;
 
   StreamSubscription<AuthState>? _authSubscription;
+  String? _userId;
   AppSessionStatus _status = AppSessionStatus.loading;
   UserProfile? _profile;
   String? _errorMessage;
@@ -164,6 +166,7 @@ class AppAuthState extends ChangeNotifier {
       throw StateError('Preview authentication is disabled.');
     }
 
+    _userId = 'preview-user';
     _profile = const UserProfile.preview();
     _status = AppSessionStatus.authenticated;
     unawaited(_analytics.track(ProductEvent.previewSignedIn));
@@ -176,6 +179,7 @@ class AppAuthState extends ChangeNotifier {
       return;
     }
 
+    _userId = null;
     _profile = null;
     _status = AppSessionStatus.signedOut;
     notifyListeners();
@@ -190,15 +194,22 @@ class AppAuthState extends ChangeNotifier {
       return;
     }
 
+    _userId = null;
     _profile = null;
     _status = AppSessionStatus.signedOut;
     notifyListeners();
   }
 
-  Future<void> _synchronizeSession(Session? session) async {
+  Future<void> _synchronizeSession(Session? session) {
+    return synchronizeUser(session?.user.id);
+  }
+
+  @visibleForTesting
+  Future<void> synchronizeUser(String? userId) async {
     final generation = ++_synchronizationGeneration;
 
-    if (session == null) {
+    if (userId == null) {
+      _userId = null;
       _profile = null;
       _errorMessage = null;
       _status = AppSessionStatus.signedOut;
@@ -206,19 +217,29 @@ class AppAuthState extends ChangeNotifier {
       return;
     }
 
-    _status = AppSessionStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
+    // Token refreshes and identity linking keep the same user. Passing through
+    // loading would send the router to the startup screen and rebuild the
+    // current one, losing what was typed in it.
+    final isRefresh =
+        userId == _userId &&
+        (_status == AppSessionStatus.onboardingRequired ||
+            _status == AppSessionStatus.authenticated);
+    _userId = userId;
+    if (!isRefresh) {
+      _status = AppSessionStatus.loading;
+      _errorMessage = null;
+      notifyListeners();
+    }
 
     try {
       final isVerified = await profileRepository.syncLinkedInVerification(
-        session.user.id,
+        userId,
       );
       if (isVerified && !_hasTrackedVerifiedProfile) {
         _hasTrackedVerifiedProfile = true;
         unawaited(_analytics.track(ProductEvent.profileVerified));
       }
-      final nextProfile = await profileRepository.fetchProfile(session.user.id);
+      final nextProfile = await profileRepository.fetchProfile(userId);
       if (generation != _synchronizationGeneration) {
         return;
       }
@@ -236,7 +257,10 @@ class AppAuthState extends ChangeNotifier {
       }
 
       _errorMessage = _readableError(error);
-      _status = AppSessionStatus.failure;
+      // A failed background refresh keeps the screen the user is on.
+      if (!isRefresh) {
+        _status = AppSessionStatus.failure;
+      }
       notifyListeners();
     }
   }

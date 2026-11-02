@@ -5,11 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/analytics/product_analytics.dart';
+import '../../core/services/external_link_launcher.dart';
 import '../../features/beta/application/beta_feedback_controller.dart';
 import '../../features/beta/data/beta_feedback_repository.dart';
-import '../../features/profile/data/profile_repository.dart';
-import '../../features/profile/domain/user_profile.dart';
-import '../../core/services/external_link_launcher.dart';
 import '../../features/join_requests/application/join_request_controller.dart';
 import '../../features/join_requests/data/join_request_repository.dart';
 import '../../features/logistics/application/logistics_controller.dart';
@@ -20,9 +18,12 @@ import '../../features/notifications/application/notification_controller.dart';
 import '../../features/notifications/application/push_controller.dart';
 import '../../features/notifications/data/notification_repository.dart';
 import '../../features/notifications/data/push_messaging.dart';
+import '../../features/profile/data/profile_repository.dart';
+import '../../features/profile/domain/user_profile.dart';
 import '../../features/safety/application/safety_controller.dart';
 import '../../features/safety/data/safety_repository.dart';
 import '../../features/trips/application/trip_catalog_controller.dart';
+import '../../features/trips/data/place_search.dart';
 import '../../features/trips/data/trip_repository.dart';
 import '../auth/app_auth_state.dart';
 import '../config/app_config.dart';
@@ -52,6 +53,12 @@ final tripRepositoryProvider = Provider<TripRepository>((ref) {
   return client == null
       ? PreviewTripRepository()
       : SupabaseTripRepository(client);
+});
+
+// Previews and tests stay offline with the built-in places.
+final placeSearchProvider = Provider<PlaceSearch>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return client == null ? const BuiltInPlaceSearch() : PhotonPlaceSearch();
 });
 
 final betaFeedbackRepositoryProvider = Provider<BetaFeedbackRepository>((ref) {

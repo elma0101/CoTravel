@@ -21,6 +21,13 @@ abstract interface class TripRepository {
 
   Future<void> cancelTrip(String tripId);
 
+  /// Keeps [kept] in order, adds [added] after them, and removes the rest.
+  Future<Trip> saveTripPhotos({
+    required Trip trip,
+    required List<TripPhoto> kept,
+    required List<NewTripPhoto> added,
+  });
+
   Future<List<Trip>> fetchSavedTrips(String userId);
 
   Future<void> saveTrip({required String userId, required String tripId});
@@ -165,6 +172,73 @@ class SupabaseTripRepository implements TripRepository {
     await _client.rpc('cancel_trip', params: {'p_trip_id': tripId});
   }
 
+  static const _photoBucket = 'trip-photos';
+
+  @override
+  Future<Trip> saveTripPhotos({
+    required Trip trip,
+    required List<TripPhoto> kept,
+    required List<NewTripPhoto> added,
+  }) async {
+    final bucket = _client.storage.from(_photoBucket);
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    final uploaded = <String>[];
+    for (var index = 0; index < added.length; index++) {
+      final extension = _photoExtension(added[index].extension);
+      final path = '${trip.id}/$stamp-$index.$extension';
+      await bucket.uploadBinary(
+        path,
+        added[index].bytes,
+        fileOptions: FileOptions(contentType: _photoContentType(extension)),
+      );
+      uploaded.add(path);
+    }
+
+    await _client.rpc(
+      'set_trip_photos',
+      params: {
+        'p_trip_id': trip.id,
+        'p_paths': [for (final photo in kept) photo.path, ...uploaded],
+      },
+    );
+
+    final keptPaths = {for (final photo in kept) photo.path};
+    final removed = [
+      for (final photo in trip.photos)
+        if (!keptPaths.contains(photo.path)) photo.path,
+    ];
+    if (removed.isNotEmpty) {
+      // The trip no longer points at these, so a failure only leaves files.
+      try {
+        await bucket.remove(removed);
+      } on StorageException {
+        // Ignored for the reason above.
+      }
+    }
+
+    final updated = await fetchTrip(trip.id);
+    if (updated == null) {
+      throw StateError('Trip was not available after saving.');
+    }
+    return updated;
+  }
+
+  String _photoExtension(String extension) {
+    final normalized = extension.toLowerCase();
+    return switch (normalized) {
+      'png' || 'webp' => normalized,
+      _ => 'jpg',
+    };
+  }
+
+  String _photoContentType(String extension) {
+    return switch (extension) {
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      _ => 'image/jpeg',
+    };
+  }
+
   Map<String, Object?> _tripParams(TripDraft draft) {
     return {
       'p_title': draft.title,
@@ -244,6 +318,15 @@ class SupabaseTripRepository implements TripRepository {
         'closed' => TripStatus.closed,
         _ => TripStatus.published,
       },
+      photos: [
+        for (final path in List<String>.from(
+          row['photo_paths'] as List? ?? const [],
+        ))
+          TripPhoto(
+            path: path,
+            url: _client.storage.from(_photoBucket).getPublicUrl(path),
+          ),
+      ],
     );
   }
 
@@ -418,6 +501,7 @@ class PreviewTripRepository implements TripRepository {
       currency: draft.currency,
       travelStyle: draft.travelStyle,
       summary: draft.summary,
+      photos: current.photos,
     );
     _trips[index] = updated;
     return updated;
@@ -430,6 +514,33 @@ class PreviewTripRepository implements TripRepository {
       throw StateError('Trip not found.');
     }
     _trips[index] = _trips[index].copyWith(status: TripStatus.cancelled);
+  }
+
+  @override
+  Future<Trip> saveTripPhotos({
+    required Trip trip,
+    required List<TripPhoto> kept,
+    required List<NewTripPhoto> added,
+  }) async {
+    final index = _trips.indexWhere((item) => item.id == trip.id);
+    if (index == -1) {
+      throw StateError('Trip not found.');
+    }
+    final photos = [
+      ...kept,
+      for (var number = 0; number < added.length; number++)
+        TripPhoto(
+          path: '${trip.id}/preview-${_nextId++}.${added[number].extension}',
+          url: '',
+          bytes: added[number].bytes,
+        ),
+    ];
+    if (photos.length > Trip.maxPhotos) {
+      throw StateError('A trip can have up to 5 photos');
+    }
+    final updated = _trips[index].copyWith(photos: photos);
+    _trips[index] = updated;
+    return updated;
   }
 
   static List<Trip> _seedTrips(DateTime now) {

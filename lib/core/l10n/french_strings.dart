@@ -609,7 +609,6 @@ const frenchStrings = <String, String>{
       "Aidez les bons voyageurs à reconnaître ce voyage.",
   "Continue to budget": "Continuer vers le budget",
   "Continue to details": "Continuer vers les détails",
-  "Trip not found": "Voyage introuvable",
   "Only trips you host can be edited.":
       "Seuls les voyages que vous organisez peuvent être modifiés.",
   "Create a trip": "Créer un voyage",
@@ -658,6 +657,115 @@ const frenchStrings = <String, String>{
       "{n} voyage sans position sur la carte figure seulement dans la liste.",
   "{n} trips have no map location and are only in the list.":
       "{n} voyages sans position sur la carte figurent seulement dans la liste.",
+
+  // Errors raised by the database
+  "A complete, verified profile is required to join trips":
+      "Un profil complet et vérifié est requis pour rejoindre un voyage",
+  "A complete, verified profile is required to publish trips":
+      "Un profil complet et vérifié est requis pour publier un voyage",
+  "Add a valid lodging or transport estimate":
+      "Ajoutez une estimation valide d’hébergement ou de transport",
+  "Add between 1 and 8 route stops": "Ajoutez entre 1 et 8 étapes",
+  "A join request cannot be created between blocked users":
+      "Aucune demande n’est possible entre des membres bloqués",
+  "A trip that has started cannot be edited":
+      "Un voyage commencé ne peut plus être modifié",
+  "A trip that has started cannot be left":
+      "Un voyage commencé ne peut plus être quitté",
+  "Authentication required": "Connexion requise",
+  "Bio must not exceed 280 characters":
+      "La présentation ne doit pas dépasser 280 caractères",
+  "Booking link labels must contain at most 100 characters":
+      "Les noms des liens de réservation doivent faire au plus 100 caractères",
+  "Booking links must be valid HTTP or HTTPS URLs":
+      "Les liens de réservation doivent être des URL HTTP ou HTTPS valides",
+  "Cancel your upcoming trips with confirmed travelers before deleting your account":
+      "Annulez vos voyages à venir avec des voyageurs confirmés avant de supprimer votre compte",
+  "Capacity cannot be lower than the confirmed group":
+      "La capacité ne peut pas être inférieure au groupe confirmé",
+  "Capacity must be between 2 and 12 people":
+      "La capacité doit être comprise entre 2 et 12 personnes",
+  "Choose a rating from 1 to 5": "Choisissez une note de 1 à 5",
+  "Choose a travel style": "Choisissez un style de voyage",
+  "Choose a valid beta experience": "Choisissez une expérience valide",
+  "Choose a valid future date range": "Choisissez des dates futures valides",
+  "Choose a valid report reason": "Choisissez un motif de signalement valide",
+  "Choose no more than 5 travel styles":
+      "Choisissez au plus 5 styles de voyage",
+  "Choose no more than 8 languages": "Choisissez au plus 8 langues",
+  "Currency must use a three-letter code":
+      "La devise doit utiliser un code à trois lettres",
+  "Display name must contain 2 to 60 characters":
+      "Le nom affiché doit contenir de 2 à 60 caractères",
+  "Every stop must contain a valid city and trip date":
+      "Chaque étape doit comporter une ville et une date valides",
+  "Every stop must contain valid route details":
+      "Chaque étape doit comporter des informations d’itinéraire valides",
+  "Home city must not exceed 80 characters":
+      "La ville ne doit pas dépasser 80 caractères",
+  "Hosts cannot request to join their own trip":
+      "Un organisateur ne peut pas demander à rejoindre son propre voyage",
+  "Join request must contain 20 to 300 characters":
+      "La demande doit contenir de 20 à 300 caractères",
+  "Join request not found": "Demande introuvable",
+  "Keep your note under 1000 characters":
+      "Votre note doit faire moins de 1000 caractères",
+  "Logistics notes must contain at most 600 characters":
+      "Les notes de logistique doivent faire au plus 600 caractères",
+  "Messages must contain 1 to 1000 characters":
+      "Les messages doivent contenir de 1 à 1000 caractères",
+  "Occupation must not exceed 80 characters":
+      "La profession ne doit pas dépasser 80 caractères",
+  "Only a confirmed traveler can leave the trip":
+      "Seul un voyageur confirmé peut quitter le voyage",
+  "Only a pending traveler request can be withdrawn":
+      "Seule une demande en attente peut être retirée",
+  "Only a published trip can be cancelled":
+      "Seul un voyage publié peut être annulé",
+  "Only a published trip can be edited":
+      "Seul un voyage publié peut être modifié",
+  "Only confirmed group members can read this conversation":
+      "Seuls les membres confirmés du groupe peuvent lire cette conversation",
+  "Only confirmed group members can send messages":
+      "Seuls les membres confirmés du groupe peuvent envoyer des messages",
+  "Only this traveler can confirm the request":
+      "Seul ce voyageur peut confirmer la demande",
+  "Only this traveler can leave the trip":
+      "Seul ce voyageur peut quitter le voyage",
+  "Only this trip host can cancel the trip":
+      "Seul l’organisateur peut annuler ce voyage",
+  "Only this trip host can edit the trip":
+      "Seul l’organisateur peut modifier ce voyage",
+  "Only this trip host can review the request":
+      "Seul l’organisateur peut examiner cette demande",
+  "Only this trip host can update logistics":
+      "Seul l’organisateur peut modifier la logistique",
+  "Origin city must contain 2 to 80 characters":
+      "La ville de départ doit contenir de 2 à 80 caractères",
+  "Report details must contain 10 to 1000 characters":
+      "Le signalement doit contenir de 10 à 1000 caractères",
+  "The profile was not found": "Profil introuvable",
+  "The report does not match this trip":
+      "Le signalement ne correspond pas à ce voyage",
+  "The reported profile was not found": "Le profil signalé est introuvable",
+  "This request has already been reviewed": "Cette demande a déjà été examinée",
+  "This request is not awaiting traveler confirmation":
+      "Cette demande n’attend pas de confirmation du voyageur",
+  "This trip has already started": "Ce voyage a déjà commencé",
+  "This trip has no open seats": "Ce voyage n’a plus de place libre",
+  "This trip is not open for requests": "Ce voyage n’accepte pas de demandes",
+  "This trip no longer has an open seat": "Ce voyage n’a plus de place libre",
+  "Trip not found": "Voyage introuvable",
+  "Trip summary must contain 20 to 600 characters":
+      "La description doit contenir de 20 à 600 caractères",
+  "Trip title must contain 4 to 80 characters":
+      "Le titre doit contenir de 4 à 80 caractères",
+  "You already have an active request for this trip":
+      "Vous avez déjà une demande active pour ce voyage",
+  "You cannot block your own profile":
+      "Vous ne pouvez pas bloquer votre propre profil",
+  "You cannot report your own profile":
+      "Vous ne pouvez pas signaler votre propre profil",
 
   // Photos
   "Photo details": "Détails de la photo",
@@ -733,15 +841,35 @@ const frenchStrings = <String, String>{
   "You can delete your account from your profile at any time. Hosts must first cancel upcoming trips that have confirmed travelers.":
       "Vous pouvez supprimer votre compte depuis votre profil à tout moment. Les organisateurs doivent d’abord annuler leurs voyages à venir comportant des voyageurs confirmés.",
   "What we collect": "Ce que nous collectons",
-  "Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips you create and save, your requests and the details you declare in them, your group chat messages, your safety reports and blocks, your notification device token, and basic usage events.":
-      "Votre adresse e-mail, les informations et la photo de votre profil, le fait qu’un compte LinkedIn soit lié ou non, les voyages que vous créez et enregistrez, vos demandes et les informations que vous y déclarez, vos messages de groupe, vos signalements et blocages, le jeton de notification de votre appareil et des événements d’utilisation de base.",
+  "Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips you create and save and the photos you add to them, your requests and the details you declare in them, your group chat messages, your safety reports and blocks, your notification device token, basic usage events, and crash reports that are not linked to your account.":
+      "Votre adresse e-mail, les informations et la photo de votre profil, le fait qu’un compte LinkedIn soit lié ou non, les voyages que vous créez et enregistrez et les photos que vous y ajoutez, vos demandes et les informations que vous y déclarez, vos messages de groupe, vos signalements et blocages, le jeton de notification de votre appareil, des événements d’utilisation de base et des rapports de plantage non liés à votre compte.",
   "Who can see it": "Qui peut y accéder",
   "Other signed-in members can see your profile and your trips. Group members can see the group chat. Hosts can see the introduction you send with a request. Members you block, and members who block you, cannot see your profile.":
       "Les autres membres connectés peuvent voir votre profil et vos voyages. Les membres d’un groupe peuvent voir sa discussion. Les organisateurs peuvent voir la présentation jointe à votre demande. Les membres que vous bloquez et ceux qui vous bloquent ne peuvent pas voir votre profil.",
   "Services we use": "Services que nous utilisons",
-  "Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us.":
-      "Les données sont hébergées chez Supabase. Les notifications push sont envoyées via Firebase Cloud Messaging. Lier LinkedIn nous transmet des informations d’identité de base provenant de LinkedIn.",
+  "Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us. Place suggestions send what you type in a place field, without your account, to Photon, a service run by komoot that uses OpenStreetMap data.":
+      "Les données sont hébergées chez Supabase. Les notifications push sont envoyées via Firebase Cloud Messaging. Lier LinkedIn nous transmet des informations d’identité de base provenant de LinkedIn. Les suggestions de lieux envoient ce que vous tapez dans un champ de lieu, sans votre compte, à Photon, un service géré par komoot qui utilise les données d’OpenStreetMap.",
   "Deleting your account": "Suppression de votre compte",
-  "Deleting your account removes your profile, photo, requests, blocks, and the trips you created. Messages you sent remain visible to their group under the name \"Former member\". Safety reports are kept without your account linked, so that complaints cannot be erased.":
-      "La suppression de votre compte efface votre profil, votre photo, vos demandes, vos blocages et les voyages que vous avez créés. Vos messages restent visibles par leur groupe sous le nom « Ancien membre ». Les signalements sont conservés sans lien avec votre compte, afin que les plaintes ne puissent pas être effacées.",
+  "Deleting your account removes your profile, photo, requests, blocks, and the trips you created with their photos. Messages you sent remain visible to their group under the name \"Former member\". Safety reports are kept without your account linked, so that complaints cannot be erased.":
+      "La suppression de votre compte efface votre profil, votre photo, vos demandes, vos blocages et les voyages que vous avez créés avec leurs photos. Vos messages restent visibles par leur groupe sous le nom « Ancien membre ». Les signalements sont conservés sans lien avec votre compte, afin que les plaintes ne puissent pas être effacées.",
+  // Trip photos
+  "Photo {number} of {count} from the host":
+      "Photo {number} sur {count} de l’hôte",
+  "Photo of {place}": "Photo de {place}",
+  "Photos (optional)": "Photos (facultatif)",
+  "Show the places on this route. The first photo is the cover, and everyone who can see the trip can see them.":
+      "Montrez les lieux de cet itinéraire. La première photo sert de couverture, et toute personne qui voit le voyage peut les voir.",
+  "Add": "Ajouter",
+  "Cover photo": "Photo de couverture",
+  "Trip photo": "Photo du voyage",
+  "Cover": "Couverture",
+  "Remove photo": "Retirer la photo",
+  "The trip was saved, but its photos could not be uploaded. Try again from Edit trip.":
+      "Le voyage est enregistré, mais ses photos n’ont pas pu être envoyées. Réessayez depuis Modifier le voyage.",
+  "Only this trip host can change its photos":
+      "Seul l’hôte de ce voyage peut modifier ses photos",
+  "A trip can have up to 5 photos": "Un voyage peut avoir 5 photos au maximum",
+  "Each photo must be stored with this trip":
+      "Chaque photo doit être enregistrée avec ce voyage",
+  "Places © OpenStreetMap contributors": "Lieux © contributeurs OpenStreetMap",
 };

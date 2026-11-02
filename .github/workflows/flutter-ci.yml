@@ -45,6 +45,11 @@ jobs:
       - name: Build Android debug APK
         run: flutter build apk --debug
 
+      # Catches shrinking and release-only failures that a debug build cannot.
+      # Unsigned: the signing key is not in the repository.
+      - name: Build Android release bundle
+        run: flutter build appbundle --release --dart-define-from-file=config/staging.example.json
+
       - name: Upload Android QA artifact
         uses: actions/upload-artifact@v4
         with:

@@ -1,9 +1,9 @@
-import '../../../core/l10n/app_strings.dart';
-import '../../../core/state/dispose_safe_notifier.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../core/l10n/app_strings.dart';
+import '../../../core/state/dispose_safe_notifier.dart';
 import '../data/notification_repository.dart';
 import '../domain/app_notification.dart';
 

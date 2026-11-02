@@ -7,35 +7,70 @@ export interface NotificationRecord {
   actor_name: string | null;
 }
 
+export type PushLanguage = "en" | "fr";
+
+const messages: Record<
+  PushLanguage,
+  { someone: string; byKind: Record<string, (actor: string, trip: string) => string> }
+> = {
+  en: {
+    someone: "Someone",
+    byKind: {
+      join_request_received: (actor, trip) => `${actor} asked to join ${trip}.`,
+      request_approved: (actor, trip) =>
+        `${actor} approved your request for ${trip}. Confirm to lock your place.`,
+      request_declined: (_, trip) =>
+        `Your request for ${trip} was not accepted.`,
+      traveler_confirmed: (actor, trip) =>
+        `${actor} confirmed their place on ${trip}.`,
+      traveler_declined: (actor, trip) =>
+        `${actor} declined the invitation to ${trip}.`,
+      traveler_withdrew: (actor, trip) =>
+        `${actor} withdrew their request for ${trip}.`,
+      traveler_left: (actor, trip) => `${actor} left ${trip}.`,
+      traveler_left_late: (actor, trip) =>
+        `${actor} left ${trip} within 7 days of departure.`,
+      trip_updated: (actor, trip) =>
+        `${actor} updated ${trip}. Check the latest plan.`,
+      trip_cancelled: (actor, trip) => `${actor} cancelled ${trip}.`,
+    },
+  },
+  fr: {
+    someone: "Quelqu’un",
+    byKind: {
+      join_request_received: (actor, trip) =>
+        `${actor} a demandé à rejoindre ${trip}.`,
+      request_approved: (actor, trip) =>
+        `${actor} a approuvé votre demande pour ${trip}. Confirmez pour réserver votre place.`,
+      request_declined: (_, trip) =>
+        `Votre demande pour ${trip} n’a pas été acceptée.`,
+      traveler_confirmed: (actor, trip) =>
+        `${actor} a confirmé sa place pour ${trip}.`,
+      traveler_declined: (actor, trip) =>
+        `${actor} a refusé l’invitation pour ${trip}.`,
+      traveler_withdrew: (actor, trip) =>
+        `${actor} a retiré sa demande pour ${trip}.`,
+      traveler_left: (actor, trip) => `${actor} a quitté ${trip}.`,
+      traveler_left_late: (actor, trip) =>
+        `${actor} a quitté ${trip} moins de 7 jours avant le départ.`,
+      trip_updated: (actor, trip) =>
+        `${actor} a modifié ${trip}. Consultez le dernier programme.`,
+      trip_cancelled: (actor, trip) => `${actor} a annulé ${trip}.`,
+    },
+  },
+};
+
 // Mirrors AppNotification.message in the app. A kind this function does not know
 // sends nothing rather than a blank alert.
-export function messageFor(record: NotificationRecord): string | null {
-  const actor = record.actor_name ?? "Someone";
-  const trip = record.trip_title;
-  switch (record.kind) {
-    case "join_request_received":
-      return `${actor} asked to join ${trip}.`;
-    case "request_approved":
-      return `${actor} approved your request for ${trip}. Confirm to lock your place.`;
-    case "request_declined":
-      return `Your request for ${trip} was not accepted.`;
-    case "traveler_confirmed":
-      return `${actor} confirmed their place on ${trip}.`;
-    case "traveler_declined":
-      return `${actor} declined the invitation to ${trip}.`;
-    case "traveler_withdrew":
-      return `${actor} withdrew their request for ${trip}.`;
-    case "traveler_left":
-      return `${actor} left ${trip}.`;
-    case "traveler_left_late":
-      return `${actor} left ${trip} within 7 days of departure.`;
-    case "trip_updated":
-      return `${actor} updated ${trip}. Check the latest plan.`;
-    case "trip_cancelled":
-      return `${actor} cancelled ${trip}.`;
-    default:
-      return null;
-  }
+export function messageFor(
+  record: NotificationRecord,
+  language: PushLanguage = "en",
+): string | null {
+  const copy = messages[language];
+  const build = copy.byKind[record.kind];
+  return build
+    ? build(record.actor_name ?? copy.someone, record.trip_title)
+    : null;
 }
 
 export function fcmMessage(

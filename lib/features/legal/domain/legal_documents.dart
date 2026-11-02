@@ -53,7 +53,7 @@ const privacyPolicy = LegalDocument(
   sections: [
     LegalSection(
       'What we collect',
-      'Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips you create and save, your requests and the details you declare in them, your group chat messages, your safety reports and blocks, your notification device token, and basic usage events.',
+      'Your email address, your profile details and photo, whether a LinkedIn account is linked, the trips you create and save and the photos you add to them, your requests and the details you declare in them, your group chat messages, your safety reports and blocks, your notification device token, basic usage events, and crash reports that are not linked to your account.',
     ),
     LegalSection(
       'Who can see it',
@@ -61,11 +61,11 @@ const privacyPolicy = LegalDocument(
     ),
     LegalSection(
       'Services we use',
-      'Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us.',
+      'Data is stored with Supabase. Push notifications are delivered through Firebase Cloud Messaging. Linking LinkedIn shares basic identity details from LinkedIn with us. Place suggestions send what you type in a place field, without your account, to Photon, a service run by komoot that uses OpenStreetMap data.',
     ),
     LegalSection(
       'Deleting your account',
-      'Deleting your account removes your profile, photo, requests, blocks, and the trips you created. Messages you sent remain visible to their group under the name "Former member". Safety reports are kept without your account linked, so that complaints cannot be erased.',
+      'Deleting your account removes your profile, photo, requests, blocks, and the trips you created with their photos. Messages you sent remain visible to their group under the name "Former member". Safety reports are kept without your account linked, so that complaints cannot be erased.',
     ),
   ],
 );

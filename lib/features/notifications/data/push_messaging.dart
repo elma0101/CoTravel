@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/l10n/app_strings.dart';
+
 abstract interface class PushMessaging {
   /// False when this build has no Firebase configuration.
   Future<bool> initialize();
@@ -106,7 +108,10 @@ class SupabasePushTokenRepository implements PushTokenRepository {
 
   @override
   Future<void> register(String token) async {
-    await _client.rpc('register_push_token', params: {'p_token': token});
+    await _client.rpc(
+      'register_push_token',
+      params: {'p_token': token, 'p_language': appLanguageCode},
+    );
   }
 }
 

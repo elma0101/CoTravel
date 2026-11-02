@@ -5,9 +5,9 @@ import '../../../app/providers/app_providers.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../trips/domain/trip.dart';
 import '../../trips/presentation/trip_formatters.dart';
 import '../application/join_request_controller.dart';
-import '../../trips/domain/trip.dart';
 import '../domain/trip_join_request.dart';
 
 class TripRequestsScreen extends ConsumerWidget {
@@ -212,16 +212,10 @@ class _UsefulContext extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(tr('Useful context'), style: textTheme.titleSmall),
-              ),
-              Text(
-                tr('Declared by the traveler'),
-                style: textTheme.bodySmall?.copyWith(color: AppColors.muted),
-              ),
-            ],
+          Text(tr('Useful context'), style: textTheme.titleSmall),
+          Text(
+            tr('Declared by the traveler'),
+            style: textTheme.bodySmall?.copyWith(color: AppColors.muted),
           ),
           const SizedBox(height: AppSpacing.xs),
           ...rows,
@@ -296,9 +290,13 @@ class _CostLine extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: Text(label)),
-        Text(
-          tr('{amount} each', {'amount': value}),
-          style: const TextStyle(fontWeight: FontWeight.w600),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            tr('{amount} each', {'amount': value}),
+            textAlign: TextAlign.end,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );

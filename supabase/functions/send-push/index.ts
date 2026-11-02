@@ -76,14 +76,13 @@ async function firebaseAccessToken(): Promise<string> {
 const backend: PushBackend = {
   async tokensFor(userId) {
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/push_tokens?select=token&user_id=eq.${userId}`,
+      `${supabaseUrl}/rest/v1/push_tokens?select=token,language&user_id=eq.${userId}`,
       { headers: databaseHeaders },
     );
     if (!response.ok) {
       throw new Error(`Token lookup failed: ${response.status}`);
     }
-    const rows: { token: string }[] = await response.json();
-    return rows.map((row) => row.token);
+    return await response.json();
   },
   async deleteToken(token) {
     await fetch(

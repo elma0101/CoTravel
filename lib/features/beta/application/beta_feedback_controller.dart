@@ -1,7 +1,8 @@
-import '../../../core/l10n/app_strings.dart';
-import '../../../core/state/dispose_safe_notifier.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/server_errors.dart';
+import '../../../core/state/dispose_safe_notifier.dart';
 import '../data/beta_feedback_repository.dart';
 import '../domain/beta_feedback.dart';
 
@@ -68,16 +69,7 @@ class BetaFeedbackController extends ChangeNotifier with DisposeSafeNotifier {
   }
 
   String _readableError(Object error) {
-    final message = error.toString();
-    for (final prefix in [
-      'Bad state: ',
-      'Invalid argument(s): ',
-      'PostgrestException(message: ',
-    ]) {
-      if (message.startsWith(prefix)) {
-        return message.substring(prefix.length).split(', code:').first;
-      }
-    }
-    return tr('Your feedback could not be sent. Please try again.');
+    return readableServerError(error) ??
+        tr('Your feedback could not be sent. Please try again.');
   }
 }

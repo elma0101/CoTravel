@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers/app_providers.dart';
+import '../../profile/presentation/linkedin_gate.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
@@ -22,6 +25,17 @@ class TripsScreen extends ConsumerStatefulWidget {
 }
 
 class _TripsScreenState extends ConsumerState<TripsScreen> {
+  Future<void> _planTrip() async {
+    final verified = await ensureLinkedInVerified(
+      context,
+      ref,
+      reason: LinkedInGateReason.host,
+    );
+    if (verified && mounted) {
+      unawaited(context.push(AppRoutes.createTrip));
+    }
+  }
+
   int _selectedView = 0;
 
   @override
@@ -88,7 +102,7 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
                       ),
                       child: FilledButton.icon(
                         key: const ValueKey('plan-trip'),
-                        onPressed: () => context.push(AppRoutes.createTrip),
+                        onPressed: _planTrip,
                         icon: const Icon(Icons.add_rounded),
                         label: Text(tr('Plan a new trip')),
                       ),

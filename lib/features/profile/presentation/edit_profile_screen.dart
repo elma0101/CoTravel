@@ -7,25 +7,22 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../app/providers/app_providers.dart';
-import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/l10n/server_errors.dart';
 import '../domain/user_profile.dart';
 
-class ProfileOnboardingScreen extends ConsumerStatefulWidget {
-  const ProfileOnboardingScreen({this.isEditing = false, super.key});
-
-  final bool isEditing;
+/// Every profile detail on one screen, for changes after sign-up. New members
+/// go through the step-by-step setup instead.
+class EditProfileScreen extends ConsumerStatefulWidget {
+  const EditProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileOnboardingScreen> createState() =>
-      _ProfileOnboardingScreenState();
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _ProfileOnboardingScreenState
-    extends ConsumerState<ProfileOnboardingScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   static const _availableStyles = [
     'Culture',
     'Food',
@@ -49,7 +46,6 @@ class _ProfileOnboardingScreenState
   String _avatarExtension = 'jpg';
   bool _isSaving = false;
   bool _isLinking = false;
-  bool _acceptedTerms = false;
 
   @override
   void initState() {
@@ -62,7 +58,6 @@ class _ProfileOnboardingScreenState
       _languagesController.text = profile.languages.join(', ');
       _occupationController.text = profile.occupation ?? '';
       _instagramController.text = profile.instagramHandle ?? '';
-      _acceptedTerms = profile.hasAcceptedCurrentTerms;
       _selectedStyles.addAll(profile.travelStyles);
     }
     unawaited(_restoreLostImage());
@@ -150,19 +145,6 @@ class _ProfileOnboardingScreenState
       return;
     }
 
-    final config = ref.read(appConfigProvider);
-    final profile = ref.read(appAuthStateProvider).profile;
-    if (config.requireLinkedInVerification &&
-        profile?.isLinkedInVerified != true) {
-      _showMessage(tr('Connect LinkedIn before completing your profile.'));
-      return;
-    }
-
-    if (!widget.isEditing && !_acceptedTerms) {
-      _showMessage(tr('Accept the terms of use to continue.'));
-      return;
-    }
-
     setState(() => _isSaving = true);
     final authState = ref.read(appAuthStateProvider);
     final draft = ProfileDraft(
@@ -175,21 +157,13 @@ class _ProfileOnboardingScreenState
       occupation: _occupationController.text.trim(),
     );
     try {
-      if (widget.isEditing) {
-        await authState.updateProfile(
-          draft: draft,
-          avatarBytes: _avatarBytes,
-          avatarExtension: _avatarExtension,
-        );
-        if (mounted) {
-          context.pop();
-        }
-      } else {
-        await authState.completeProfile(
-          draft: draft,
-          avatarBytes: _avatarBytes,
-          avatarExtension: _avatarExtension,
-        );
+      await authState.updateProfile(
+        draft: draft,
+        avatarBytes: _avatarBytes,
+        avatarExtension: _avatarExtension,
+      );
+      if (mounted) {
+        context.pop();
       }
     } on Object catch (error) {
       if (mounted) {
@@ -205,23 +179,11 @@ class _ProfileOnboardingScreenState
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(appAuthStateProvider);
-    final config = ref.watch(appConfigProvider);
     final profile = authState.profile;
     final isVerified = profile?.isLinkedInVerified == true;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.isEditing ? tr('Edit profile') : tr('Your travel profile'),
-        ),
-        actions: [
-          if (!widget.isEditing)
-            TextButton(
-              onPressed: authState.signOut,
-              child: Text(tr('Sign out')),
-            ),
-        ],
-      ),
+      appBar: AppBar(title: Text(tr('Edit profile'))),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -276,12 +238,6 @@ class _ProfileOnboardingScreenState
                   labelText: tr('Short introduction'),
                   hintText: tr('What makes you a good travel companion?'),
                 ),
-                validator: (value) {
-                  final length = value?.trim().length ?? 0;
-                  return length < 20
-                      ? tr('Write at least 20 characters')
-                      : null;
-                },
               ),
               const SizedBox(height: AppSpacing.md),
               TextFormField(
@@ -291,9 +247,6 @@ class _ProfileOnboardingScreenState
                   labelText: tr('Home city'),
                   prefixIcon: Icon(Icons.location_city_outlined),
                 ),
-                validator: (value) => (value?.trim().isEmpty ?? true)
-                    ? tr('Add your home city')
-                    : null,
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
@@ -366,50 +319,16 @@ class _ProfileOnboardingScreenState
               const SizedBox(height: AppSpacing.xl),
               _VerificationCard(
                 isVerified: isVerified,
-                isRequired: config.requireLinkedInVerification,
                 isLinking: _isLinking,
                 onLink: _linkLinkedIn,
                 onRefresh: authState.refreshProfile,
               ),
               const SizedBox(height: AppSpacing.xl),
-              if (!widget.isEditing) ...[
-                CheckboxListTile(
-                  key: const ValueKey('accept-terms'),
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  value: _acceptedTerms,
-                  onChanged: (value) {
-                    setState(() => _acceptedTerms = value ?? false);
-                  },
-                  title: Text(
-                    tr(
-                      'I accept the terms of use and privacy policy. CoTravel is a coordination tool, not a travel agency.',
-                    ),
-                  ),
-                ),
-                Wrap(
-                  children: [
-                    TextButton(
-                      onPressed: () => context.push(AppRoutes.terms),
-                      child: Text(tr('Read the terms')),
-                    ),
-                    TextButton(
-                      onPressed: () => context.push(AppRoutes.privacy),
-                      child: Text(tr('Read the privacy policy')),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
               FilledButton(
                 key: const ValueKey('save-profile'),
                 onPressed: _isSaving ? null : _saveProfile,
                 child: Text(
-                  _isSaving
-                      ? tr('Saving profile…')
-                      : widget.isEditing
-                      ? tr('Save changes')
-                      : tr('Complete profile'),
+                  _isSaving ? tr('Saving profile…') : tr('Save changes'),
                 ),
               ),
             ],
@@ -499,14 +418,12 @@ class _AvatarEditor extends StatelessWidget {
 class _VerificationCard extends StatelessWidget {
   const _VerificationCard({
     required this.isVerified,
-    required this.isRequired,
     required this.isLinking,
     required this.onLink,
     required this.onRefresh,
   });
 
   final bool isVerified;
-  final bool isRequired;
   final bool isLinking;
   final VoidCallback onLink;
   final VoidCallback onRefresh;
@@ -540,14 +457,6 @@ class _VerificationCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              if (isRequired && !isVerified)
-                Text(
-                  tr('Required'),
-                  style: TextStyle(
-                    color: AppColors.terracotta,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),

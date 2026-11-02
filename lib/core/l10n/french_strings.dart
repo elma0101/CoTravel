@@ -893,4 +893,52 @@ const frenchStrings = <String, String>{
   "This account has been suspended.": "Ce compte a été suspendu.",
   "Your session has ended. Sign in again.":
       "Votre session a pris fin. Reconnectez-vous.",
+  "Tell travelers a bit about you": "Présentez-vous aux voyageurs",
+  "A short intro and what you do help hosts say yes faster.":
+      "Une courte présentation et votre métier aident les hôtes à accepter plus vite.",
+  "Agree and start exploring": "Accepter et commencer",
+  "Continue": "Continuer",
+  "Skip for now": "Passer pour l’instant",
+  "Hi! What should we call you?": "Bonjour ! Comment vous appelez-vous ?",
+  "This is how travelers will see you.":
+      "C’est ainsi que les voyageurs vous verront.",
+  "Your first name": "Votre prénom",
+  "Where are you based?": "Où habitez-vous ?",
+  "Travelers nearby can meet you before the trip.":
+      "Les voyageurs proches pourront vous rencontrer avant le voyage.",
+  "Somewhere else": "Ailleurs",
+  "How do you like to travel?": "Comment aimez-vous voyager ?",
+  "Pick a few. We use them to suggest trips.":
+      "Choisissez-en quelques-uns. Ils nous aident à vous suggérer des voyages.",
+  "Which languages do you speak?": "Quelles langues parlez-vous ?",
+  "So your group can plan together easily.":
+      "Pour que votre groupe s’organise facilement.",
+  "Another language": "Une autre langue",
+  "Add language": "Ajouter la langue",
+  "You're in, {name}!": "Bienvenue, {name} !",
+  "Find a trip that fits you, or plan your own.":
+      "Trouvez un voyage qui vous ressemble, ou organisez le vôtre.",
+  "By continuing you accept the terms of use and privacy policy. CoTravel is a coordination tool, not a travel agency.":
+      "En continuant, vous acceptez les conditions d’utilisation et la politique de confidentialité. CoTravel est un outil de coordination, pas une agence de voyages.",
+  "Step {number} of {count}": "Étape {number} sur {count}",
+  "Add a photo": "Ajouter une photo",
+  "Change photo": "Changer de photo",
+  "You are verified!": "Vous êtes vérifié !",
+  "Every host and traveler on CoTravel is verified with LinkedIn, so groups know who they travel with. CoTravel never posts to LinkedIn.":
+      "Chaque hôte et voyageur de CoTravel est vérifié avec LinkedIn, pour que chacun sache avec qui il voyage. CoTravel ne publie jamais sur LinkedIn.",
+  "Not now": "Plus tard",
+  "One quick step before you join": "Une petite étape avant de rejoindre",
+  "One quick step before you host": "Une petite étape avant d’organiser",
+  "Verify your profile": "Vérifiez votre profil",
+  "Now let’s send your request.": "Envoyons maintenant votre demande.",
+  "Now let’s plan your trip.": "Organisons maintenant votre voyage.",
+  "Your profile now shows the verified badge.":
+      "Votre profil affiche maintenant le badge vérifié.",
+  "Arabic": "Arabe",
+  "French": "Français",
+  "English": "Anglais",
+  "Tamazight": "Tamazight",
+  "Spanish": "Espagnol",
+  "German": "Allemand",
+  "Italian": "Italien",
 };

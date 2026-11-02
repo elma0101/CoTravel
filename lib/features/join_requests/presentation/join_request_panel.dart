@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers/app_providers.dart';
+import '../../profile/presentation/linkedin_gate.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_spacing.dart';
@@ -255,6 +256,14 @@ class JoinRequestBar extends ConsumerWidget {
   final Trip trip;
 
   Future<void> _composeRequest(BuildContext context, WidgetRef ref) async {
+    final verified = await ensureLinkedInVerified(
+      context,
+      ref,
+      reason: LinkedInGateReason.join,
+    );
+    if (!verified || !context.mounted) {
+      return;
+    }
     final requestController = ref.read(joinRequestControllerProvider);
 
     final submitted = await showModalBottomSheet<bool>(

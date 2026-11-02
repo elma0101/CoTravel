@@ -123,9 +123,9 @@ class AppAuthState extends ChangeNotifier {
     String avatarExtension = 'jpg',
   }) async {
     final userId = _supabaseClient?.auth.currentUser?.id ?? 'preview-user';
-    _status = AppSessionStatus.loading;
+    // The status stays put until the profile is saved, so a failure leaves
+    // the sign-up screens, and what was chosen in them, where they were.
     _errorMessage = null;
-    notifyListeners();
 
     try {
       await profileRepository.acceptTerms(currentTermsVersion);

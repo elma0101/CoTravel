@@ -574,64 +574,6 @@ void main() {
     expect(analytics.events.last.event, ProductEvent.tripPublished);
   });
 
-  testWidgets('requires and completes profile onboarding', (tester) async {
-    final authState = AppAuthState.preview(
-      initiallyAuthenticated: true,
-      onboardingComplete: false,
-    );
-    addTearDown(authState.dispose);
-
-    await _pumpApp(tester, authState);
-
-    expect(
-      find.text('Help people know who they will travel with.'),
-      findsOneWidget,
-    );
-
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Display name'),
-      'Sam Traveler',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Short introduction'),
-      'I enjoy thoughtful itineraries and meeting considerate travelers.',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Home city'),
-      'Casablanca',
-    );
-    await tester.drag(find.byType(ListView), const Offset(0, -480));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Culture'));
-    await tester.scrollUntilVisible(
-      find.text('Languages'),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Languages'),
-      'Arabic, French',
-    );
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('accept-terms')),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('accept-terms')));
-    await tester.pump();
-    await tester.scrollUntilVisible(
-      find.text('Complete profile'),
-      240,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Complete profile'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Find your people, then go.'), findsOneWidget);
-  });
-
   testWidgets('returns to welcome after signing out', (tester) async {
     final authState = AppAuthState.preview(initiallyAuthenticated: true);
     addTearDown(authState.dispose);

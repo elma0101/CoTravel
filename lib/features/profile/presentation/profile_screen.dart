@@ -11,6 +11,7 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/widgets/screen_header.dart';
 import '../domain/user_profile.dart';
+import 'linkedin_gate.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -34,6 +35,18 @@ class ProfileScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: _ProfileSummary(profile: profile),
               ),
+              if (profile != null && profile.bio == null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                    AppSpacing.lg,
+                    0,
+                  ),
+                  child: _CompleteProfileCard(
+                    onTap: () => context.push(AppRoutes.editProfile),
+                  ),
+                ),
               const SizedBox(height: AppSpacing.lg),
               _VerificationTile(
                 isVerified: profile?.isLinkedInVerified == true,
@@ -217,13 +230,60 @@ class _ProfileSummary extends StatelessWidget {
   }
 }
 
-class _VerificationTile extends StatelessWidget {
+class _CompleteProfileCard extends StatelessWidget {
+  const _CompleteProfileCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.terracottaSoft,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        key: const ValueKey('complete-profile-card'),
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              const Icon(Icons.auto_awesome_outlined, color: AppColors.ink),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr('Tell travelers a bit about you'),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      tr(
+                        'A short intro and what you do help hosts say yes faster.',
+                      ),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VerificationTile extends ConsumerWidget {
   const _VerificationTile({required this.isVerified});
 
   final bool isVerified;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       leading: Icon(
@@ -238,8 +298,14 @@ class _VerificationTile extends StatelessWidget {
             ? tr('Your professional identity is connected.')
             : tr('Connect a professional identity to strengthen trust.'),
       ),
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: () => context.push(AppRoutes.editProfile),
+      trailing: isVerified ? null : const Icon(Icons.chevron_right_rounded),
+      onTap: isVerified
+          ? null
+          : () => ensureLinkedInVerified(
+              context,
+              ref,
+              reason: LinkedInGateReason.profile,
+            ),
     );
   }
 }

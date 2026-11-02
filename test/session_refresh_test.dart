@@ -60,7 +60,7 @@ void main() {
     expect(statuses.first, AppSessionStatus.loading);
   });
 
-  testWidgets('returning from LinkedIn keeps what was typed in onboarding', (
+  testWidgets('a session refresh keeps the sign-up step and its answers', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1080, 2400);
@@ -92,22 +92,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final scrollable = find.byType(Scrollable).first;
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('profile-occupation')),
-      300,
-      scrollable: scrollable,
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('profile-occupation')),
-      'Software engineer',
-    );
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('accept-terms')),
-      300,
-      scrollable: scrollable,
-    );
-    await tester.tap(find.byKey(const ValueKey('accept-terms')));
+    await tester.enterText(find.byKey(const ValueKey('setup-name')), 'Sam');
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('setup-continue')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rabat'));
     await tester.pump();
 
     // What Supabase reports when the linked identity comes back.
@@ -118,10 +107,18 @@ void main() {
     await refresh;
     await tester.pumpAndSettle();
 
-    expect(find.text('Software engineer'), findsOneWidget);
-    final terms = tester.widget<CheckboxListTile>(
-      find.byKey(const ValueKey('accept-terms')),
-    );
-    expect(terms.value, isTrue);
+    expect(find.text('Where are you based?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('setup-continue')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Culture'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('setup-continue')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('French'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('setup-continue')));
+    await tester.pumpAndSettle();
+    expect(find.text("You're in, Sam!"), findsOneWidget);
+    expect(find.text('Rabat'), findsOneWidget);
   });
 }

@@ -19,7 +19,8 @@ import '../../features/notifications/domain/app_notification.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/profile/domain/traveler_action_target.dart';
 import '../../features/profile/presentation/member_profile_screen.dart';
-import '../../features/profile/presentation/profile_onboarding_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/profile_setup_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/safety/presentation/safety_center_screen.dart';
 import '../../features/trips/presentation/create_trip_screen.dart';
@@ -167,7 +168,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.onboarding,
-        builder: (context, state) => const ProfileOnboardingScreen(),
+        builder: (context, state) => const ProfileSetupScreen(),
       ),
       GoRoute(
         path: AppRoutes.tripMap,
@@ -217,9 +218,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.editProfile,
-        builder: (context, state) {
-          return const ProfileOnboardingScreen(isEditing: true);
-        },
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: AppRoutes.createTrip,

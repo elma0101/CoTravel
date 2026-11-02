@@ -29,8 +29,8 @@ does not mean the milestone meets the specification; see the completion plan.
 | 2 | Core flow: in-app notifications, trip editing and cancellation, leaving a trip, cancellation windows, hiding past trips, profile editing | Implemented; Android push is built but not yet tested on a device, and iOS push needs a paid Apple account |
 | 3 | Trust and legal: occupation, Instagram, trust facts, terms, consent, account deletion, account switching | Implemented; legal text is a draft pending review, and structured join details and host filters and tags move to Phase 5 |
 | 4 | Match the mockups: shared design pieces, then Explore, Trip details, Create trip, and Join request; French and English | Implemented; French awaits native review, push text and server errors are still English, and Join request context needs Phase 5 data |
-| 5 | Discovery and logistics: map view, place search with coordinates, pre-filled booking links, saved trips, structured join details, host background filter | Implemented; the map and booking links are not yet tried on a device, and place search covers a built-in list of Moroccan places |
-| 6 | Beta: crash reporting, security audit, staging, signing, real KPI evidence | In progress: crash reporting, French push and server errors, and a release build check are in; staging, signing, the two-account audit and KPI evidence need live accounts |
+| 5 | Discovery and logistics: map view, place search with coordinates, pre-filled booking links, saved trips, structured join details, host background filter, trip photos | Implemented; place search uses OpenStreetMap through Photon, with the built-in list offline, and keeps exact points for departures and stops; booking links are not yet tried on a device |
+| 6 | Beta: crash reporting, security audit, staging, signing, real KPI evidence | In progress: crash reporting, French push, server and sign-in errors, a release build check, staging and LinkedIn are in; signing, the two-account audit and KPI evidence need live accounts |
 
 ## Product decisions
 

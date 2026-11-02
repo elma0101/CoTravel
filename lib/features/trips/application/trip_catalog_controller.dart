@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/analytics/product_analytics.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/server_errors.dart';
 import '../../../core/state/dispose_safe_notifier.dart';
 import '../../profile/domain/user_profile.dart';
 import '../data/trip_repository.dart';
@@ -141,8 +142,10 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
         ),
       );
       return trip;
-    } on Object {
-      _errorMessage = tr('Your trip could not be published. Please try again.');
+    } on Object catch (error) {
+      _errorMessage =
+          readableServerError(error) ??
+          tr('Your trip could not be published. Please try again.');
       rethrow;
     } finally {
       _isPublishing = false;
@@ -164,8 +167,10 @@ class TripCatalogController extends ChangeNotifier with DisposeSafeNotifier {
       _discoverableTrips = _replaced(_discoverableTrips, updated);
       _savedTrips = _replaced(_savedTrips, updated);
       return updated;
-    } on Object {
-      _errorMessage = tr('Your changes could not be saved. Please try again.');
+    } on Object catch (error) {
+      _errorMessage =
+          readableServerError(error) ??
+          tr('Your changes could not be saved. Please try again.');
       rethrow;
     } finally {
       _isPublishing = false;

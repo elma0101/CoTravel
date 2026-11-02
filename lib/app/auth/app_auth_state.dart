@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/analytics/product_analytics.dart';
 import '../../core/l10n/app_strings.dart';
+import '../../core/l10n/auth_errors.dart';
+import '../../core/l10n/server_errors.dart';
 import '../../features/legal/domain/legal_documents.dart';
 import '../../features/profile/data/profile_repository.dart';
 import '../../features/profile/domain/user_profile.dart';
@@ -274,12 +276,9 @@ class AppAuthState extends ChangeNotifier {
   }
 
   String _readableError(Object error) {
-    return switch (error) {
-      AuthException(:final message) => message,
-      PostgrestException(:final message) => message,
-      StorageException(:final message) => message,
-      _ => tr('Something went wrong. Please try again.'),
-    };
+    return readableAuthError(error) ??
+        readableServerError(error) ??
+        tr('Something went wrong. Please try again.');
   }
 
   @override

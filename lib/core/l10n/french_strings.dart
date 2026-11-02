@@ -872,4 +872,25 @@ const frenchStrings = <String, String>{
   "Each photo must be stored with this trip":
       "Chaque photo doit être enregistrée avec ce voyage",
   "Places © OpenStreetMap contributors": "Lieux © contributeurs OpenStreetMap",
+  "Choose a valid departure point": "Choisissez un point de départ valide",
+  "Check your connection and try again.":
+      "Vérifiez votre connexion et réessayez.",
+  "Too many attempts. Wait a minute, then try again.":
+      "Trop de tentatives. Attendez une minute, puis réessayez.",
+  "Enter a valid email address.": "Saisissez une adresse e-mail valide.",
+  "Sign-in links cannot be sent to this address yet.":
+      "Les liens de connexion ne peuvent pas encore être envoyés à cette adresse.",
+  "This sign-in link has expired. Ask for a new one.":
+      "Ce lien de connexion a expiré. Demandez-en un nouveau.",
+  "Confirm your email address first.":
+      "Confirmez d’abord votre adresse e-mail.",
+  "This LinkedIn account is already linked to another CoTravel account.":
+      "Ce compte LinkedIn est déjà associé à un autre compte CoTravel.",
+  "LinkedIn verification is not available right now. Try again later.":
+      "La vérification LinkedIn n’est pas disponible pour le moment. Réessayez plus tard.",
+  "New accounts are closed for now.":
+      "Les nouvelles inscriptions sont fermées pour le moment.",
+  "This account has been suspended.": "Ce compte a été suspendu.",
+  "Your session has ended. Sign in again.":
+      "Votre session a pris fin. Reconnectez-vous.",
 };

@@ -38,7 +38,9 @@ class TripRoute {
           name: trip.originCity,
           date: trip.startDate,
           type: TripStopType.waypoint,
-          coordinate: MoroccoRouteCoordinates.lookup(trip.originCity),
+          coordinate:
+              trip.originCoordinate ??
+              MoroccoRouteCoordinates.lookup(trip.originCity),
           note: tr('Departure'),
           isOrigin: true,
         ),

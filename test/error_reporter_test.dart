@@ -2,6 +2,7 @@ import 'package:cotravel_app/core/errors/error_reporter.dart';
 import 'package:cotravel_app/core/l10n/app_strings.dart';
 import 'package:cotravel_app/core/l10n/server_errors.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
   group('error reporter', () {
@@ -66,6 +67,15 @@ void main() {
     test('read the message out of each error shape', () {
       expect(
         readableServerError(StateError('This trip has no open seats')),
+        'This trip has no open seats',
+      );
+      expect(
+        readableServerError(
+          const PostgrestException(
+            message: 'This trip has no open seats',
+            code: 'P0001',
+          ),
+        ),
         'This trip has no open seats',
       );
       expect(readableServerError(Exception('nothing readable')), isNull);

@@ -122,3 +122,18 @@ no high-severity release blocker remains. A percentage based on an inadequate
 sample, seeded confirmations, or solicited-positive-only feedback is not valid
 evidence. If a target misses, use feedback comments and task area to choose the
 next focused iteration rather than broadening the product scope.
+
+## Crash reports
+
+Crashes arrive in a service-only table. Reports hold the error type, code stack,
+app version and platform, with no account or error message. Read them from the
+Supabase SQL editor:
+
+```sql
+select kind, app_version, count(*), max(created_at) as last_seen
+from public.client_errors
+group by kind, app_version
+order by last_seen desc;
+```
+
+Errors before sign-in are not sent, because the function requires a session.

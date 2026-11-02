@@ -55,7 +55,7 @@ function backendWith(responses: Record<string, { status: number; body: string }>
 Deno.test("every kind the database allows has a message", () => {
   const migration = Deno.readTextFileSync(
     new URL(
-      "../../migrations/20260806050000_core_flow.sql",
+      "../../migrations/20260807130000_core_flow.sql",
       import.meta.url,
     ),
   );

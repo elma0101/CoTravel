@@ -20,7 +20,6 @@ class TripPhotoAttributionButton extends StatelessWidget {
       shape: const CircleBorder(),
       child: IconButton(
         tooltip: tr('Photo details'),
-        visualDensity: VisualDensity.compact,
         onPressed: () => _showPhotoDetails(context, photo),
         icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
       ),

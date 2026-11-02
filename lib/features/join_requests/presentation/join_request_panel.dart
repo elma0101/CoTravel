@@ -307,20 +307,23 @@ class JoinRequestBar extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          tr('Group'),
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: AppColors.muted),
+                      Text(
+                        tr('Group'),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.muted,
                         ),
                       ),
-                      Text(
-                        tr('{participantCount} of {capacity} confirmed', {
-                          'participantCount': trip.participantCount,
-                          'capacity': trip.capacity,
-                        }),
-                        key: const ValueKey('trip-group-count'),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          tr('{participantCount} of {capacity} confirmed', {
+                            'participantCount': trip.participantCount,
+                            'capacity': trip.capacity,
+                          }),
+                          key: const ValueKey('trip-group-count'),
+                          textAlign: TextAlign.end,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ],
                   ),

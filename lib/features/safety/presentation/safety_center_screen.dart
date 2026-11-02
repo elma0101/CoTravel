@@ -170,9 +170,11 @@ class _CommunityStandards extends StatelessWidget {
             children: [
               Icon(Icons.shield_outlined, color: AppColors.green),
               SizedBox(width: AppSpacing.sm),
-              Text(
-                tr('Community standard'),
-                style: TextStyle(fontWeight: FontWeight.w600),
+              Expanded(
+                child: Text(
+                  tr('Community standard'),
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),

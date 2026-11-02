@@ -34,10 +34,11 @@ class NotificationsScreen extends ConsumerWidget {
             title: Text(tr('Notifications')),
             actions: [
               if (controller.unreadCount > 0)
-                TextButton(
+                IconButton(
                   key: const ValueKey('mark-all-notifications-read'),
+                  tooltip: tr('Mark all read'),
                   onPressed: controller.markAllRead,
-                  child: Text(tr('Mark all read')),
+                  icon: const Icon(Icons.done_all_rounded),
                 ),
             ],
           ),
